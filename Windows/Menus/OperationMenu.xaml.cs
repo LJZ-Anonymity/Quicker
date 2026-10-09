@@ -365,12 +365,37 @@ namespace Quicker.Windows.Menus
         // 导出动作数据到指定文件夹
         private void ExportAction_Click(object sender, RoutedEventArgs e)
         {
-            close = false; // 设置关闭标识符
-            base.HideMainWindow(); // 隐藏操作菜单窗口
-            using var dialog = new System.Windows.Forms.FolderBrowserDialog() { ShowNewFolderButton = true }; // 创建文件夹选择对话框
-            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK) // 选择文件夹
-                db2.ExportActionDataToJson(TableName, ButtonID, dialog.SelectedPath); // 导出动作数据到指定文件夹
-            close = true; // 设置关闭标识符
+            close = false; // 屏蔽失焦
+            try
+            {
+                base.HideMainWindow(); // 隐藏操作菜单窗口
+
+                // 默认文件名：动作标题_yyyyMMdd_HHmmss.json
+                ButtonData buttonData = db2.GetButtonDataByID(ButtonID, TableName);
+                string defaultFileName = $"{(buttonData?.Title ?? "Action")}_{DateTime.Now:yyyyMMdd_HHmmss}.json";
+
+                var dialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "导出动作",
+                    Filter = "json文件 (*.json)|*.json|所有文件 (*.*)|*.*",
+                    DefaultExt = ".json",
+                    FileName = defaultFileName,
+                    AddExtension = true,
+                    OverwritePrompt = true
+                };
+
+                if (dialog.ShowDialog() == true)
+                {
+                    string folderPath = Path.GetDirectoryName(dialog.FileName);
+                    db2.ExportActionDataToJson(TableName, ButtonID, folderPath);
+                }
+            }
+            finally // 恢复
+            {
+                close = true;
+            }
+
+            base.Close();
         }
 
         // 点击按钮关闭悬浮动作窗口
@@ -861,12 +886,10 @@ namespace Quicker.Windows.Menus
         // 重写基类的失焦处理方法
         protected override void HandleDeactivated()
         {
-            if (close) 
-            {
-                using var windowMananger = new WindowManager(); // 创建窗口管理器
-                windowMananger.SetMainWindowFocused(); // 关闭窗口
-            }
-            // 调用基类方法以触发ClosingOrHiding事件
+            if (!close) return;
+
+            using var windowMananger = new WindowManager();
+            windowMananger.SetMainWindowFocused();
             base.HandleDeactivated();
         }
 
