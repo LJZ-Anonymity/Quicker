@@ -11,6 +11,7 @@ using Quicker.Managers;
 using System.Windows;
 using Quicker.Models;
 using WpfAnimatedGif;
+using System.Text;
 using System.IO;
 
 namespace Quicker.UserControls.AddWindow
@@ -97,7 +98,8 @@ namespace Quicker.UserControls.AddWindow
         {
             var openFileDialog = new Microsoft.Win32.OpenFileDialog
             {
-                Filter = "任意文件(*.*)|*.*|可执行程序(*.exe)|*.exe" // 设置文件类型过滤器
+                Filter = "任意文件(*.*)|*.*|可执行程序(*.exe)|*.exe", // 设置文件类型过滤器
+                DereferenceLinks = false
             };
             if (openFileDialog.ShowDialog() == true) // 检查用户是否点击了"确定"
             {
@@ -209,6 +211,44 @@ namespace Quicker.UserControls.AddWindow
             Grid1.Margin = newMargin; // 将新的Margin赋给Grid1
         }
 
+        /// <summary>
+        /// 转换lnk按钮点击事件处理
+        /// </summary>
+        private void ConvertLnkButton_Click(object sender, RoutedEventArgs e)
+        {
+            string lnkPath = LocationTextBox.Text?.Trim();
+            if (string.IsNullOrWhiteSpace(lnkPath))
+                return;
+
+            // 1. 普通文件/文件夹快捷方式
+            string targetPath = GetLnkTargetPath(lnkPath);
+            if (!string.IsNullOrEmpty(targetPath))
+            {
+                LocationTextBox.Text = targetPath;
+                SetIconFromPath(targetPath);
+                return;
+            }
+
+            // 2. Internet 快捷方式(URI 协议)
+            string url = GetInternetShortcutUrl(lnkPath);
+            if (!string.IsNullOrEmpty(url))
+            {
+                LocationTextBox.Text = url;
+                return;
+            }
+
+            // 3. 兜底: 从 Arguments 里抠 URI
+            string uriCommand = GetLnkUriCommand(lnkPath);
+            if (!string.IsNullOrEmpty(uriCommand))
+            {
+                LocationTextBox.Text = uriCommand;
+                return;
+            }
+
+            using var toast = new ToastManager();
+            toast.Show("无法解析快捷方式目标!", ToastType.Error);
+        }
+
         #endregion
 
         #region 业务逻辑
@@ -250,7 +290,8 @@ namespace Quicker.UserControls.AddWindow
         {
             ActionType.OpenFile,
             ActionType.OpenFiles,
-            ActionType.OpenUwpApp
+            ActionType.OpenUwpApp,
+            ActionType.OpenUri
         }; // 将来新增的文件相关动作类型可以在这里添加
 
         /// <summary>
@@ -416,10 +457,15 @@ namespace Quicker.UserControls.AddWindow
         {
             string location = LocationTextBox.Text?.Trim() ?? string.Empty;
 
-            // 多个文件
-            if (location.Contains(";")) return ActionType.OpenFiles;
+            // 0. URI 协议命令优先：weixin://、steam://、ms-settings:// 等
+            if (IsUriProtocol(location))
+                return ActionType.OpenUri;
 
-            // 系统命令 / Shell 命名空间 / 窗口句柄 标识符：都应按“打开文件/位置”处理
+            // 1. 多个文件
+            if (location.Contains(";"))
+                return ActionType.OpenFiles;
+
+            // 2. 系统命令 / Shell 命名空间 / 窗口句柄
             if (IsSystemCommand(location) ||
                 IsShellNamespacePath(location) ||
                 location.StartsWith("hwnd:", StringComparison.OrdinalIgnoreCase))
@@ -427,7 +473,7 @@ namespace Quicker.UserControls.AddWindow
                 return ActionType.OpenFile;
             }
 
-            // 普通本地路径
+            // 3. 普通本地路径
             const string pattern = @"^[A-Za-z]:\\(?:[^\\/:*?""<>|\r\n]+\\)*[^\\/:*?""<>|\r\n]*$";
             bool isValidPath = Regex.IsMatch(location, pattern);
             return isValidPath ? ActionType.OpenFile : ActionType.OpenUwpApp;
@@ -486,14 +532,7 @@ namespace Quicker.UserControls.AddWindow
             {
                 if (text.EndsWith(".lnk", StringComparison.OrdinalIgnoreCase)) // 检查是否为lnk文件路径
                 {
-                    if (File.Exists(text)) // 检查快捷方式文件是否存在
-                    {
-                        string targetPath = GetLnkTargetPath(text); // 检查目标文件或文件夹是否存在
-                        if (!string.IsNullOrEmpty(targetPath) && (File.Exists(targetPath) || Directory.Exists(targetPath)))
-                        {
-                            shouldBeVisible = true;
-                        }
-                    }
+                    shouldBeVisible = File.Exists(text); // 只要是.lnk文件且存在就显示转换按钮
                 }
             }
 
@@ -544,20 +583,122 @@ namespace Quicker.UserControls.AddWindow
         }
 
         /// <summary>
-        /// 转换lnk按钮点击事件处理
+        /// 获取lnk文件中的URI协议命令
         /// </summary>
-        private void ConvertLnkButton_Click(object sender, RoutedEventArgs e)
+        /// <param name="lnkFilePath">lnk文件路径</param>
+        /// <returns>URI协议命令，如果获取失败则返回null</returns>
+        private string GetLnkUriCommand(string lnkFilePath)
         {
-            string lnkPath = LocationTextBox.Text?.Trim();
-            if (string.IsNullOrWhiteSpace(lnkPath))
-                return;
+            if (string.IsNullOrEmpty(lnkFilePath) || !File.Exists(lnkFilePath))
+                return null;
 
-            string targetPath = GetLnkTargetPath(lnkPath);
-            if (!string.IsNullOrEmpty(targetPath))
+            IWshShortcut shortcut = null;
+            WshShell shell = null;
+            try
             {
-                LocationTextBox.Text = targetPath;
-                SetIconFromPath(targetPath); // 更新图标
+                shell = new WshShell();
+                shortcut = (IWshShortcut)shell.CreateShortcut(lnkFilePath);
+
+                string arguments = shortcut.Arguments?.Trim();
+                string targetPath = shortcut.TargetPath?.Trim();
+
+                // 情况1：TargetPath 本身就是 URI 协议，如 steam://xxx
+                if (!string.IsNullOrWhiteSpace(targetPath) &&
+                    IsUriProtocol(targetPath))
+                {
+                    return string.IsNullOrWhiteSpace(arguments)
+                        ? targetPath
+                        : $"{targetPath} {arguments}";
+                }
+
+                // 情况2：Arguments 中包含 URI 协议命令，如 "steam://rungameid/123"
+                if (!string.IsNullOrWhiteSpace(arguments))
+                {
+                    string uri = ExtractUriFromArguments(arguments);
+                    if (!string.IsNullOrEmpty(uri))
+                        return uri;
+                }
+
+                return null;
             }
+            catch
+            {
+                return null;
+            }
+            finally
+            {
+                if (shortcut != null) Marshal.ReleaseComObject(shortcut);
+                if (shell != null) Marshal.ReleaseComObject(shell);
+            }
+        }
+
+        /// <summary>
+        /// 判断字符串是否为URI协议
+        /// </summary>
+        private bool IsUriProtocol(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+
+            return Regex.IsMatch(value.Trim(), @"^[a-zA-Z][a-zA-Z0-9+.-]*://");
+        }
+
+        /// <summary>
+        /// 从参数中提取URI协议命令
+        /// </summary>
+        private string ExtractUriFromArguments(string arguments)
+        {
+            if (string.IsNullOrWhiteSpace(arguments))
+                return null;
+
+            // 匹配 xxx://... 形式的 URI，允许后面带参数
+            Match match = Regex.Match(arguments, @"[a-zA-Z][a-zA-Z0-9+.-]*://[^\s""']+");
+            return match.Success ? match.Value : null;
+        }
+
+        /// <summary>
+        /// 读取 Internet 快捷方式中的目标 URL
+        /// 说明：.lnk 中字符串以 UTF-16LE 明文存储，直接扫描字节流即可，避免 COM 互操作的不确定性
+        /// </summary>
+        private string GetInternetShortcutUrl(string lnkFilePath)
+        {
+            if (string.IsNullOrEmpty(lnkFilePath) || !File.Exists(lnkFilePath))
+                return null;
+
+            try
+            {
+                byte[] bytes = File.ReadAllBytes(lnkFilePath);
+
+                // .lnk 中 URL 通常以 UTF-16LE 存储
+                string text = Encoding.Unicode.GetString(bytes);
+                string url = MatchUriInText(text);
+                if (!string.IsNullOrEmpty(url))
+                    return url;
+
+                // 兜底：ASCII 编码
+                text = Encoding.ASCII.GetString(bytes);
+                return MatchUriInText(text);
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 从文本中匹配 URI 协议命令(如 weixin://...、steam://...、ms-settings://...)
+        /// </summary>
+        private static string MatchUriInText(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return null;
+
+            // 匹配 <协议>://<非空白/非控制字符/非引号/非反斜杠> 的内容
+            var match = Regex.Match(
+                text,
+                @"[a-zA-Z][a-zA-Z0-9+.\-]*://[^\s\u0000-\u001F""'<>\\]{1,2048}");
+
+            return match.Success ? match.Value : null;
         }
 
         #endregion

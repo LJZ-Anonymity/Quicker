@@ -470,31 +470,6 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             {
                 // 调用新API端点
                 var response = await httpClient.GetAsync($"https://uapis.cn/api/v1/social/qq/userinfo?qq={qqNumber}");
-                if (!response.IsSuccessStatusCode) // 处理错误状态码
-                {
-                    var errorContent = await response.Content.ReadAsStringAsync();
-                    bool isRateLimitError = response.StatusCode == System.Net.HttpStatusCode.TooManyRequests; // 检查是否为速率限制错误（429状态码或RATE_LIMIT_EXCEEDED错误码）
-                    if (!isRateLimitError)
-                    {
-                        try // 尝试解析JSON检查错误码
-                        {
-                            using var doc = JsonDocument.Parse(errorContent);
-                            if (doc.RootElement.TryGetProperty("code", out var codeElement) &&
-                                codeElement.ValueKind == JsonValueKind.String &&
-                                codeElement.GetString() == "RATE_LIMIT_EXCEEDED")
-                            {
-                                isRateLimitError = true;
-                            }
-                        }
-                        catch { } // JSON解析失败时忽略，继续使用状态码判断
-                    }
-
-                    if (!isRateLimitError) // 非限制错误才显示提示
-                    {
-                        toast.Show($"API请求失败: {response.StatusCode} - {errorContent}", ToastType.Error);
-                    }
-                    return null;
-                }
 
                 // 解析JSON响应
                 var jsonResponse = await response.Content.ReadAsStringAsync();

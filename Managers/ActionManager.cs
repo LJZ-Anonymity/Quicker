@@ -54,42 +54,27 @@ namespace Quicker.Managers
         {
             try
             {
-                string fileDirectory = Path.GetDirectoryName(data.Location); // 获取文件所在的目录
+                string targetPath = data.Location;
 
-                // 对于快捷方式文件，使用 ShellExecute API 来确保正确打开
-                // 这样可以正确处理系统快捷方式（如控制面板、管理工具等）
-                string operation = data.Data1 == "True" ? "runas" : "open"; // 如果 Data1 为 True，使用管理员权限
-                int nShowCmd = int.TryParse(data.Data3, out int windowStyle) ? windowStyle switch
+                // 如果是 .lnk 文件，尝试解析其真实目标（可能是 URL 协议）
+                if (Path.GetExtension(data.Location).Equals(".lnk", StringComparison.OrdinalIgnoreCase))
                 {
-                    0 => 1, // SW_SHOWNORMAL - 正常窗口
-                    1 => 7, // SW_MINIMIZE - 最小化窗口
-                    2 => 3, // SW_MAXIMIZE - 最大化窗口
-                    _ => 1  // 默认正常窗口
-                } : 1; // 默认正常窗口
-
-                IntPtr result = ShellExecute(IntPtr.Zero, operation, data.Location, null, fileDirectory ?? AppPathHelper.TempDataFolder, nShowCmd);
-
-                // ShellExecute 返回值大于 32 表示成功
-                if ((int)result <= 32)
-                {
-                    // 如果 ShellExecute 失败，尝试使用 Process.Start 作为备用方案
-                    var startInfo = new ProcessStartInfo
+                    try
                     {
-                        FileName = data.Location,
-                        Verb = operation, // 管理员权限运行
-                        UseShellExecute = true, // 对于快捷方式，必须使用 ShellExecute
-                        WorkingDirectory = fileDirectory ?? AppPathHelper.TempDataFolder,
-                        WindowStyle = int.TryParse(data.Data3, out int style) ? style switch
+                        string realTarget = GetShortcutTargetPath(data.Location);
+                        if (!string.IsNullOrWhiteSpace(realTarget))
                         {
-                            0 => ProcessWindowStyle.Normal,
-                            1 => ProcessWindowStyle.Minimized,
-                            2 => ProcessWindowStyle.Maximized,
-                            _ => ProcessWindowStyle.Normal
-                        } : ProcessWindowStyle.Normal
-                    };
-
-                    Process.Start(startInfo);
+                            targetPath = realTarget;
+                        }
+                    }
+                    catch
+                    {
+                        // 解析失败就继续用原路径
+                    }
                 }
+
+                string fileDirectory = Path.GetDirectoryName(data.Location);
+                RunShellCommand(targetPath, data, fileDirectory ?? AppPathHelper.TempDataFolder);
             }
             catch (Exception ex)
             {
@@ -105,14 +90,8 @@ namespace Quicker.Managers
         {
             try
             {
-                string fileDirectory = Path.GetDirectoryName(data.Location); // 获取文件所在的目录
-                var startInfo = new ProcessStartInfo
-                {
-                    FileName = data.Location,
-                    WorkingDirectory = fileDirectory ?? AppPathHelper.TempDataFolder, // 设置工作目录为文件所在的目录，如果获取失败则使用临时目录
-                    UseShellExecute = true
-                }; // 创建进程启动信息
-                Process.Start(startInfo); // 启动进程
+                string fileDirectory = Path.GetDirectoryName(data.Location);
+                RunShellCommand(data.Location, data, fileDirectory ?? AppPathHelper.TempDataFolder);
             }
             catch (Exception ex)
             {
@@ -420,6 +399,9 @@ namespace Quicker.Managers
                 case ActionType.OpenActionPage:
                     OpenActionPage(data);
                     break;
+                case ActionType.OpenUri:
+                    OpenUriCommand(data);
+                    break;
                 default:
                     ShowToast($"未知的动作类型：{data.ActionType}", ToastType.Error);
                     break;
@@ -451,6 +433,80 @@ namespace Quicker.Managers
                 mainWindow.Show();
             }
             mainWindow.OpenActionPage(data);
+        }
+
+        /// <summary>
+        /// 执行 URI 协议命令
+        /// </summary>
+        /// <param name="data">按钮数据</param>
+        public void OpenUriCommand(ButtonData data)
+        {
+            try
+            {
+                string command = data.Location?.Trim().Trim('"');
+                if (string.IsNullOrWhiteSpace(command))
+                    return;
+
+                RunShellCommand(command, data); // URI 没有工作目录，传 null
+            }
+            catch (Exception ex)
+            {
+                ShowToast($"打开协议命令失败：{ex.Message}", ToastType.Error);
+            }
+        }
+
+        /// <summary>
+        /// 通过 ShellExecute 执行命令，失败时用 Process.Start 兜底
+        /// </summary>
+        /// <param name="fileName">要执行的文件/路径/URI 命令</param>
+        /// <param name="data">按钮数据，用于取 Data1(管理员) 和 Data3(窗口状态)</param>
+        /// <param name="workingDirectory">工作目录，可为 null</param>
+        private void RunShellCommand(string fileName, ButtonData data, string workingDirectory = null)
+        {
+            if (string.IsNullOrWhiteSpace(fileName))
+                return;
+
+            string operation = data.Data1 == "True" ? "runas" : "open";
+
+            int nShowCmd = int.TryParse(data.Data3, out int windowStyle) ? windowStyle switch
+            {
+                0 => 1, // SW_SHOWNORMAL
+                1 => 7, // SW_MINIMIZE
+                2 => 3, // SW_MAXIMIZE
+                _ => 1
+            } : 1;
+
+            IntPtr result = ShellExecute(
+                IntPtr.Zero,
+                operation,
+                fileName,
+                null,
+                workingDirectory,
+                nShowCmd
+            );
+
+            if ((int)result <= 32)
+            {
+                // 备用方案
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Verb = operation,
+                    UseShellExecute = true,
+                    WindowStyle = int.TryParse(data.Data3, out int style) ? style switch
+                    {
+                        0 => ProcessWindowStyle.Normal,
+                        1 => ProcessWindowStyle.Minimized,
+                        2 => ProcessWindowStyle.Maximized,
+                        _ => ProcessWindowStyle.Normal
+                    } : ProcessWindowStyle.Normal
+                };
+
+                if (!string.IsNullOrWhiteSpace(workingDirectory))
+                    startInfo.WorkingDirectory = workingDirectory;
+
+                Process.Start(startInfo);
+            }
         }
 
         // 实现IDisposable接口

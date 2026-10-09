@@ -144,6 +144,7 @@ namespace Quicker.Windows.AddWindows
             ButtonData buttonData = db2.GetButtonDataByID(ButtonID, TableName); // 获取按钮数据
             switch (buttonData.ActionType)
             {
+                case ActionType.OpenUri:
                 case ActionType.OpenFile:
                 case ActionType.OpenFiles:
                 case ActionType.OpenUwpApp:
