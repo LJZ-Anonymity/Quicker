@@ -92,6 +92,7 @@
                 <TextBlock Text="更改锚点色" VerticalAlignment="Center"/>
             </StackPanel>
         </Button>
+        <Slider Canvas.Left="651" Canvas.Top="330" HorizontalAlignment="Left" VerticalAlignment="Top" Width="108" Visibility="Collapsed"/>
         <Popup x:Name="ColorPickerPopup" StaysOpen="False" Placement="Bottom" AllowsTransparency="True">
             <Border Background="White" BorderBrush="Gray" BorderThickness="1" CornerRadius="3">
                 <setting:ColorPicker x:Name="PopupColorPicker" Width="245" Height="280" SelectedColorChanged="PopupColorPicker_SelectedColorChanged"/>

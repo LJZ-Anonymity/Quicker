@@ -28,8 +28,9 @@ namespace Quicker.Windows.AddWindows
         private const string OPEN_WEBSITE_IMAGE_PATH = "pack://application:,,,/Resources/Images/OpenWebSiteImage.png";
         private const string DEFAULT_IMAGE_PATH = "pack://application:,,,/Resources/Images/Quicker_Enabled.png";
 
-        private readonly ActionManager actionManager = new(); // 动作管理器
-        private readonly ButtonManager buttonManager = new(); // 按钮管理器
+        private readonly ActionManager actionManager = new();
+        private readonly ButtonManager buttonManager = new();
+        private readonly IconManager iconManager = new();
         private SelectWindowWindow selectWindowWindow; // SelectWindowWindow 的实例引用
         private readonly ButtonDatabase db2 = new(); // 按钮数据库
         private FindAppsWindow findAppsWindow; // FindAppsWindow 的实例引用
@@ -43,6 +44,15 @@ namespace Quicker.Windows.AddWindows
         public int ButtonID { get; private set; } // 当前按钮
         public string TableName { get; private set; } // 表名
         public int Choice { get; private set; } // 选择添加动作类型
+
+        public interface IActionEditor
+        {
+            ActionType GetActionType();
+            string GetLocation();
+            string GetData1();
+            string GetData2();
+            string GetData3();
+        } // 各控件语义化的字段
 
         /*
          * 构造函数参数说明：
@@ -181,6 +191,12 @@ namespace Quicker.Windows.AddWindows
             });
         }
 
+        // 修改图标
+        private void ModifyImage(object sender, RoutedEventArgs e)
+        {
+
+        }
+
         // 删除图标
         private void DeleteImage(object sender, RoutedEventArgs e)
         {
@@ -207,27 +223,55 @@ namespace Quicker.Windows.AddWindows
         // 保存动作
         private void Save()
         {
-            switch(ChoiceComboBox.SelectedIndex)
+            // 空引用保护
+            if (ActionInfoGrid.Children.Count == 0 ||
+                ActionInfoGrid.Children[0] is not IActionEditor editor)
+                return;
+
+            // 图标一次性搞定，由父窗口负责
+            string savedIconPath = ButtonImage.Visibility == Visibility.Visible
+                ? SaveIconToLocal()
+                : "";
+
+            var oldData = db2.GetButtonDataByID(ButtonID, TableName);
+
+            var buttonData = new ButtonData
             {
-                case 0:
-                    OpenFile openFile = (OpenFile)ActionInfoGrid.Children[0]; // 获取 OpenFile 控件
-                    openFile.Save(); // 保存打开文件动作
-                    break; // 选择文件
-                case 1:
-                    OpenWebsite openWebsite = (OpenWebsite)ActionInfoGrid.Children[0]; // 获取 OpenWebsite 控件
-                    openWebsite.Save(); // 保存打开网址动作
-                    break; // 选择网址
-                case 2:
-                    LoadExtension loadExtension = (LoadExtension)ActionInfoGrid.Children[0]; // 获取 LoadExtension 控件
-                    loadExtension.Save(); // 保存加载扩展动作
-                    break; // 加载扩展
-                default:
-                    break; // 其他情况
-            }
-            ActionPageManageWindow actionPageManageWindow = Application.Current.Windows.OfType<ActionPageManageWindow>().FirstOrDefault(); // 尝试查找现有的菜单栏
-            if (actionPageManageWindow != null)
-                actionPageManageWindow.UpdateButton(ButtonID); // 更新菜单栏按钮
-            this.Close(); // 关闭窗口
+                ButtonID = ButtonID,
+                Title = TitleTextBox.Text,
+                Description = DescriptionTextBox.Text,
+                ImagePath = savedIconPath,
+                Location = editor.GetLocation(),
+                ActionType = editor.GetActionType(),
+                Data1 = editor.GetData1(),
+                Data2 = editor.GetData2(),
+                Data3 = editor.GetData3(),
+                CreateTime = oldData?.CreateTime ?? DateTime.Now,
+                UsedTimes = oldData?.UsedTimes ?? 0
+            };
+
+            db2.UpdateAction(buttonData, TableName);
+
+            Application.Current.Windows.OfType<ActionPageManageWindow>()
+                .FirstOrDefault()?.UpdateButton(ButtonID);
+
+            Close();
+        }
+
+        /// <summary>
+        /// 保存图标到本地
+        /// </summary>
+        /// <returns>保存路径</returns>
+        public string SaveIconToLocal()
+        {
+            // 优先用本地文件路径
+            if (!string.IsNullOrEmpty(iconPath) && File.Exists(iconPath) && !iconPath.StartsWith("pack://"))
+                return iconManager.SaveImageToLocalIcons(iconPath);
+            // 其它情况（如pack://、内存图片等），保存ButtonImage.Source
+            if (ButtonImage.Source != null)
+                return iconManager.SaveIconToFile(ButtonImage.Source);
+
+            return "";
         }
 
         // 点击保存按钮保存动作
@@ -314,7 +358,7 @@ namespace Quicker.Windows.AddWindows
                         openFile.LocationTextBox.Text = e.ProcessPath; // 设置路径
                         SaveButton.IsEnabled = true; // 启用保存按钮
                     }
-                    
+
                     // 设置图标
                     if (e.ProcessIcon != null)
                     {
@@ -322,10 +366,7 @@ namespace Quicker.Windows.AddWindows
                         ButtonImage.Visibility = Visibility.Visible; // 显示图标
                     }
                 }
-                catch
-                {
-
-                }
+                catch { }
                 finally
                 {
                     // 取消事件订阅并关闭选择窗口
@@ -346,7 +387,7 @@ namespace Quicker.Windows.AddWindows
         /// <param name="sender"> 发送者 </param>
         /// <param name="selectedImagePath"> 选择的图片路径 </param>
         private void OnImageConfirmed(object sender, string selectedImagePath)
-        {           
+        {
             if (!string.IsNullOrEmpty(selectedImagePath))
             {
                 SetButtonImage(selectedImagePath); // 设置图片源
@@ -531,30 +572,6 @@ namespace Quicker.Windows.AddWindows
                 selectWindowWindow = null; // 清理静态引用
             }
             iconPath = null;
-
-            GC.Collect(); // 强制垃圾回收
-            GC.WaitForPendingFinalizers(); // 等待垃圾回收完成
-            GC.Collect(); // 再次强制垃圾回收
-        }
-
-        /// <summary>
-        /// 保存图标到本地
-        /// </summary>
-        /// <returns>保存路径</returns>
-        public string SaveIconToLocal()
-        {
-            IconManager iconManager = new();
-            // 优先用本地文件路径
-            if (!string.IsNullOrEmpty(iconPath) && File.Exists(iconPath) && !iconPath.StartsWith("pack://"))
-            {
-                return iconManager.SaveImageToLocalIcons(iconPath);
-            }
-            // 其它情况（如pack://、内存图片等），保存ButtonImage.Source
-            if (ButtonImage.Source != null)
-            {
-                return iconManager.SaveIconToFile(ButtonImage.Source);
-            }
-            return "";
         }
     }
 }

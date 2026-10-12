@@ -46,20 +46,14 @@
         </ComboBox>
         <Button x:Name="SaveButton" Style="{StaticResource BlueButton}" Content="保存(S)" HorizontalAlignment="Left" Margin="256,0,0,31" VerticalAlignment="Bottom" BorderBrush="{x:Null}" Width="81" Height="30" Click="SaveAction" IsEnabled="False"/>
         <Button Style="{StaticResource WhiteButton}" Content="取消(C)" HorizontalAlignment="Left" Margin="348,0,0,31" VerticalAlignment="Bottom" Click="CloseAddWindow" Height="30" Width="81"/>
-        <Button Style="{StaticResource ImageButton}"  HorizontalAlignment="Left" Margin="577,103,0,0" VerticalAlignment="Top" Click="ManageLocalIcons"/>
         <Rectangle HorizontalAlignment="Center" Height="1" Margin="0,0,0,79" Stroke="LightGray" VerticalAlignment="Bottom" Width="648"/>
         <Rectangle HorizontalAlignment="Left" Margin="493,10,0,85" Stroke="LightGray" Width="1"/>
-        <Button Style="{StaticResource ImageButton}" ToolTip="去除图标" HorizontalAlignment="Left" Margin="601,103,0,0" VerticalAlignment="Top" Click="DeleteImage">
-            <Image Source="/Resources/Images/DeleteImage.png"/>
-        </Button>
         <TextBox x:Name="TitleTextBox" Style="{StaticResource RoundedTextBox}" Width="138" Margin="520,155,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" TextChanged="UpdateTitle"/>
         <TextBox x:Name="DescriptionTextBox" Style="{StaticResource RoundedTextBox}" Width="138" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="520,215,0,0" TextChanged="UsageTextBox_TextChanged"/>
         <Label Content="标题" HorizontalAlignment="Left" Margin="515,125,0,0" VerticalAlignment="Top"/>
         <Label Content="功能/用途说明" HorizontalAlignment="Left" Margin="515,185,0,0" VerticalAlignment="Top"/>
-        <Button Style="{StaticResource ImageButton}" ToolTip="选择网络或文件图标" HorizontalAlignment="Left" Margin="548,103,0,0" VerticalAlignment="Top" Click="AddImage">
-            <Image Source="/Resources/Images/SelectLocalImage.png" Width="16" Height="16"/>
-        </Button>
-        <Button x:Name="ButtonView" Width="78" Height="78" BorderBrush="#FF707070" HorizontalAlignment="Left" VerticalAlignment="Top" BorderThickness="1.5,1.5,1.5,1.5" Margin="547,20,0,0" Click="SelectImage" MouseEnter="ButtonView_MouseEnter" MouseLeave="ButtonView_MouseLeave">
+        <!-- 右边的动作预览 -->
+        <Button x:Name="ButtonView" Width="78" Height="78" BorderBrush="#FF707070" HorizontalAlignment="Left" VerticalAlignment="Top" BorderThickness="1.5,1.5,1.5,1.5" Margin="550,20,0,0" Click="SelectImage" MouseEnter="ButtonView_MouseEnter" MouseLeave="ButtonView_MouseLeave">
             <Button.Template>
                 <ControlTemplate TargetType="Button">
                     <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" >
@@ -76,6 +70,17 @@
                 <TextBlock x:Name="ButtonTitle" Visibility="Collapsed" TextWrapping="NoWrap" VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Row="1"/>
             </Grid>
         </Button>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="553,103,0,0">
+            <Button Style="{StaticResource ImageButton}" ToolTip="选择已有图标" Click="ManageLocalIcons">
+                <Image/>
+            </Button>
+            <Button Style="{StaticResource ImageButton}" ToolTip="修改图标" Click="ModifyImage">
+                <Image/>
+            </Button>
+            <Button Style="{StaticResource ImageButton}" ToolTip="去除图标" Click="DeleteImage">
+                <Image Source="/Resources/Images/DeleteImage.png"/>
+            </Button>
+        </StackPanel>
         <Grid x:Name="ActionInfoGrid" Margin="0,66,207,80" Panel.ZIndex="-1"/>
     </Grid>
 </Window>

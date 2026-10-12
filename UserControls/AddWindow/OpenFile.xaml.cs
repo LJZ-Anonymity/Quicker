@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Windows.Media.Imaging;
 using Quicker.Windows.MainWindows;
+using Quicker.Windows.AddWindows;
 using System.Windows.Controls;
 using Quicker.Database.Core;
 using File = System.IO.File;
@@ -19,7 +20,7 @@ namespace Quicker.UserControls.AddWindow
     /// <summary>
     /// OpenFile 控件用于处理文件、应用程序和文件夹的选择和打开
     /// </summary>
-    public partial class OpenFile : UserControl
+    public partial class OpenFile : UserControl, AddActionWindow.IActionEditor
     {
         #region 字段
 
@@ -30,6 +31,16 @@ namespace Quicker.UserControls.AddWindow
         public FindAppsWindow findAppsWindow; // FindAppsWindow 的引用
         private ButtonDatabase _buttonDb = new(); // 按钮数据库
         private bool isLoading = true; // 是否正在加载
+
+        #region IActionEditor
+
+        public ActionType GetActionType() => DetermineActionType();
+        public string GetLocation() => LocationTextBox.Text;
+        public string GetData1() => (RunasAdministrator.IsChecked == true).ToString();
+        public string GetData2() => (TryToOpenExitingWindow.IsChecked == true).ToString();
+        public string GetData3() => (WindowStateComboBox.SelectedIndex != -1
+            ? WindowStateComboBox.SelectedIndex : 0).ToString();
+        #endregion
 
         #endregion
 
@@ -348,73 +359,7 @@ namespace Quicker.UserControls.AddWindow
         /// <param name="imagePath">图片路径</param>
         private void SetButtonImageFromPath(string imagePath)
         {
-            string ext = Path.GetExtension(imagePath).ToLower(); // 获取文件扩展名
-            if (ext == ".svg") // 如果扩展名是SVG
-            {
-                SetSvgButtonImage(imagePath); // 设置SVG图片
-            }
-            else // 其它格式
-            {
-                SetBitmapButtonImage(imagePath); // 设置普通图片
-            }
-            _addWindow.iconPath = imagePath; // 同步iconPath
-        }
-
-        /// <summary>
-        /// 设置SVG图片到ButtonImage
-        /// </summary>
-        /// <param name="imagePath">SVG图片路径</param>
-        private void SetSvgButtonImage(string imagePath)
-        {
-            _addWindow.ButtonImage.Source = IconManager.LoadSvgToBitmapImage(imagePath); // 加载SVG图片
-        }
-
-        /// <summary>
-        /// 设置普通图片（含GIF动图）到ButtonImage
-        /// </summary>
-        /// <param name="imagePath">图片路径</param>
-        private void SetBitmapButtonImage(string imagePath)
-        {
-            var bitmap = new BitmapImage(new Uri(imagePath)); // 创建 BitmapImage 实例
-            WpfAnimatedGif.ImageBehavior.SetAnimatedSource(_addWindow.ButtonImage, bitmap); // 支持GIF动图
-        }
-
-        // 保存动作
-        public void Save()
-        {
-            bool runasAdministrator = RunasAdministrator.IsChecked == true;
-            bool tryToOpenExitingWindow = TryToOpenExitingWindow.IsChecked == true;
-            int windowState = WindowStateComboBox.SelectedIndex != -1 ? WindowStateComboBox.SelectedIndex : 0;
-
-            // 保存图标
-            _addWindow.iconPath = _addWindow.ButtonImage.Visibility == Visibility.Visible
-                ? _addWindow.SaveIconToLocal()
-                : "";
-
-            // 确定动作类型
-            ActionType actionType = DetermineActionType();
-
-            // 获取旧数据并保留创建时间
-            var oldData = _buttonDb.GetButtonDataByID(_addWindow.ButtonID, _addWindow.TableName);
-            DateTime createdTime = oldData != null ? oldData.CreateTime : DateTime.Now;
-            int usedTimes = oldData != null ? oldData.UsedTimes : 0;
-            var buttonData = new ButtonData
-            {
-                ButtonID = _addWindow.ButtonID,
-                Title = _addWindow.TitleTextBox.Text,
-                Location = LocationTextBox.Text,
-                ImagePath = _addWindow.iconPath,
-                Data1 = runasAdministrator.ToString(),
-                Data2 = tryToOpenExitingWindow.ToString(),
-                Data3 = windowState.ToString(),
-                Description = _addWindow.DescriptionTextBox.Text,
-                CreateTime = createdTime,
-                ActionType = actionType,
-                UsedTimes = usedTimes
-            }; // 创建按钮数据对象
-            
-            // 更新数据库
-            _buttonDb.UpdateAction(buttonData, _addWindow.TableName);
+            _addWindow.SetButtonImage(imagePath);
         }
 
         #endregion

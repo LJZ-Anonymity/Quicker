@@ -1,4 +1,5 @@
 ﻿using System.Windows.Media.Imaging;
+using Quicker.Windows.AddWindows;
 using System.Windows.Controls;
 using Quicker.Database.Core;
 using Quicker.Managers;
@@ -15,7 +16,7 @@ namespace Quicker.UserControls.AddWindow
     /// <summary>
     /// 扩展加载控件
     /// </summary>
-    public partial class LoadExtension : UserControl
+    public partial class LoadExtension : UserControl,AddActionWindow.IActionEditor
     {
         #region 字段和属性
         
@@ -25,6 +26,16 @@ namespace Quicker.UserControls.AddWindow
         private ButtonDatabase _buttonDb = new(); // 按钮数据库
         private string _selectedPath; // 选中的文件夹路径
         private bool isLoading = true; // 是否正在加载
+
+        #region IActionEditor
+
+        public ActionType GetActionType() => ActionType.LoadExtension;
+        public string GetLocation() => LocationTextBox.Text;
+        public string GetData1() => "";
+        public string GetData2() => "";
+        public string GetData3() => "";
+
+        #endregion
 
         #endregion
 
@@ -327,31 +338,6 @@ namespace Quicker.UserControls.AddWindow
         #endregion
 
         #region 保存和清理
-
-        // 保存扩展信息
-        public void Save()
-        {
-            _addWindow.iconPath = _addWindow.ButtonImage.Visibility == Visibility.Visible
-                ? _addWindow.SaveIconToLocal()
-                : ""; // 保存图标
-
-            // 获取旧数据并保留创建时间
-            var oldData = _buttonDb.GetButtonDataByID(_addWindow.ButtonID, _addWindow.TableName);
-            DateTime createdTime = oldData != null ? oldData.CreateTime : DateTime.Now;
-            int usedTimes = oldData != null ? oldData.UsedTimes : 0;
-            var buttonData = new ButtonData
-            {
-                ButtonID = _addWindow.ButtonID,
-                Title = _addWindow.TitleTextBox.Text,
-                Location = _selectedPath,
-                ImagePath = _addWindow.iconPath,
-                Description = _addWindow.DescriptionTextBox.Text,
-                CreateTime = createdTime,
-                ActionType = ActionType.LoadExtension,
-                UsedTimes = usedTimes
-            }; // 创建按钮数据对象
-            _buttonDb.UpdateAction(buttonData, _addWindow.TableName); // 更新数据库
-        }
 
         // 卸载时释放资源
         private void LoadExtension_Unloaded(object sender, System.Windows.RoutedEventArgs e)

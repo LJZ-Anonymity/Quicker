@@ -1,5 +1,6 @@
 ﻿using System.Windows.Media.Imaging;
 using Quicker.Windows.ToolWindows;
+using Quicker.Windows.AddWindows;
 using System.Windows.Controls;
 using Quicker.Database.Core;
 using System.Windows.Media;
@@ -16,7 +17,7 @@ namespace Quicker.UserControls.AddWindow
     /// <summary>
     /// OpenWebsite 控件用于处理网站打开相关操作
     /// </summary>
-    public partial class OpenWebsite : UserControl
+    public partial class OpenWebsite : UserControl,AddActionWindow.IActionEditor
     {
         #region 字段
 
@@ -26,6 +27,20 @@ namespace Quicker.UserControls.AddWindow
         private const string DefaultUrlPrefix = "https://"; // 默认URL前缀
         private ButtonDatabase _buttonDb = new(); // 按钮数据库
         private bool isLoading = true; // 是否正在加载
+
+        #region IActionEditor
+
+        public ActionType GetActionType() => ActionType.OpenWebsite;
+
+        public string GetLocation() => LocationTextBox.Text;
+
+        public string GetData1() => BrowserComboBox.SelectedIndex.ToString();
+
+        public string GetData2() => BrowserLocation.Text;
+
+        public string GetData3() => "";   // 网站动作暂不使用 Data3
+
+        #endregion
 
         #endregion
 
@@ -219,35 +234,6 @@ namespace Quicker.UserControls.AddWindow
             {
                 loadingWindow?.Close(); // 异步操作完成后关闭窗口
             }
-        }
-
-        // 保存动作
-        public void Save()
-        {
-            _addWindow.iconPath = _addWindow.ButtonImage.Visibility == Visibility.Visible
-                ? _addWindow.SaveIconToLocal()
-                : "";
-
-            // 获取旧数据并保留创建时间
-            var oldData = _buttonDb.GetButtonDataByID(_addWindow.ButtonID, _addWindow.TableName);
-            DateTime createdTime = oldData != null ? oldData.CreateTime : DateTime.Now;
-            int usedTimes = oldData != null ? oldData.UsedTimes : 0;
-            var buttonData = new ButtonData
-            {
-                ButtonID = _addWindow.ButtonID,
-                Title = _addWindow.TitleTextBox.Text,
-                Location = LocationTextBox.Text,
-                ImagePath = _addWindow.iconPath,
-                Data1 = BrowserComboBox.SelectedIndex.ToString(),
-                Data2 = BrowserLocation.Text,
-                Description = _addWindow.DescriptionTextBox.Text,
-                CreateTime = createdTime,
-                ActionType = ActionType.OpenWebsite,
-                UsedTimes = usedTimes
-            }; // 创建按钮数据对象
-            
-            // 更新数据库
-            _buttonDb.UpdateAction(buttonData, _addWindow.TableName);
         }
 
         #endregion
