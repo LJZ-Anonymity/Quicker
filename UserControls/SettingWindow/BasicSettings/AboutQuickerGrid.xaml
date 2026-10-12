@@ -35,9 +35,9 @@
             <!-- 开发团队 -->
             <GroupBox Header="开发团队" Style="{StaticResource SettingGroupBox}" Margin="10,106,0,0">
                 <Grid>
-                    <Label x:Name="zhuzi" Content="策划、代码、美术：@Anonymity" HorizontalAlignment="Center" VerticalAlignment="Top"/>
-                    <Label x:Name="mj" Content="美术协助、代码协助：@墨分璃" HorizontalAlignment="Left" Margin="0,28,0,0" VerticalAlignment="Top"/>
-                    <Label x:Name="luang_sang" Content="测试：@巍巍噻" HorizontalAlignment="Left" Margin="0,56,0,0" VerticalAlignment="Top"/>
+                    <Label Content="策划、代码、美术：@Anonymity" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                    <Label Content="美术协助、代码协助：@墨分璃" HorizontalAlignment="Left" Margin="0,28,0,0" VerticalAlignment="Top"/>
+                    <Label Content="测试：@巍巍噻" HorizontalAlignment="Left" Margin="0,56,0,0" VerticalAlignment="Top"/>
                 </Grid>
             </GroupBox>
             <!-- 特别感谢 -->

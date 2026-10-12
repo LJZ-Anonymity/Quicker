@@ -33,7 +33,6 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             VersionLabel.Content = $"版本：{AppVersionHelper.CurrentVersion}"; // 加载版本信息
 
             RefreshPathsAndEnsureDirectories(); // 初始化路径与目录
-            LoadQQUserInfo(); // 加载QQ用户信息
         }
 
         // 基础设置-关于Quicker-关于Quicker
@@ -416,105 +415,6 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             catch
             {
                 toast.Show("删除旧数据目录失败，请手动清理。", ToastType.Warning);
-            }
-        }
-
-        /// <summary>
-        /// 加载QQ用户信息
-        /// </summary>
-        private void LoadQQUserInfo()
-        {
-            var teamMembers = new[]
-            {
-                (zhuzi, "331433038", "Anonymity"),
-                (mj, "2260995976", "墨分璃"),
-                (luang_sang, "2574357344", "巍巍噻")
-            }; // 开发团队成员信息
-
-            // 后台异步获取真实昵称，不阻塞UI
-            _ = Task.Run(async () =>
-            {
-                var tasks = teamMembers.Select(async member =>
-                {
-                    try
-                    {
-                        string qqNickname = await GetQQNicknameAsync(member.Item2); // 获取QQ用户名
-                        //Debug.WriteLine($"QQ {member.Item2} 获取结果: {qqNickname}");
-                        if (!string.IsNullOrEmpty(qqNickname) && qqNickname != member.Item3)
-                        {
-                            Dispatcher.Invoke(() =>
-                            {
-                                string currentContent = member.Item1.Content.ToString(); // 获取当前昵称
-                                member.Item1.Content = currentContent.Replace($"@{member.Item3}", $"@{qqNickname}"); // 替换昵称
-                            });
-                        }
-                    }
-                    catch { }
-                });
-
-                await Task.WhenAll(tasks);
-            });
-        }
-
-        /// <summary>
-        /// 异步获取QQ昵称（使用新API）
-        /// </summary>
-        /// <param name="qqNumber">QQ号</param>
-        /// <returns>QQ昵称</returns>
-        public async Task<string> GetQQNicknameAsync(string qqNumber)
-        {
-            using var httpClient = new HttpClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(10);
-            using var toast = new ToastManager();
-            try
-            {
-                // 调用新API端点
-                var response = await httpClient.GetAsync($"https://uapis.cn/api/v1/social/qq/userinfo?qq={qqNumber}");
-
-                // 解析JSON响应
-                var jsonResponse = await response.Content.ReadAsStringAsync();
-                return ParseNicknameFromJsonResponse(jsonResponse);
-            }
-            catch (Exception ex)
-            {
-                toast.Show($"获取QQ昵称异常: {ex.Message}", ToastType.Error);
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// 从JSON响应中解析昵称
-        /// </summary>
-        /// <param name="jsonResponse">JSON响应</param>
-        /// <returns>QQ昵称</returns>
-        private static string ParseNicknameFromJsonResponse(string jsonResponse)
-        {
-            using var toast = new ToastManager();
-            try
-            {
-                using var doc = JsonDocument.Parse(jsonResponse);
-                var root = doc.RootElement;
-
-                // 根据新的响应格式解析字段
-                if (root.TryGetProperty("nickname", out var nicknameElement) &&
-                    nicknameElement.ValueKind == JsonValueKind.String)
-                {
-                    return nicknameElement.GetString();
-                }
-
-                // 检查错误响应
-                if (root.TryGetProperty("code", out var errorCode) &&
-                    root.TryGetProperty("message", out var errorMessage))
-                {
-                    toast.Show($"API返回错误: {errorCode} - {errorMessage}", ToastType.Error);
-                }
-
-                return null;
-            }
-            catch (JsonException ex)
-            {
-                toast.Show($"JSON解析失败: {ex.Message}", ToastType.Error);
-                return null;
             }
         }
 
