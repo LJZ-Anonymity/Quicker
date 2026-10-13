@@ -328,15 +328,7 @@ namespace Quicker.UserControls.AddWindow
         {
             if (!string.IsNullOrEmpty(imagePath))
             {
-                try
-                {
-                    _addWindow.ButtonImage.Visibility = Visibility.Visible; // 显示图标
-                    SetButtonImageFromPath(imagePath); // 调用主方法
-                }
-                catch
-                {
-                    _addWindow.ButtonImage.Visibility = Visibility.Collapsed; // 如果加载失败，隐藏图标
-                }
+                _addWindow.SetButtonImage(imagePath);
             }
         }
 
@@ -351,15 +343,6 @@ namespace Quicker.UserControls.AddWindow
             WindowStateComboBox.SelectedIndex = int.Parse(buttonData.Data3); // 设置窗口状态
             _addWindow.DescriptionTextBox.Text = buttonData.Description; // 设置描述
             _addWindow.UpdateTooltip(); // 更新提示文本
-        }
-
-        /// <summary>
-        /// 根据图片路径设置ButtonImage，自动识别SVG和普通图片
-        /// </summary>
-        /// <param name="imagePath">图片路径</param>
-        private void SetButtonImageFromPath(string imagePath)
-        {
-            _addWindow.SetButtonImage(imagePath);
         }
 
         #endregion

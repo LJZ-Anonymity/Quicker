@@ -503,24 +503,19 @@ namespace Quicker.Windows.ToolWindows
             string originalFilePath = _originalBitmapSource is BitmapImage bmpImg && bmpImg.UriSource != null ? bmpImg.UriSource.LocalPath : null;
             string fileName = $"{DateTimeOffset.Now.ToUnixTimeMilliseconds():x}.png"; // 默认保存文件名
             string filePath = System.IO.Path.Combine(dir, fileName); // 默认保存路径
+            string savedPath;
             if (UseOriginalImageCheckBox.IsChecked == true) // 保存原图
             {
-                string savedPath = SaveOriginalImageWithFallback(bitmapSource, dir, filePath, originalFilePath);
-                if (string.IsNullOrEmpty(savedPath)) // 保存失败
-                    return;
-                CroppedImagePath = savedPath; // 实际保存路径
-                OnCropCompleted(CroppedImagePath); // 通知完成
+                savedPath = SaveOriginalImageWithFallback(bitmapSource, dir, filePath, originalFilePath);
             }
             else
             {
-                if (!TryGetCropRect(bitmapSource, out var cropRect, out var scaleInfo)) // 计算裁剪区域失败
-                    return;
-                string savedPath = SaveCroppedImageWithFallback(bitmapSource, cropRect, dir, filePath, originalFilePath);
-                if (string.IsNullOrEmpty(savedPath)) // 保存失败
-                    return;
-                CroppedImagePath = savedPath; // 实际保存路径
-                OnCropCompleted(CroppedImagePath); // 通知完成
+                if (!TryGetCropRect(bitmapSource, out var cropRect, out var scaleInfo)) return; // 计算裁剪区域失败
+                savedPath = SaveCroppedImageWithFallback(bitmapSource, cropRect, dir, filePath, originalFilePath);
             }
+            if (string.IsNullOrEmpty(savedPath)) return; // 保存失败
+            CroppedImagePath = savedPath; // 实际保存路径
+            OnCropCompleted(CroppedImagePath); // 通知完成
         }
 
         /// <summary>

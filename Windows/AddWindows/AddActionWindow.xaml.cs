@@ -223,10 +223,7 @@ namespace Quicker.Windows.AddWindows
         // 保存动作
         private void Save()
         {
-            // 空引用保护
-            if (ActionInfoGrid.Children.Count == 0 ||
-                ActionInfoGrid.Children[0] is not IActionEditor editor)
-                return;
+            var editor = ActionInfoGrid.Children[0] as IActionEditor; // 获取动作编辑器
 
             // 图标一次性搞定，由父窗口负责
             string savedIconPath = ButtonImage.Visibility == Visibility.Visible

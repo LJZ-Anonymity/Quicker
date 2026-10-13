@@ -277,6 +277,9 @@ namespace Quicker.Managers
         /// <returns>图标对象 (ImageSource)，如果失败则返回 null</returns>
         public static ImageSource GetIcon(string filePath)
         {
+            if (Directory.Exists(filePath))
+                return GetIconFromImageList(filePath) ?? GetIconFromPath(filePath); // 优先处理文件夹
+
             bool isLinkFile = Path.GetExtension(filePath).Equals(".lnk", StringComparison.OrdinalIgnoreCase);
             if (isLinkFile && IsSystemShortcut(filePath)) // 如果是操作系统快捷方式，优先使用专门的方法
             {
@@ -359,9 +362,7 @@ namespace Quicker.Managers
             // 对于普通文件或无法获取目标路径的快捷方式，使用 SHGFI_USEFILEATTRIBUTES 可以提高性能
             // 对于快捷方式的目标文件，不使用此标志以确保获取原始图标
             if (!(isLinkFile && hasValidTarget))
-            {
                 flags |= SHGFI_USEFILEATTRIBUTES;
-            }
 
             IntPtr hIcon = SHGetFileInfo(
                 filePath,

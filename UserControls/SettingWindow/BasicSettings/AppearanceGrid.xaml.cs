@@ -801,7 +801,11 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         private void SelectBackgroundImageButton_Click(object sender, RoutedEventArgs e)
         {
             BackgroundImagePathPopup.IsOpen = false; // 关闭弹窗
-            var dialog = CreateImageOpenFileDialog(); // 创建图片选择对话框
+            var dialog = new System.Windows.Forms.OpenFileDialog()
+            {
+                Filter = "图片文件|*.jpg;*.jpeg;*.png;*.bmp;*.gif;*.svg;*.ico",
+                Title = "选择背景图片"
+            };
             var result = dialog.ShowDialog(); // 显示文件选择对话框
             if (result == System.Windows.Forms.DialogResult.OK)
             {
@@ -829,19 +833,6 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
                 BackgroundImagePathButton.IsEnabled = false; // 禁用选择按钮
                 imageCropWindow.Show(); // 显示图片裁剪窗口
             }
-        }
-
-        /// <summary>
-        /// 创建图片选择对话框
-        /// </summary>
-        /// <returns>图片选择对话框</returns>
-        private System.Windows.Forms.OpenFileDialog CreateImageOpenFileDialog()
-        {
-            return new System.Windows.Forms.OpenFileDialog()
-            {
-                Filter = "图片文件|*.jpg;*.jpeg;*.png;*.bmp;*.gif;*.svg;*.ico",
-                Title = "选择背景图片"
-            };
         }
 
         /// <summary>
