@@ -87,15 +87,6 @@ Quicker 支持通过创建扩展模块来增强应用功能。你可以通过以
 
 ---
 
-## <a id="contact"></a>联系作者
-
-如需进一步了解项目或有任何问题，请通过以下方式联系作者：
-
-- **GitHub Issues**：https://github.com/LJZ-Anonymity/Quicker/issues
-- **邮箱**：331433038@qq.com
-
----
-
 ## 项目文件结构
 
 <details>

@@ -152,10 +152,12 @@ namespace Quicker.Windows.Menus
         /// <param name="buttonData">按钮数据</param>
         private void AdjustUIForButtonType(ButtonData buttonData)
         {
-            if (buttonData.ActionType == ActionType.OpenWebsite)
+            if (buttonData.ActionType != ActionType.OpenFile &&
+                buttonData.ActionType != ActionType.OpenFiles &&
+                buttonData.ActionType != ActionType.LoadExtension) 
             {
                 MainStackPanel.Children.Remove(OpenLocation); // 移除打开文件或文件夹按钮
-                MainGrid.Height -= 25; // 设置网格高度
+                MainGrid.Height -= 25;
             }
         }
 
