@@ -2,6 +2,7 @@ using Quicker.Windows.MainWindows.MainWindow;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Quicker.Database.Core;
+using File = System.IO.File;
 using IWshRuntimeLibrary;
 using System.Diagnostics;
 using Quicker.Database;
@@ -163,8 +164,7 @@ namespace Quicker.Managers
             }
             catch (Exception ex)
             {
-                using var toast = new ToastManager(); // 消息提醒管理器
-                toast.Show($"打开网站失败：{ex.Message}", ToastType.Error); // 弹出消息提醒
+                ShowToast($"打开网站失败：{ex.Message}", ToastType.Error);
             }
         }
 
@@ -182,12 +182,29 @@ namespace Quicker.Managers
         }
 
         /// <summary>
-        /// 打开IE浏览器
+        /// 打开IE浏览器（若不存在则回退到默认浏览器）
         /// </summary>
         /// <param name="website"> 网站地址 </param>
         private void LaunchInternetExplorer(string website)
         {
-            Process.Start("ieplore.exe", website); // 启动IE浏览器
+            // IE 已在多数 Win10/11 上停用，优先检测，不存在则回退默认浏览器
+            string iePath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                @"Internet Explorer\iexplore.exe");
+
+            if (File.Exists(iePath))
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = iePath,
+                    Arguments = website,
+                    UseShellExecute = true
+                });
+            }
+            else
+            {
+                LaunchDefaultBrowser(website); // 回退：默认浏览器
+            }
         }
 
         /// <summary>
@@ -275,49 +292,107 @@ namespace Quicker.Managers
         }
 
         /// <summary>
-        /// 通过用户指定浏览器打开网站
+        /// 通过用户指定浏览器打开网站（格式："url;browserPath"）
         /// </summary>
-        /// <param name="website"> 网站地址 </param>
+        /// <param name="location"> "网站地址;浏览器路径" </param>
         private void LaunchCustomBrowser(string location)
         {
-            string[] processNames = location.Split(';'); // 将文本内容按照分号分隔
-            string website = processNames[0]; // 获取网站地址
-            string browserPath = processNames[1]; // 获取浏览器路径
+            if (string.IsNullOrWhiteSpace(location))
+            {
+                ShowToast("自定义浏览器配置为空", ToastType.Error);
+                return;
+            }
+
+            string[] parts = location.Split(';');
+            if (parts.Length < 2)
+            {
+                ShowToast("自定义浏览器配置格式错误：应为 \"网址;浏览器路径\"", ToastType.Error);
+                return;
+            }
+
+            string website = parts[0];
+            string browserPath = parts[1];
+
+            if (!File.Exists(browserPath))
+            {
+                ShowToast($"指定的浏览器不存在：{browserPath}", ToastType.Error);
+                return;
+            }
+
             Process.Start(new ProcessStartInfo
             {
                 FileName = browserPath,
                 Arguments = website,
                 UseShellExecute = true
-            }); // 启动用户指定浏览器打开网站
+            });
         }
 
-        // 获取Edge浏览器路径
+        /// <summary>
+        /// 获取 Edge 浏览器路径（注册表 App Paths 优先，回退到常见路径）。
+        /// </summary>
         private string GetEdgeBrowserPath()
         {
-            try // 通过注册表获取Edge浏览器路径
+            // 1. 注册表 App Paths
+            try
             {
-                RegistryKey key = Registry.ClassesRoot.OpenSubKey(@"Local Settings\Software\Microsoft\Windows\CurrentVersion\App Model}");
-
-                if (key != null)
-                {
-                    object value = key.GetValue("Edge"); // 获取Edge浏览器路径
-                    if (value != null)
-                        return value.ToString(); // 返回Edge浏览器路径
-                }
+                using var key = Registry.LocalMachine.OpenSubKey(
+                    @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\msedge.exe");
+                if (key?.GetValue("") is string fromReg && File.Exists(fromReg))
+                    return fromReg;
             }
             catch { }
-            return @"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"; // 如果注册表中找不到，使用默认路径
+
+            // 2. 常见安装路径
+            string[] candidates =
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+                    @"Microsoft\Edge\Application\msedge.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                    @"Microsoft\Edge\Application\msedge.exe"),
+            };
+
+            foreach (var p in candidates)
+            {
+                if (File.Exists(p)) return p;
+            }
+
+            // 3. 兜底
+            return "msedge.exe";
         }
 
-        // 获取Chrome浏览器路径
+        /// <summary>
+        /// 获取 Chrome 浏览器路径（注册表 App Paths 优先，回退到常见路径）。
+        /// </summary>
         private string GetChromeBrowserPath()
         {
-            string chromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe"; // 默认路径
-            if (!System.IO.File.Exists(chromePath))
+            // 1. 注册表 App Paths
+            try
             {
-                chromePath = @"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"; // 32位路径
+                using var key = Registry.LocalMachine.OpenSubKey(
+                    @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe");
+                if (key?.GetValue("") is string fromReg && File.Exists(fromReg))
+                    return fromReg;
             }
-            return chromePath; // 返回Chrome浏览器路径
+            catch { }
+
+            // 2. 常见安装路径
+            string[] candidates =
+            {
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
+                    @"Google\Chrome\Application\chrome.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+                    @"Google\Chrome\Application\chrome.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    @"Google\Chrome\Application\chrome.exe"),
+            };
+
+            foreach (var p in candidates)
+            {
+                if (File.Exists(p)) return p;
+            }
+
+            // 3. 兜底
+            return "chrome.exe";
         }
 
         /// <summary>
@@ -334,21 +409,23 @@ namespace Quicker.Managers
         }
 
         /// <summary>
-        /// 打开UWP应用
+        /// 打开UWP应用（经 explorer.exe 的 shell:AppsFolder 协议）
         /// </summary>
         /// <param name="data"> 按钮数据 </param>
         public void OpenUwpApp(ButtonData data)
         {
             try
             {
-                // 使用shell:AppsFolder协议启动UWP应用
-                string appPath = $"shell:AppsFolder\\{data.Location}";
-                ShellExecute(IntPtr.Zero, "open", appPath, null, null, 1);
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "explorer.exe",
+                    Arguments = $"shell:AppsFolder\\{data.Location}",
+                    UseShellExecute = true
+                });
             }
             catch (Exception ex)
             {
-                using var toast = new ToastManager(); // 消息提醒管理器
-                toast.Show($"打开UWP应用失败：{ex.Message}", ToastType.Error); // 弹出消息提醒
+                ShowToast($"打开 UWP 应用失败：{ex.Message}", ToastType.Error);
             }
         }
 
@@ -359,10 +436,9 @@ namespace Quicker.Managers
         public void LoadExtension(ButtonData data)
         {
             string dllPath = data.Location; // 直接获取DLL文件路径
-            if (!System.IO.File.Exists(dllPath)) // 判断DLL文件是否存在
+            if (!File.Exists(dllPath)) // 判断DLL文件是否存在
             {
-                using var toast = new ToastManager();
-                toast.Show($"扩展文件不存在: {dllPath}", ToastType.Error);
+                ShowToast($"扩展文件不存在: {dllPath}", ToastType.Error);
                 return;
             }
             else
@@ -376,7 +452,7 @@ namespace Quicker.Managers
         /// 执行动作
         /// </summary>
         /// <param name="data"> 按钮数据 </param>
-        /// /// <param name="tableName"> 数据库表名 </param>
+        /// <param name="tableName"> 数据库表名 </param>
         public async Task DoActionAsync(ButtonData data, string tableName)
         {
             switch (data.ActionType)

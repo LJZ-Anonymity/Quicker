@@ -1,5 +1,5 @@
-﻿using System.Collections.ObjectModel;
-using Quicker.UserControls.AddWindow;
+﻿using Quicker.UserControls.AddWindow;
+using System.Collections.ObjectModel;
 using Quicker.Windows.ToolWindows;
 using Quicker.Windows.AddWindows;
 using System.Windows.Controls;
@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Data;
 using Quicker.Database;
 using Quicker.Managers;
+using Quicker.Models;
 using System.Windows;
 using System.IO;
 
@@ -76,7 +77,6 @@ namespace Quicker.Windows.MainWindows
             {
                 // 使用AppManager加载应用
                 AppManager appManager = new();
-                appManager.ClearCache(); // 清空缓存
                 var apps = await appManager.LoadAllApplicationsAsync(); // 加载所有应用并排序
                 foreach (var app in apps) // 将排序后的应用添加到集合中
                 {
@@ -172,6 +172,9 @@ namespace Quicker.Windows.MainWindows
         // 刷新ListView
         private void RefreshButton_Click(object sender, RoutedEventArgs e)
         {
+            AppManager appManager = new();
+            appManager.ClearCache(); // 清空缓存
+
             LoadApplications(); // 重新加载应用
         }
 
@@ -199,12 +202,10 @@ namespace Quicker.Windows.MainWindows
                 try
                 {
                     AppInfo selectedApp;
-                    // 检查是否是系统窗口（窗口句柄标识符）
                     if (e.ProcessPath.StartsWith("hwnd:", StringComparison.OrdinalIgnoreCase))
                     {
-                        // 系统窗口：使用窗口标题作为名称，窗口句柄标识符作为路径
-                        string windowName = !string.IsNullOrEmpty(e.WindowTitle) 
-                            ? e.WindowTitle 
+                        string windowName = !string.IsNullOrEmpty(e.WindowTitle)
+                            ? e.WindowTitle
                             : "系统窗口";
 
                         selectedApp = new AppInfo
@@ -224,20 +225,17 @@ namespace Quicker.Windows.MainWindows
                         };
                     }
 
-                    if (e.ProcessIcon != null) // 设置图标 - 直接使用传递过来的图标
-                    {
+                    if (e.ProcessIcon != null)
                         selectedApp.Icon = e.ProcessIcon;
-                    }
 
-                    SelectedApp = selectedApp; // 设置为选中的应用
-                    // 触发应用选中事件
+                    SelectedApp = selectedApp;
                     ApplicationSelected?.Invoke(this, new ApplicationSelectedEventArgs { SelectedApp = selectedApp });
-                    this.Close(); // 关闭窗口
+                    this.Close();
                 }
                 catch { }
                 finally
                 {
-                    selectWindowWindow?.Close(); // 关闭选择窗口
+                    selectWindowWindow?.Close();
                 }
             }
         }
