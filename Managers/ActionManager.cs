@@ -28,16 +28,18 @@ namespace Quicker.Managers
         /// <param name="data"> 按钮数据 </param>
         public void OpenFile(ButtonData data)
         {
-            AppPathHelper.EnsureDirectoryExists(AppPathHelper.TempDataFolder); // 确保临时目录存在
+            AppPathHelper.EnsureDirectoryExists(AppPathHelper.TempDataFolder);
+            ParseCommandLine(data.Location, out string actualFileName, out _); // 先解析出实际的纯净文件路径，用于判断扩展名和窗口标题
+
             if (data.Data2 == "true") // 如果尝试打开已存在的窗口
             {
-                string windowTitle = System.IO.Path.GetFileNameWithoutExtension(data.Location);
-                using var windowManager = new WindowManager(); // 创建窗口管理器
+                string windowTitle = System.IO.Path.GetFileNameWithoutExtension(actualFileName);
+                using var windowManager = new WindowManager();
                 windowManager.TryToOpenExitingWindow(windowTitle);
             }
 
-            if (Path.GetExtension(data.Location).Equals(".lnk", StringComparison.OrdinalIgnoreCase) ||
-                Path.GetExtension(data.Location).Equals(".url", StringComparison.OrdinalIgnoreCase))
+            if (Path.GetExtension(actualFileName).Equals(".lnk", StringComparison.OrdinalIgnoreCase) ||
+                Path.GetExtension(actualFileName).Equals(".url", StringComparison.OrdinalIgnoreCase))
             {
                 ProcessShortcutFile(data); // 处理快捷方式文件
             }
@@ -91,7 +93,8 @@ namespace Quicker.Managers
         {
             try
             {
-                string fileDirectory = Path.GetDirectoryName(data.Location);
+                ParseCommandLine(data.Location, out string actualFileName, out _); // 提取纯路径获取所在目录
+                string fileDirectory = Path.GetDirectoryName(actualFileName);
                 RunShellCommand(data.Location, data, fileDirectory ?? AppPathHelper.TempDataFolder);
             }
             catch (Exception ex)
@@ -118,9 +121,21 @@ namespace Quicker.Managers
         /// <returns> 目标路径 </returns>
         private string GetShortcutTargetPath(string shortcutFilePath)
         {
-            WshShell shell = new WshShell(); // 创建WshShell对象
-            IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut(shortcutFilePath); // 创建快捷方式对象
-            return shortcut.TargetPath; // 获取快捷方式的目标路径
+            WshShell shell = new WshShell();
+            IWshShortcut shortcut = (IWshShortcut)shell.CreateShortcut(shortcutFilePath);
+
+            string target = shortcut.TargetPath;
+            string args = shortcut.Arguments;
+
+            Marshal.ReleaseComObject(shortcut);
+            Marshal.ReleaseComObject(shell);
+
+            if (string.IsNullOrWhiteSpace(target))
+                return string.Empty;
+
+            // 如果目标路径有空格且没加引号，则加上引号
+            string quotedTarget = target.Contains(" ") && !target.StartsWith("\"") ? $"\"{target}\"" : target;
+            return string.IsNullOrWhiteSpace(args) ? quotedTarget : $"{quotedTarget} {args.Trim()}"; // 拼接参数
         }
 
         /// <summary>
@@ -542,6 +557,8 @@ namespace Quicker.Managers
             if (string.IsNullOrWhiteSpace(fileName))
                 return;
 
+            ParseCommandLine(fileName, out string actualFileName, out string arguments); // 拆分出纯路径和参数
+
             string operation = data.Data1 == "True" ? "runas" : "open";
 
             int nShowCmd = int.TryParse(data.Data3, out int windowStyle) ? windowStyle switch
@@ -552,11 +569,12 @@ namespace Quicker.Managers
                 _ => 1
             } : 1;
 
+            // lpFile 传入纯净路径，lpParameters 传入参数
             IntPtr result = ShellExecute(
                 IntPtr.Zero,
                 operation,
-                fileName,
-                null,
+                actualFileName,
+                arguments,
                 workingDirectory,
                 nShowCmd
             );
@@ -566,7 +584,8 @@ namespace Quicker.Managers
                 // 备用方案
                 var startInfo = new ProcessStartInfo
                 {
-                    FileName = fileName,
+                    FileName = actualFileName,
+                    Arguments = arguments ?? string.Empty,
                     Verb = operation,
                     UseShellExecute = true,
                     WindowStyle = int.TryParse(data.Data3, out int style) ? style switch
@@ -582,6 +601,66 @@ namespace Quicker.Managers
                     startInfo.WorkingDirectory = workingDirectory;
 
                 Process.Start(startInfo);
+            }
+        }
+
+        /// <summary>
+        /// 拆分完整命令行，提取出可执行文件路径和参数
+        /// </summary>
+        /// <param name="commandLine">完整命令行</param>
+        /// <param name="fileName">输出：纯净的文件路径</param>
+        /// <param name="arguments">输出：启动参数</param>
+        private void ParseCommandLine(string commandLine, out string fileName, out string arguments)
+        {
+            fileName = commandLine;
+            arguments = null;
+
+            if (string.IsNullOrWhiteSpace(commandLine))
+                return;
+
+            commandLine = commandLine.Trim();
+
+            // 处理带引号的路径，例如 "C:\Program Files\App\app.exe" -arg1 -arg2
+            if (commandLine.StartsWith("\""))
+            {
+                int endQuoteIndex = commandLine.IndexOf('"', 1);
+                if (endQuoteIndex > 0)
+                {
+                    fileName = commandLine.Substring(1, endQuoteIndex - 1);
+                    if (commandLine.Length > endQuoteIndex + 1)
+                    {
+                        arguments = commandLine.Substring(endQuoteIndex + 1).Trim();
+                    }
+                    return;
+                }
+            }
+
+            // 如果整个字符串就是一个真实存在的文件，那就不拆分
+            if (File.Exists(commandLine))
+            {
+                fileName = commandLine;
+                return;
+            }
+
+            // 处理 .exe 结尾且带参数的情况，例如 C:\Windows\notepad.exe test.txt
+            int exeIndex = commandLine.IndexOf(".exe", StringComparison.OrdinalIgnoreCase);
+            if (exeIndex > 0)
+            {
+                int splitIndex = exeIndex + 4;
+                if (commandLine.Length > splitIndex && commandLine[splitIndex] == ' ')
+                {
+                    fileName = commandLine.Substring(0, splitIndex);
+                    arguments = commandLine.Substring(splitIndex + 1).Trim();
+                    return;
+                }
+            }
+
+            // 兜底：按第一个空格拆分（兼容 URI 协议等场景）
+            int spaceIndex = commandLine.IndexOf(' ');
+            if (spaceIndex > 0)
+            {
+                fileName = commandLine.Substring(0, spaceIndex);
+                arguments = commandLine.Substring(spaceIndex + 1).Trim();
             }
         }
 

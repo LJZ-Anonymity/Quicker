@@ -158,7 +158,9 @@ namespace Quicker.UserControls.AddWindow
             SetIconFromPath(folderPath); // 设置图标
         }
 
-        // 复制地址
+        /// <summary>
+        /// 复制地址
+        /// </summary>
         private void CopyLocation(object sender, RoutedEventArgs e)
         {
             string clipboardText = System.Windows.Clipboard.GetText(); // 获取剪贴板文本
@@ -167,7 +169,9 @@ namespace Quicker.UserControls.AddWindow
             OpenFilePopup.IsOpen = false; // 关闭弹出菜单
         }
 
-        // 重新提取文件图标
+        /// <summary>
+        /// 重新提取文件图标
+        /// </summary>
         private void ReGetFileIcon(object sender, RoutedEventArgs e)
         {
             SetIconFromPath(LocationTextBox.Text); // 设置图标
@@ -231,16 +235,36 @@ namespace Quicker.UserControls.AddWindow
             if (string.IsNullOrWhiteSpace(lnkPath))
                 return;
 
-            // 1. 普通文件/文件夹快捷方式
-            string targetPath = GetLnkTargetPath(lnkPath);
+            // 普通文件/文件夹快捷方式
+            string targetPath = GetLnkTargetPath(lnkPath, out string arguments);
             if (!string.IsNullOrEmpty(targetPath))
             {
-                LocationTextBox.Text = targetPath;
-                SetIconFromPath(targetPath);
+                if (IsUriProtocol(targetPath))
+                {
+                    // 如果目标是 URI 协议，直接拼接参数
+                    LocationTextBox.Text = string.IsNullOrWhiteSpace(arguments)
+                        ? targetPath
+                        : $"{targetPath} {arguments.Trim()}";
+                }
+                else
+                {
+                    // 判断路径是否包含空格且没有引号，如果有则加上引号，防止命令行解析错误
+                    string quotedTarget = targetPath.Contains(" ") && !targetPath.StartsWith("\"")
+                        ? $"\"{targetPath}\""
+                        : targetPath;
+
+                    // 拼接启动参数
+                    LocationTextBox.Text = string.IsNullOrWhiteSpace(arguments)
+                        ? quotedTarget
+                        : $"{quotedTarget} {arguments.Trim()}";
+
+                    // 提取图标必须使用纯净的路径（不能带参数）
+                    SetIconFromPath(targetPath);
+                }
                 return;
             }
 
-            // 2. Internet 快捷方式(URI 协议)
+            // Internet 快捷方式(URI 协议)
             string url = GetInternetShortcutUrl(lnkPath);
             if (!string.IsNullOrEmpty(url))
             {
@@ -248,7 +272,7 @@ namespace Quicker.UserControls.AddWindow
                 return;
             }
 
-            // 3. 兜底: 从 Arguments 里抠 URI
+            // 兜底: 从 Arguments 里抠 URI
             string uriCommand = GetLnkUriCommand(lnkPath);
             if (!string.IsNullOrEmpty(uriCommand))
             {
@@ -258,6 +282,39 @@ namespace Quicker.UserControls.AddWindow
 
             using var toast = new ToastManager();
             toast.Show("无法解析快捷方式目标!", ToastType.Error);
+        }
+
+        /// <summary>
+        /// 获取lnk文件的目标路径及启动参数
+        /// </summary>
+        /// <param name="lnkFilePath">lnk文件路径</param>
+        /// <param name="arguments">输出参数：启动参数</param>
+        /// <returns>目标路径，如果获取失败则返回null</returns>
+        private string GetLnkTargetPath(string lnkFilePath, out string arguments)
+        {
+            arguments = string.Empty;
+            if (string.IsNullOrEmpty(lnkFilePath) || !File.Exists(lnkFilePath))
+                return null;
+
+            IWshShortcut shortcut = null;
+            WshShell shell = null;
+            try
+            {
+                shell = new WshShell();
+                shortcut = (IWshShortcut)shell.CreateShortcut(lnkFilePath);
+                string targetPath = shortcut.TargetPath;
+                arguments = shortcut.Arguments ?? string.Empty; // 获取启动参数
+                return string.IsNullOrEmpty(targetPath) ? null : targetPath;
+            }
+            catch
+            {
+                return null;
+            }
+            finally
+            {
+                if (shortcut != null) Marshal.ReleaseComObject(shortcut);
+                if (shell != null) Marshal.ReleaseComObject(shell);
+            }
         }
 
         #endregion
@@ -401,9 +458,28 @@ namespace Quicker.UserControls.AddWindow
                 return ActionType.OpenFile;
             }
 
-            // 3. 普通本地路径
+            // 3. 普通本地路径 (提取实际路径部分，避免被启动参数干扰)
+            string checkPath = location;
+            if (checkPath.StartsWith("\""))
+            {
+                // 有引号包裹，取第一个引号对的内容
+                int endQuote = checkPath.IndexOf('"', 1);
+                if (endQuote > 0) checkPath = checkPath.Substring(1, endQuote - 1);
+            }
+            else if (checkPath.Length > 2 && checkPath[1] == ':')
+            {
+                // 无引号但有空格且是盘符开头，尝试截取到 .exe 为止
+                int exeIndex = checkPath.IndexOf(".exe", StringComparison.OrdinalIgnoreCase);
+                if (exeIndex > 0) checkPath = checkPath.Substring(0, exeIndex + 4);
+                else
+                {
+                    int spaceIndex = checkPath.IndexOf(' ');
+                    if (spaceIndex > 0) checkPath = checkPath.Substring(0, spaceIndex);
+                }
+            }
+
             const string pattern = @"^[A-Za-z]:\\(?:[^\\/:*?""<>|\r\n]+\\)*[^\\/:*?""<>|\r\n]*$";
-            bool isValidPath = Regex.IsMatch(location, pattern);
+            bool isValidPath = Regex.IsMatch(checkPath, pattern);
             return isValidPath ? ActionType.OpenFile : ActionType.OpenUwpApp;
         }
 
