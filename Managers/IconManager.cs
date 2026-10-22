@@ -72,6 +72,29 @@ namespace Quicker.Managers
         // 直接从文件提取图标（避免压缩标记）
         [DllImport("shell32.dll", CharSet = CharSet.Auto)]
         private static extern int ExtractIconEx(string lpszFile, int nIconIndex, out IntPtr phiconLarge, out IntPtr phiconSmall, int nIcons); // 从文件提取图标
+
+        // 获取系统特殊文件夹图标
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        private struct SHSTOCKICONINFO
+        {
+            public uint cbSize;
+            public IntPtr hIcon;
+            public int iSysIconIndex;
+            public int iIcon;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
+            public string szPath;
+        }
+
+        [DllImport("shell32.dll", SetLastError = false, CharSet = CharSet.Unicode)]
+        private static extern int SHGetStockIconInfo(uint siid, uint uFlags, ref SHSTOCKICONINFO psii);
+
+        private const uint FILE_ATTRIBUTE_DIRECTORY = 0x00000010;
+        private const uint SHGSI_LARGEICON = 0x000000000;
+        private const uint SHGSI_ICON = 0x000000100;
+
+        // 系统图标 ID
+        private const uint SIID_DOWNLOADS = 184; // Win8+ 支持
+
         #endregion
 
         /// <summary>
@@ -270,45 +293,82 @@ namespace Quicker.Managers
         }
 
         /// <summary>
-        /// 从指定路径的文件中提取图标，并确保移除压缩标记等叠加图标。
-        /// 如果是 .lnk 文件，将提取目标文件的图标（不带快捷方式标识）。
+        /// 从指定路径的文件中提取图标，确保移除快捷方式箭头等叠加图标。
         /// </summary>
         /// <param name="filePath">文件路径</param>
-        /// <returns>图标对象 (ImageSource)，如果失败则返回 null</returns>
         public static ImageSource GetIcon(string filePath)
         {
+            // 对于文件夹
             if (Directory.Exists(filePath))
-                return GetIconFromImageList(filePath) ?? GetIconFromPath(filePath); // 优先处理文件夹
+            {
+                // 优先获取系统内置特殊图标（如桌面），彻底防止被压缩属性污染
+                ImageSource specialIcon = GetSpecialFolderIcon(filePath);
+                if (specialIcon != null) return specialIcon;
+
+                // 尝试解析 desktop.ini 自定义图标，直接提源文件，避免系统覆盖
+                ImageSource customIcon = GetFolderCustomIcon(filePath);
+                if (customIcon != null) return customIcon;
+
+                // 兜底：强制返回标准文件夹图标（不带任何覆盖符号）
+                return GetStandardFolderIcon(filePath) ?? GetIconFromImageList(filePath) ?? GetIconFromPath(filePath);
+            }
+
+            #region 对于快捷方式
 
             bool isLinkFile = Path.GetExtension(filePath).Equals(".lnk", StringComparison.OrdinalIgnoreCase);
-            if (isLinkFile && IsSystemShortcut(filePath)) // 如果是操作系统快捷方式，优先使用专门的方法
-            {
-                ImageSource systemIcon = GetSystemShortcutIcon(filePath);
-                if (systemIcon != null)
-                    return systemIcon;
-            }
-
-            // 如果是快捷方式，尝试获取目标路径的图标
             if (isLinkFile)
             {
-                string targetPath = GetTargetPathFromLinkFile(filePath);
-                bool hasValidTarget = IsValidTargetPath(targetPath);
-                
-                if (hasValidTarget)
+                // 2.1 优先读取 IconLocation（例如模拟器游戏快捷方式往往在这里记录真实图标）
+                string iconLocation = GetIconLocationFromLinkFile(filePath);
+                if (!string.IsNullOrWhiteSpace(iconLocation))
                 {
-                    ImageSource targetIcon = GetIconFromTargetPath(targetPath);
-                    if (targetIcon != null)
-                        return targetIcon;
+                    string iconPath = iconLocation;
+                    int iconIndex = 0;
+
+                    // IconLocation 格式通常是 "C:\path\app.exe,0" 或 "C:\path\icon.ico"
+                    int commaIndex = iconLocation.LastIndexOf(',');
+                    if (commaIndex > 0)
+                    {
+                        iconPath = iconLocation.Substring(0, commaIndex).Trim();
+                        string indexStr = iconLocation.Substring(commaIndex + 1).Trim();
+                        int.TryParse(indexStr, out iconIndex);
+                    }
+
+                    iconPath = iconPath.Trim('"');
+
+                    if (File.Exists(iconPath))
+                    {
+                        // 如果是 exe 或 dll，直接通过 ExtractIconEx 提取，彻底避免快捷方式箭头
+                        if (IsExecutableFile(iconPath))
+                        {
+                            ImageSource resIcon = ExtractIconDirectlyFromFileWithIndex(iconPath, iconIndex);
+                            if (resIcon != null) return resIcon;
+                        }
+                        else
+                        {
+                            // 如果是 ico 图片等，直接读取该文件
+                            ImageSource imgIcon = GetIconFromImageList(iconPath) ?? GetIconFromPath(iconPath);
+                            if (imgIcon != null) return imgIcon;
+                        }
+                    }
                 }
 
-                // 无法获取目标路径时，使用系统图标列表方法（不带叠加图标）
-                ImageSource iconFromList = GetIconFromImageList(filePath);
-                if (iconFromList != null)
-                    return iconFromList;
+                // 2.2 如果没有有效的 IconLocation，尝试提取 TargetPath 的图标
+                string targetPath = GetTargetPathFromLinkFile(filePath);
+                if (IsValidTargetPath(targetPath))
+                {
+                    ImageSource targetIcon = GetIconFromTargetPath(targetPath);
+                    if (targetIcon != null) return targetIcon;
+                }
 
-                return GetIconWithStandardMethod(filePath, isLinkFile, hasValidTarget); // 系统图标列表方法失败，使用标准方法（快捷方式且无有效目标）
+                // 2.3 如果所有途径都失败了，绝不对 .lnk 本身提取（必然带小箭头），交由上层处理
+                return null;
             }
-            return GetIconWithStandardMethod(filePath, isLinkFile, false); // 对于普通文件，使用标准方法
+
+            #endregion
+
+            // 对于普通文件，使用标准方法
+            return GetIconWithStandardMethod(filePath, false, false);
         }
 
         /// <summary>
@@ -820,7 +880,7 @@ namespace Quicker.Managers
         private static ImageSource ExtractIconDirectlyFromFile(string filePath)
         {
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) return null;
-            
+
             IntPtr hIconLarge = IntPtr.Zero;
             IntPtr hIconSmall = IntPtr.Zero;
             try
@@ -840,7 +900,7 @@ namespace Quicker.Managers
                     }
                     return iconSource;
                 }
-                
+
                 // 如果 ExtractIconEx 失败，尝试使用 Icon.ExtractAssociatedIcon
                 try
                 {
@@ -852,11 +912,7 @@ namespace Quicker.Managers
                         return iconSource;
                     }
                 }
-                catch
-                {
-                    // 忽略异常，继续返回 null
-                }
-                
+                catch { }
                 return null;
             }
             catch
@@ -1081,6 +1137,187 @@ namespace Quicker.Managers
         {
             using var toast = new ToastManager(); // 创建ToastManager对象
             toast.Show(message, title); // 显示Toast
+        }
+
+        /// <summary>
+        /// 从快捷方式文件中获取 IconLocation（图标位置）
+        /// </summary>
+        /// <param name="linkFilePath">快捷方式文件路径</param>
+        /// <returns>图标路径（可能带索引，如 "C:\app.exe,0"）</returns>
+        private static string GetIconLocationFromLinkFile(string linkFilePath)
+        {
+            if (string.IsNullOrEmpty(linkFilePath) || !File.Exists(linkFilePath)) return null;
+            IWshShortcut shortcut = null;
+            WshShell shell = null;
+            try
+            {
+                shell = new WshShell();
+                shortcut = (IWshShortcut)shell.CreateShortcut(linkFilePath);
+                string iconLoc = shortcut.IconLocation;
+                return string.IsNullOrWhiteSpace(iconLoc) ? null : iconLoc;
+            }
+            catch
+            {
+                return null;
+            }
+            finally
+            {
+                if (shortcut != null) Marshal.ReleaseComObject(shortcut);
+                if (shell != null) Marshal.ReleaseComObject(shell);
+            }
+        }
+
+        /// <summary>
+        /// 从指定文件及索引提取图标（直接读取 PE 资源，避免系统附加的快捷方式标记）
+        /// </summary>
+        private static ImageSource ExtractIconDirectlyFromFileWithIndex(string filePath, int iconIndex)
+        {
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) return null;
+
+            IntPtr hIconLarge = IntPtr.Zero;
+            IntPtr hIconSmall = IntPtr.Zero;
+            try
+            {
+                int iconCount = ExtractIconEx(filePath, iconIndex, out hIconLarge, out hIconSmall, 1);
+                if (iconCount > 0 && hIconLarge != IntPtr.Zero)
+                {
+                    return ConvertHIconToImageSource(hIconLarge);
+                }
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+            finally
+            {
+                if (hIconLarge != IntPtr.Zero) DestroyIcon(hIconLarge);
+                if (hIconSmall != IntPtr.Zero) DestroyIcon(hIconSmall);
+            }
+        }
+
+        /// <summary>
+        /// 获取系统内置特殊文件夹的纯净图标（如桌面、下载，不受压缩等覆盖属性影响）
+        /// </summary>
+        private static ImageSource GetSpecialFolderIcon(string filePath)
+        {
+            try
+            {
+                string normalizedPath = Path.GetFullPath(filePath).TrimEnd('\\', '/');
+
+                // 只识别下载文件夹（下载文件夹的 SIID_DOWNLOADS = 184 是正确的）
+                string downloadsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads").TrimEnd('\\', '/');
+                if (string.Equals(normalizedPath, downloadsPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    SHSTOCKICONINFO info = new();
+                    info.cbSize = (uint)Marshal.SizeOf(info);
+                    if (SHGetStockIconInfo(SIID_DOWNLOADS, SHGSI_ICON | SHGSI_LARGEICON, ref info) == 0 && info.hIcon != IntPtr.Zero)
+                    {
+                        ImageSource icon = ConvertHIconToImageSource(info.hIcon);
+                        DestroyIcon(info.hIcon);
+                        return icon;
+                    }
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        /// <summary>
+        /// 获取用户自定义的文件夹图标（通过解析 desktop.ini，避免系统叠加压缩标记）
+        /// </summary>
+        private static ImageSource GetFolderCustomIcon(string folderPath)
+        {
+            try
+            {
+                string desktopIniPath = Path.Combine(folderPath, "desktop.ini");
+                if (File.Exists(desktopIniPath))
+                {
+                    string[] lines = File.ReadAllLines(desktopIniPath);
+                    string iconResource = null;
+                    foreach (var line in lines)
+                    {
+                        if (line.StartsWith("IconResource=", StringComparison.OrdinalIgnoreCase))
+                        {
+                            iconResource = line.Substring("IconResource=".Length).Trim();
+                            break;
+                        }
+                    }
+
+                    if (!string.IsNullOrEmpty(iconResource))
+                    {
+                        string iconPath = iconResource;
+                        int iconIndex = 0;
+
+                        // 解析路径中的索引，例如 "C:\path\app.exe,0"
+                        int commaIndex = iconResource.LastIndexOf(',');
+                        if (commaIndex > 0)
+                        {
+                            iconPath = iconResource.Substring(0, commaIndex).Trim();
+                            if (int.TryParse(iconResource.Substring(commaIndex + 1).Trim(), out int index))
+                                iconIndex = index;
+                        }
+
+                        iconPath = iconPath.Trim('"');
+                        iconPath = Environment.ExpandEnvironmentVariables(iconPath);
+
+                        // 处理相对路径
+                        if (!Path.IsPathRooted(iconPath))
+                            iconPath = Path.Combine(folderPath, iconPath);
+
+                        if (File.Exists(iconPath))
+                        {
+                            if (IsExecutableFile(iconPath))
+                            {
+                                return ExtractIconDirectlyFromFileWithIndex(iconPath, iconIndex);
+                            }
+                            else if (iconPath.EndsWith(".ico", StringComparison.OrdinalIgnoreCase))
+                            {
+                                return LoadBitmapImage(iconPath);
+                            }
+                            else
+                            {
+                                return GetIconFromImageList(iconPath) ?? GetIconFromPath(iconPath);
+                            }
+                        }
+                    }
+                }
+            }
+            catch { }
+            return null;
+        }
+
+        /// <summary>
+        /// 获取纯净的标准文件夹图标（强制忽略 NTFS 压缩、共享等属性，不带任何覆盖箭头）
+        /// </summary>
+        private static ImageSource GetStandardFolderIcon(string folderPath)
+        {
+            SHFILEINFO shfi = new();
+            uint flags = SHGFI_ICON | SHGFI_LARGEICON | SHGFI_USEFILEATTRIBUTES;
+
+            IntPtr hIcon = SHGetFileInfo(
+                folderPath,
+                FILE_ATTRIBUTE_DIRECTORY, // 强制视作普通文件夹
+                out shfi,
+                (uint)Marshal.SizeOf(shfi),
+                flags
+            );
+
+            if (hIcon != IntPtr.Zero && shfi.hIcon != IntPtr.Zero)
+            {
+                try
+                {
+                    ImageSource iconSource = ConvertHIconToImageSource(shfi.hIcon);
+                    DestroyIcon(shfi.hIcon);
+                    return iconSource;
+                }
+                catch
+                {
+                    if (shfi.hIcon != IntPtr.Zero) DestroyIcon(shfi.hIcon);
+                    return null;
+                }
+            }
+            return null;
         }
     }
 }

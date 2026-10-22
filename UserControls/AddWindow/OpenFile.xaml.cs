@@ -257,9 +257,6 @@ namespace Quicker.UserControls.AddWindow
                     LocationTextBox.Text = string.IsNullOrWhiteSpace(arguments)
                         ? quotedTarget
                         : $"{quotedTarget} {arguments.Trim()}";
-
-                    // 提取图标必须使用纯净的路径（不能带参数）
-                    SetIconFromPath(targetPath);
                 }
                 return;
             }
