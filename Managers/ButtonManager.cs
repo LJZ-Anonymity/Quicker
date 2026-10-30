@@ -3,6 +3,7 @@ using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using Quicker.Windows.MainWindows;
 using System.Windows.Controls;
+using System.Threading.Tasks;
 using Quicker.Database.Core;
 using Quicker.Windows.Menus;
 using System.Windows.Media;
@@ -13,7 +14,6 @@ using Quicker.Models;
 using WpfAnimatedGif;
 using Quicker.Extend;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace Quicker.Managers
 {
@@ -664,14 +664,23 @@ namespace Quicker.Managers
             if (menu == null) return;
 
             if (isMainWindow) // 为主窗口菜单绑定关闭事件
-            {
-                menu.ClosingOrHiding += new Action(() =>
-                {
-                    isClosing = false; // 重置关闭标志
-                });
-            }
+                BindMainWindowClosingFlag(menu);
 
             menu.Show(); // 显示菜单（基类会自动处理动画）
+        }
+
+        /// <summary>
+        /// 菜单无论是失焦关闭还是按钮直接 Close，都要恢复主窗口的失焦关闭能力。
+        /// </summary>
+        private void BindMainWindowClosingFlag(BaseMenuWindow menu)
+        {
+            void ResetClosingFlag()
+            {
+                isClosing = false;
+            }
+
+            menu.ClosingOrHiding += ResetClosingFlag;
+            menu.Closed += (_, _) => ResetClosingFlag();
         }
 
         /// <summary>
@@ -755,12 +764,7 @@ namespace Quicker.Managers
                     {
                         // 如果是主窗口菜单，绑定关闭事件来重置关闭标志
                         if (isMainWindow && menuInstance is BaseMenuWindow menu)
-                        {
-                            menu.ClosingOrHiding += new Action(() =>
-                            {
-                                isClosing = false; // 重置关闭标志
-                            });
-                        }
+                            BindMainWindowClosingFlag(menu);
 
                         // 设置菜单位置和显示
                         SetMenuPositionAndShow(menuInstance, sourceWindow);

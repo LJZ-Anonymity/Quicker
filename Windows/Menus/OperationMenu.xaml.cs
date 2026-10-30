@@ -972,19 +972,23 @@ namespace Quicker.Windows.Menus
         #endregion
 
         #region 资源释放
+
         // 关闭窗口前释放资源
         protected override void OnClosed(EventArgs e)
         {
-            // 清理特定资源
-            buttonManager.Dispose(); // 释放按钮管理器资源
-            actionManager.Dispose(); // 释放动作管理器资源
-            close = false; // 设置关闭标识符
-            GC.Collect(); // 强制垃圾回收
-            GC.WaitForPendingFinalizers(); // 等待垃圾回收完成
-            GC.Collect(); // 再次强制垃圾回收
+            buttonManager.Dispose();
+            actionManager.Dispose();
+            close = false; // 设置关闭标识符，避免已关闭后的延迟失焦回调再次处理
+
+            if (FatherWindow is MainWindow { IsVisible: true })
+            {
+                using var windowManager = new WindowManager();
+                windowManager.SetMainWindowFocused();
+            }
 
             base.OnClosed(e); // 调用基类的 OnClosed 方法
         }
+
         #endregion
     }
 
