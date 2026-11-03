@@ -216,7 +216,9 @@ namespace Quicker.Managers
                 if (window != null)
                     window.Show(); // 显示窗口
             }
-            window?.Activate(); // 激活窗口
+
+            if(!AppStateManager.MainWindowPinned)
+                AppStateManager.MainWindowInstance.HideWindowSilently();
         }
 
         /// <summary>
