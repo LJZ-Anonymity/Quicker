@@ -459,7 +459,6 @@ namespace Quicker.Windows.Menus
         private void CheckImformation_Click(object sender, RoutedEventArgs e)
         {
             ActionInfoWindow actionInfoWindow = new(ButtonID, TableName); // 创建动作信息窗口
-            MainWindow mainWindow = Application.Current.Windows.OfType<MainWindow>().FirstOrDefault(); // 尝试查找主窗口
             actionInfoWindow.ShowDialog(); // 显示动作信息窗口
             base.Close(); // 关闭操作菜单窗口
         }

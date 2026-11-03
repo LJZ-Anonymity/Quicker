@@ -264,18 +264,47 @@ namespace Quicker
         private void Hook_MousePressed(object? sender, MouseHookEventArgs e)
         {
             AppStateManager.MousePressStartTime = DateTime.Now;
-
+            IsMouseClickOutsideMainWindow(e); // 点击落在已显示的 MainWindow 外部则隐藏
             if (!CanProcessHook()) return;
+
             var openMainWindowConditions = AppStateManager.OpenMainWindowConditions;
             if (GetCtrlKeyState() &&
                 ((e.Data.Button == MouseButton.Button2 && openMainWindowConditions.OpenMainWindowByCtrl_RightMouseClick) ||
-                (e.Data.Button == MouseButton.Button3 && openMainWindowConditions.OpenMainWindowByCtrl_MiddleMouseClick)))
+                 (e.Data.Button == MouseButton.Button3 && openMainWindowConditions.OpenMainWindowByCtrl_MiddleMouseClick)))
             {
                 HideOrShowMainWindow();
                 return;
             }
 
             ProcessMouseButtonPress(e.Data.Button, openMainWindowConditions);
+        }
+
+        /// <summary>
+        /// 检测鼠标点击是否在MainWindow外部
+        /// </summary>
+        private void IsMouseClickOutsideMainWindow(MouseHookEventArgs e)
+        {
+            var win = AppStateManager.MainWindowInstance;
+            if (win == null || win.IsHiddenOrInvisible || AppStateManager.MainWindowPinned || AppStateManager.Pause)
+                return;
+
+            bool isInside = Dispatcher.Invoke(() =>
+            {
+                if (win.IsHiddenOrInvisible || !win.IsLoaded) return true;
+                return win.IsPointInsideMainWindowOrMenus(e.Data.X, e.Data.Y); // 主窗口和菜单一起判定
+            });
+
+            if (!isInside)
+            {
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    if (!win.IsHiddenOrInvisible)
+                    {
+                        win.HideWindowSilently();
+                        ResetInteractionState();
+                    }
+                }));
+            }
         }
 
         // 鼠标松开事件
@@ -287,7 +316,7 @@ namespace Quicker
             var conventions = AppStateManager.Conventions;
             var openMainWindowConditions = AppStateManager.OpenMainWindowConditions;
 
-            // 【关键】当场计算精确的鼠标按住时长，并立刻清空
+            // 当场计算精确的鼠标按住时长，并立刻清空
             TimeSpan pressDuration = DateTime.Now - AppStateManager.MousePressStartTime.Value;
             AppStateManager.MousePressStartTime = null;
 

@@ -22,7 +22,6 @@
     Width="450"
 
     MouseLeftButtonDown="MoveMainWindow"
-    Deactivated="MainWindow_Deactivated"
     Closing="MainWindow_Closing"
     Loaded="MainWindow_Loaded"
 >

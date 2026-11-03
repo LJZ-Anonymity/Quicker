@@ -1,6 +1,7 @@
 ﻿using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using VisualTreeHelper = Quicker.Helpers.VisualTreeHelper;
 using DragEventArgs = System.Windows.DragEventArgs;
+using Application = System.Windows.Application;
 using Button = System.Windows.Controls.Button;
 using Panel = System.Windows.Controls.Panel;
 using System.Windows.Controls.Primitives;
@@ -163,6 +164,24 @@ namespace Quicker.Windows.MainWindows.MainWindow
         #endregion
 
         #region 状态监听与UI刷新
+
+        /// <summary>
+        /// 判断屏幕坐标是否在 MainWindow 或其关联菜单的可见区域内。
+        /// </summary>
+        public bool IsPointInsideMainWindowOrMenus(int screenX, int screenY)
+        {
+            var vb = ViewBorder;
+            if (vb != null && vb.IsVisible && vb.ActualWidth > 0 && vb.ActualHeight > 0)
+            {
+                var tl = vb.PointToScreen(new System.Windows.Point(0, 0));
+                var br = vb.PointToScreen(new System.Windows.Point(vb.ActualWidth, vb.ActualHeight));
+                if (screenX >= tl.X && screenX <= br.X && screenY >= tl.Y && screenY <= br.Y)
+                    return true;
+            }
+
+            if (buttonManager != null && buttonManager.isClosing) return true;
+            return false;
+        }
 
         private void SubscribeStateEvents()
         {
@@ -684,16 +703,6 @@ namespace Quicker.Windows.MainWindows.MainWindow
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             SetMainWindowState(); // 需要窗口句柄
-        }
-
-        /// <summary>
-        /// 失去焦点时隐藏功能面板
-        /// </summary>
-        private void MainWindow_Deactivated(object sender, EventArgs e)
-        {
-            if (buttonManager.isClosing) return; // 菜单交互中，保持显示
-            if (AppStateManager.Pause || AppStateManager.MainWindowPinned) return;
-            HideWindowSilently();
         }
 
         /// <summary>
