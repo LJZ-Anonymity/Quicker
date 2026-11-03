@@ -701,6 +701,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// <param name="style">按钮样式</param>
         private void AddButtonsToGrid(Grid grid, int pageIndex, int rows, int cols, string gridType, Style style)
         {
+            var pageData = db2.GetButtonDataByPage(gridType, pageIndex);
             for (int row = 0; row < rows; row++)
             {
                 for (int col = 0; col < cols; col++)
@@ -708,11 +709,15 @@ namespace Quicker.Windows.MainWindows.MainWindow
                     int buttonIndex = pageIndex * 100 + (row + 1) * 10 + (col + 1);
                     string buttonName = $"{gridType}{buttonIndex}";
                     Button button = CreateButton(buttonName, style);
-                    // 设置行列（注意：有间隔，实际行列号*2）
+
                     Grid.SetRow(button, row * 2);
                     Grid.SetColumn(button, col * 2);
+
+                    // 从字典里直接取数据，如果没有则是空按钮
+                    pageData.TryGetValue(buttonIndex, out ButtonData buttonData);
+
                     // 绑定数据和事件
-                    BindButtonDataAndEvents(button, buttonIndex, gridType);
+                    BindButtonDataAndEvents(button, buttonData, gridType);
                     grid.Children.Add(button);
                 }
             }
@@ -742,13 +747,13 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// 绑定按钮的数据和事件，并刷新显示
         /// </summary>
         /// <param name="button">目标按钮</param>
-        /// <param name="buttonIndex">按钮索引</param>
+        /// <param name="buttonData">从批量查询中获取的按钮数据</param>
         /// <param name="gridType">Grid类型</param>
-        private void BindButtonDataAndEvents(Button button, int buttonIndex, string gridType)
+        private void BindButtonDataAndEvents(Button button, ButtonData buttonData, string gridType)
         {
             BindButtonEvents(button); // 绑定事件
-            var buttonData = db2.GetButtonDataByID(buttonIndex, gridType); // 获取按钮数据
-            button.Tag = buttonData; // 绑定数据
+            button.Tag = buttonData; // 为空时 Tag 就是 null
+
             var vm = DataContext as MainWindowViewModel;
             buttonManager.RefreshButtonDisplay(button, buttonData, vm.ButtonSize, true); // 刷新显示
         }
@@ -1213,46 +1218,6 @@ namespace Quicker.Windows.MainWindows.MainWindow
         private void ShowAddImageOnButton(Button btn, double buttonSize)
         {
             double imageSize = buttonSize / 2.0;
-            btn.Content = new Image
-            {
-                Source = new BitmapImage(new Uri("pack://application:,,,/Resources/Images/Add.png")),
-                Stretch = Stretch.Uniform,
-                Height = imageSize,
-                Width = imageSize,
-                Opacity = 0.5
-            };
-        }
-
-        /// <summary>
-        /// 对有Tag的按钮执行放大动画（如果设置允许）。
-        /// </summary>
-        /// <param name="btn">目标按钮</param>
-        /// <param name="appearance">外观设置</param>
-        private void AnimateButtonScale(Button btn, dynamic appearance)
-        {
-            if (appearance == null || !appearance.ShowActionButtonMouseOver) return; // 不显示动画
-            var border = VisualTreeHelper.FindVisualChild<Border>(btn); // 获取按钮边框
-            var scale = new ScaleTransform(1, 1); // 创建缩放动画
-            border.RenderTransformOrigin = new Point(0.5, 0.5); // 设置缩放中心
-            border.RenderTransform = scale; // 设置缩放动画
-
-            var animX = new DoubleAnimation(1.05, TimeSpan.FromMilliseconds(100)); // 创建X轴缩放动画
-            var animY = new DoubleAnimation(1.05, TimeSpan.FromMilliseconds(100));
-            scale.BeginAnimation(ScaleTransform.ScaleXProperty, animX); // 开始动画
-            scale.BeginAnimation(ScaleTransform.ScaleYProperty, animY);
-        }
-
-        /// <summary>
-        /// 对无Tag的按钮显示添加图片（如果设置允许）。
-        /// </summary>
-        /// <param name="btn">目标按钮</param>
-        /// <param name="appearance">外观设置（用于获取按钮尺寸）</param>
-        /// <param name="conventions">通用设置（用于判断是否显示图片）</param>
-        private void ShowAddImageOnButton(Button btn, dynamic appearance, dynamic conventions)
-        {
-            if (conventions == null || !conventions.ShowAddImage) return; // 不显示图片
-            double btnSize = appearance.ButtonSize; // 获取按钮尺寸
-            double imageSize = btnSize / 2.0; // 计算图片尺寸
             btn.Content = new Image
             {
                 Source = new BitmapImage(new Uri("pack://application:,,,/Resources/Images/Add.png")),

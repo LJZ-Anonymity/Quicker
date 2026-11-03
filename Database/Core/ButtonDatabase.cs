@@ -10,6 +10,11 @@ namespace Quicker.Database.Core
 {
     public class ButtonDatabase : IDisposable
     {
+        /// <summary>
+        /// 打开数据库连接
+        /// </summary>
+        public SQLiteConnection OpenConnection() => DatabaseHelper.OpenConnection("Button.db");
+
         public ButtonDatabase()
         {
             DatabaseHelper.EnsureDatabaseDirectoryExists(); // 确保数据库目录存在
@@ -395,15 +400,14 @@ namespace Quicker.Database.Core
         /// <returns> 总页面数 </returns>
         public int GetTotalAntionPageIndex(string tableName)
         {
-            int TotalAntionPageIndex = 1; // 重置页面索引
-            var buttonData = GetButtonDataByTableName(tableName); // 从数据库中获取按钮数据
-            foreach (var data in buttonData)
-            {
-                int aPart = data.ButtonID / 100; // 获取A部分
-                if (aPart > TotalAntionPageIndex) // 如果数字大于当前最大索引
-                    TotalAntionPageIndex = aPart + 1; // 更新全局页面索引
-            }
-            return TotalAntionPageIndex;
+            using var connection = OpenConnection();
+            using var command = new SQLiteCommand($"SELECT MAX(ButtonID) FROM [{tableName}]", connection);
+            var result = command.ExecuteScalar();
+
+            if (result == null || result == DBNull.Value) return 1; // 空表返回 1
+
+            int maxId = Convert.ToInt32(result);
+            return (maxId / 100) + 1;
         }
 
         /// <summary>
@@ -522,12 +526,27 @@ namespace Quicker.Database.Core
         }
 
         /// <summary>
-        /// 打开数据库连接
+        /// 一次性获取某一页的所有按钮数据（避免循环查库）
         /// </summary>
-        /// <returns> 数据库连接 </returns>
-        public SQLiteConnection OpenConnection()
+        public Dictionary<int, ButtonData> GetButtonDataByPage(string tableName, int pageIndex)
         {
-            return DatabaseHelper.OpenConnection("Button.db");
+            var result = new Dictionary<int, ButtonData>();
+            using var connection = OpenConnection();
+            // 利用 ButtonID 的规律，直接用 BETWEEN 或数学运算过滤，避免全表扫描
+            int minId = pageIndex * 100;
+            int maxId = (pageIndex + 1) * 100;
+
+            using var command = new SQLiteCommand($"SELECT * FROM [{tableName}] WHERE ButtonID >= @MinId AND ButtonID < @MaxId", connection);
+            command.Parameters.AddWithValue("@MinId", minId);
+            command.Parameters.AddWithValue("@MaxId", maxId);
+
+            using var reader = command.ExecuteReader();
+            while (reader.Read())
+            {
+                var data = ButtonDataHelper.FromReader(reader);
+                result[data.ButtonID] = data;
+            }
+            return result;
         }
 
         /// <summary>
