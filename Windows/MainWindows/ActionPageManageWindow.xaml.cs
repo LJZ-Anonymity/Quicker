@@ -32,10 +32,184 @@ namespace Quicker.Windows.MainWindows
         private static SolidColorBrush blankButtonBrush; // 空白按钮背景色
         private static SolidColorBrush blankButtonMouseOverBrush; // 空白按钮鼠标移入背景色
 
+        #region 脏位刷新
+
+        private readonly HashSet<string> _dirty = new();
+        private readonly object _dirtyLock = new();
+        private bool _refreshScheduled;
+        private bool _isSelfTriggered;
+
+        private void SubscribeStateEvents()
+        {
+            AppStateManager.AppearanceChanged += OnAppearanceChanged;
+            AppStateManager.ConventionsChanged += OnConventionsChanged;
+            AppStateManager.ActionPageChanged += OnActionPageChanged;
+            AppStateManager.SceneListChanged += OnSceneListChanged;
+        }
+
+        private void UnsubscribeStateEvents()
+        {
+            AppStateManager.AppearanceChanged -= OnAppearanceChanged;
+            AppStateManager.ConventionsChanged -= OnConventionsChanged;
+            AppStateManager.ActionPageChanged -= OnActionPageChanged;
+            AppStateManager.SceneListChanged -= OnSceneListChanged;
+        }
+
+        private void OnAppearanceChanged(Quicker.Models.Settings.Appearance appearance)
+        {
+            if (_isSelfTriggered) return;
+            MarkDirty("appearance");
+            ScheduleRefresh();
+        }
+
+        private void OnConventionsChanged()
+        {
+            if (_isSelfTriggered) return;
+            MarkDirty("conventions");
+            ScheduleRefresh();
+        }
+
+        private void OnActionPageChanged(string table)
+        {
+            if (_isSelfTriggered) return;
+            MarkDirty($"page:{table}");
+            ScheduleRefresh();
+        }
+
+        private void OnSceneListChanged(string table)
+        {
+            if (_isSelfTriggered) return;
+            MarkDirty($"scenes:{table}");
+            ScheduleRefresh();
+        }
+
+        private void MarkDirty(string key)
+        {
+            lock (_dirtyLock) { _dirty.Add(key); }
+        }
+
+        private bool ConsumeDirty(string key)
+        {
+            lock (_dirtyLock) { return _dirty.Remove(key); }
+        }
+
+        private List<string> ConsumeDirtyByPrefix(string prefix)
+        {
+            lock (_dirtyLock)
+            {
+                var keys = _dirty
+                    .Where(k => k.StartsWith(prefix, StringComparison.Ordinal))
+                    .ToList();
+                foreach (var k in keys) _dirty.Remove(k);
+                return keys.Select(k => k.Substring(prefix.Length)).ToList();
+            }
+        }
+
+        private void ScheduleRefresh()
+        {
+            if (Dispatcher.HasShutdownStarted) return;
+
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.BeginInvoke(new Action(ScheduleRefresh));
+                return;
+            }
+
+            if (_refreshScheduled) return;
+            _refreshScheduled = true;
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                _refreshScheduled = false;
+                RefreshOnShow();
+            }), System.Windows.Threading.DispatcherPriority.Background);
+        }
+
+        /// <summary>
+        /// 按脏位增量刷新 UI（在 UI 线程调用）
+        /// </summary>
+        private void RefreshOnShow()
+        {
+            if (type == null) return; // 窗口正在关闭
+
+            // 外观变更：重新加载颜色 + 刷新所有按钮背景 + 场景按钮背景
+            if (ConsumeDirty("appearance"))
+            {
+                InitAppearanceBrushes();
+                RefreshAllButtonBackgrounds();
+                SetButtonBackground();
+            }
+
+            // 行为设置变更
+            if (ConsumeDirty("conventions"))
+            {
+                LoadSettings();
+            }
+
+            // 页面数据变更（按钮内容）
+            foreach (var table in ConsumeDirtyByPrefix("page:"))
+            {
+                if (string.Equals(table, type, StringComparison.Ordinal))
+                    RefreshCurrentPageButtons();
+            }
+
+            // 场景页数变更（动作页数量变化）
+            foreach (var table in ConsumeDirtyByPrefix("scenes:"))
+            {
+                if (string.Equals(table, type, StringComparison.Ordinal))
+                    LoadCanvas(type);
+            }
+        }
+
+        /// <summary>
+        /// 刷新所有画布中动作按钮的背景色（不重建画布）
+        /// </summary>
+        private void RefreshAllButtonBackgrounds()
+        {
+            foreach (var item in MainListView.Items)
+            {
+                if (item is not Canvas canvas) continue;
+                var grid = canvas.Children.Cast<UIElement>().OfType<UniformGrid>().FirstOrDefault();
+                if (grid == null) continue;
+                foreach (var child in grid.Children)
+                {
+                    if (child is not Button button) continue;
+                    button.Background = isDarkModle
+                        ? (button.Tag is ButtonData ? actionDarkModleButtonBrush : blankButtonBrush)
+                        : (button.Tag is ButtonData ? actionButtonBrush : blankButtonBrush);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 刷新当前画布中所有按钮的显示内容
+        /// </summary>
+        private void RefreshCurrentPageButtons()
+        {
+            foreach (var item in MainListView.Items)
+            {
+                if (item is not Canvas canvas) continue;
+                var grid = canvas.Children.Cast<UIElement>().OfType<UniformGrid>().FirstOrDefault();
+                if (grid == null) continue;
+                foreach (var child in grid.Children)
+                {
+                    if (child is not Button button) continue;
+                    int buttonId = int.Parse(button.Name.Replace(type, ""));
+                    var data = db2.GetButtonDataByID(buttonId, type);
+                    buttonManager.RefreshButtonDisplay(button, data, 60, false);
+                    button.Background = isDarkModle
+                        ? (data != null ? actionDarkModleButtonBrush : blankButtonBrush)
+                        : (data != null ? actionButtonBrush : blankButtonBrush);
+                }
+            }
+        }
+
+        #endregion
+
         public ActionPageManageWindow(string type = "common")
         {
             InitAppearanceBrushes(); // 加载 Appearance 颜色
             InitializeComponent(); // 初始化窗口
+            SubscribeStateEvents();
             GenerateSceneButtons(); // 加载按钮前缀
             TypeChanged(type); // 默认加载通用场景
         }
@@ -627,9 +801,10 @@ namespace Quicker.Windows.MainWindows
         private void Button_Drop(object sender, DragEventArgs e)
         {
             if (sender is Button TargetButton)
+            {
                 buttonManager.Button_Drop(sender, e, false, type); // 处理拖放事件
-
-            AppStateManager.NotifyActionPageChanged(type);
+                NotifyActionPageChanged(type);
+            }
         }
 
         // 鼠标左键按下事件
@@ -699,7 +874,7 @@ namespace Quicker.Windows.MainWindows
                 MainListView.Items.Add(GenerateCanvas(canvasCount, type)); // 生成画布
             }
 
-            AppStateManager.NotifySceneListChanged(type);
+            NotifySceneListChanged(type);
         }
 
         /// <summary>
@@ -780,7 +955,7 @@ namespace Quicker.Windows.MainWindows
                 }
             }
 
-            AppStateManager.NotifyActionPageChanged(type);
+            NotifyActionPageChanged(type);
         }
 
         // 鼠标移动时检查是否满足拖拽条件
@@ -821,7 +996,7 @@ namespace Quicker.Windows.MainWindows
                     UpdateCanvasInListView(sourceIndex, type); // 更新 ListView 中的特定 Canvas
                     UpdateCanvasInListView(targetIndex, type); // 更新 ListView 中的特定 Canvas
 
-                    AppStateManager.NotifyActionPageChanged(type);
+                    NotifyActionPageChanged(type);
                 }
             }
         }
@@ -954,8 +1129,8 @@ namespace Quicker.Windows.MainWindows
             }
             LoadCanvas(type); // 刷新界面
 
-            AppStateManager.NotifyActionPageChanged(type);
-            AppStateManager.NotifySceneListChanged(type);
+            NotifyActionPageChanged(type);
+            NotifySceneListChanged(type);
         }
 
         // 点击按钮添加场景
@@ -1074,10 +1249,10 @@ namespace Quicker.Windows.MainWindows
                             db3.DeleteScene(type); // 删除场景数据表
                     }
 
-                    AppStateManager.NotifyActionPageChanged(type);
-                    AppStateManager.NotifyActionPageChanged(targetSceneData.SceneName);
-                    AppStateManager.NotifySceneListChanged(type);
-                    AppStateManager.NotifySceneListChanged(targetSceneData.SceneName);
+                    NotifyActionPageChanged(type);
+                    NotifyActionPageChanged(targetSceneData.SceneName);
+                    NotifySceneListChanged(type);
+                    NotifySceneListChanged(targetSceneData.SceneName);
 
                     TypeChanged(targetSceneData.SceneName); // 刷新界面
                 }
@@ -1115,9 +1290,24 @@ namespace Quicker.Windows.MainWindows
             toast.Show(message, toastType); // 弹出消息提醒
         }
 
+        private void NotifyActionPageChanged(string table)
+        {
+            _isSelfTriggered = true;
+            try { AppStateManager.NotifyActionPageChanged(table); }
+            finally { _isSelfTriggered = false; }
+        }
+
+        private void NotifySceneListChanged(string table)
+        {
+            _isSelfTriggered = true;
+            try { AppStateManager.NotifySceneListChanged(table); }
+            finally { _isSelfTriggered = false; }
+        }
+
         // 关闭窗口时释放资源
         protected override void OnClosed(EventArgs e)
         {
+            UnsubscribeStateEvents();
             // 释放Appearance颜色资源
             actionButtonBrush = null;
             actionButtonMouseOverBrush = null;

@@ -248,9 +248,7 @@ namespace Quicker.Windows.AddWindows
             };
 
             db2.UpdateAction(buttonData, TableName);
-
-            Application.Current.Windows.OfType<ActionPageManageWindow>()
-                .FirstOrDefault()?.UpdateButton(ButtonID);
+            AppStateManager.NotifyActionPageChanged(TableName);
 
             Close();
         }

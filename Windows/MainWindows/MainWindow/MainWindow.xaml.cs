@@ -50,6 +50,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         private bool _isShutdown = false; // 资源是否已释放
         private bool _isSilentlyHidden;
         private bool _refreshScheduled; // 刷新调度中
+        private bool _isSelfTriggered; // 自身触发标志
         private string CommonStyle;
 
         public MainWindow()
@@ -188,9 +189,34 @@ namespace Quicker.Windows.MainWindows.MainWindow
             ScheduleRefresh();
         }
         private void OnConventionsChanged() { MarkDirty("conventions"); ScheduleRefresh(); }
-        private void OnActionPageChanged(string table) { MarkDirty($"page:{table}"); ScheduleRefresh(); }
-        private void OnSceneListChanged(string table) { MarkDirty($"scenes:{table}"); ScheduleRefresh(); }
+        private void OnActionPageChanged(string table)
+        {
+            if (_isSelfTriggered) return;
+            MarkDirty($"page:{table}");
+            ScheduleRefresh();
+        }
+
+        private void OnSceneListChanged(string table)
+        {
+            if (_isSelfTriggered) return;
+            MarkDirty($"scenes:{table}");
+            ScheduleRefresh();
+        }
         private void OnLockStateChanged() { MarkDirty("lock"); ScheduleRefresh(); }
+
+        private void NotifyActionPageChanged(string table)
+        {
+            _isSelfTriggered = true;
+            try { AppStateManager.NotifyActionPageChanged(table); }
+            finally { _isSelfTriggered = false; }
+        }
+
+        private void NotifySceneListChanged(string table)
+        {
+            _isSelfTriggered = true;
+            try { AppStateManager.NotifySceneListChanged(table); }
+            finally { _isSelfTriggered = false; }
+        }
 
         private void MarkDirty(string key)
         {
@@ -833,12 +859,14 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// <summary>
         /// 处理文件拖拽到按钮上
         /// </summary>
-        /// <param name="sender">目标按钮</param>
-        /// <param name="e">拖拽事件参数</param>
         public void Button_Drop(object sender, DragEventArgs e)
         {
             if (sender is Button TargetButton)
-                buttonManager.Button_Drop(sender, e, true, GetButtonType(sender)); // 处理拖拽事件
+            {
+                string buttonType = GetButtonType(sender);
+                buttonManager.Button_Drop(sender, e, true, buttonType);
+                NotifyActionPageChanged(buttonType);
+            }
         }
 
         // 鼠标左键按下时记录初始位置
@@ -955,12 +983,15 @@ namespace Quicker.Windows.MainWindows.MainWindow
             if (button == null) return; // 如果按钮不存在，直接返回
             var buttonData = db2.GetButtonDataByID(buttonID, tableName); // 从数据库中获取按钮数据
             buttonManager.RefreshButtonDisplay(button, buttonData, 60, true); // 更新按钮内容
+            NotifyActionPageChanged(tableName);
         }
 
         // 拖拽动作按钮到上面删除动作
         private void CloseMainWindowButton_Drop(object sender, DragEventArgs e)
         {
-            buttonManager.DeleteActionByDrag(this, CommonStyle); // 删除动作
+            string commonStyle = CommonStyle;
+            buttonManager.DeleteActionByDrag(this, commonStyle);
+            NotifyActionPageChanged(commonStyle);
         }
 
         /// <summary>

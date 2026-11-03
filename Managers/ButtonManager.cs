@@ -325,6 +325,7 @@ namespace Quicker.Managers
                 ActionType = ActionType.OpenWebsite,
             }; // 设置按钮数据
             db2.UpdateAction(buttonData, tableName); // 添加按钮数据到数据库
+            AppStateManager.NotifyActionPageChanged(tableName);
         }
 
         /// <summary>
