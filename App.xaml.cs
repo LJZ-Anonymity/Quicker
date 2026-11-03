@@ -648,7 +648,7 @@ namespace Quicker
                  conditions.OpenMainWindowByCtrl))
             {
                 var win = AppStateManager.MainWindowInstance;
-                if (win == null || !win.IsVisible)
+                if (win == null || win.IsHiddenOrInvisible)
                 {
                     _ = PrepareMainWindowAsync();
                 }
@@ -787,12 +787,9 @@ namespace Quicker
         {
             if (win == null) return;
 
-            if (!win.IsVisible) win.Show();
-            else win.Visibility = Visibility.Visible;
-
+            win.ShowWindowSilently();
             win.Activate();
 
-            // Show 之后 win.Left/Top 才是真实值
             if (!double.IsNaN(win.Left)) AppStateManager.Left = (float)win.Left;
             if (!double.IsNaN(win.Top)) AppStateManager.Top = (float)win.Top;
 
@@ -800,15 +797,16 @@ namespace Quicker
         }
 
         /// <summary>
-        /// 切换主窗口显示状态。要求 UI 线程调用。
+        /// 切换主窗口显示状态。要求 UI 线程调用
         /// </summary>
         private void ToggleMainWindow()
         {
             var win = AppStateManager.MainWindowInstance;
-            if (win.IsVisible)
+            if (win == null) return;
+            if (!win.IsHiddenOrInvisible)
             {
-                if (AppStateManager.MainWindowPinned) return; // 订住时不允许自动隐藏
-                win.Hide();
+                if (AppStateManager.MainWindowPinned) return;
+                win.HideWindowSilently();
                 ResetInteractionState();
             }
             else

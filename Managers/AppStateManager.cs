@@ -85,7 +85,6 @@ namespace Quicker.Managers
 
         // 窗口操作对象
         public static MainWindow? MainWindowInstance { get; set; } = null; // 常驻主窗口实例（唯一）
-        public static MainWindow? PreLoadMainWindow { get; set; } = null; // 预加载主窗口
 
         // 窗口状态
         public static bool Locked { get; set; } = false; // 锁定状态

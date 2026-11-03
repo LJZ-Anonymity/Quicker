@@ -37,7 +37,7 @@
             </Grid>
         </Button>
         <Grid  Margin="13,49,11,42" MouseEnter="ShowScrollBar" MouseLeave="HideScrollBar">
-            <ListView x:Name="ApplicationsListView" SelectionMode="Single" BorderBrush="#FFD9D9D9" SelectionChanged="ApplicationsListView_SelectionChanged" Background="{x:Null}" ScrollViewer.HorizontalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollBarVisibility="Hidden" Foreground="Black" ScrollViewer.CanContentScroll="True" MouseDoubleClick="SaveApplication" PreviewMouseRightButtonDown="CopyLocation" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,0,4,4" ScrollViewer.ScrollChanged="ListViewScrollViewer_ScrollChanged">
+            <ListView x:Name="ApplicationsListView" SelectionMode="Single" BorderBrush="#FFD9D9D9" SelectionChanged="ApplicationsListView_SelectionChanged" Background="{x:Null}" ScrollViewer.HorizontalScrollBarVisibility="Hidden" ScrollViewer.VerticalScrollBarVisibility="Hidden" Foreground="Black" ScrollViewer.CanContentScroll="False" MouseDoubleClick="SaveApplication" PreviewMouseRightButtonDown="CopyLocation" d:ItemsSource="{d:SampleData ItemCount=5}" Margin="0,0,4,4" ScrollViewer.ScrollChanged="ListViewScrollViewer_ScrollChanged">
                 <ListView.ItemContainerStyle>
                     <Style TargetType="ListViewItem">
                         <Style.Triggers>

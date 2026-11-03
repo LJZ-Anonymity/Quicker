@@ -842,18 +842,6 @@ namespace Quicker.Managers
         }
 
         /// <summary>
-        /// 隐藏面板窗口
-        /// </summary>
-        /// <param name="window"> 要隐藏面板窗口的窗口 </param>
-        public void HideMainWindow(Window window)
-        {
-            var windowList = Application.Current.Windows.OfType<MainWindow>(); // 查找所有主窗口
-            foreach (var w in windowList)
-                w.Visibility = Visibility.Hidden; // 关闭所有主窗口
-            window.Visibility = Visibility.Hidden; // 关闭面板窗口
-        }
-
-        /// <summary>
         /// 处理地址文本内容
         /// </summary>
         /// <param name="location"> 地址文本内容 </param>

@@ -35,6 +35,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         private SolidColorBrush UnSelectedBrush => (this.DataContext as MainWindowViewModel).UnSelectedBrush;
         public bool ShouldCenterAtMouseOnShow { get; set; } = false; // 本次唤起是否需要居中到鼠标
         public bool ShouldCenterOnScreenOnShow { get; set; } = false; // 本次唤起是否需要居中屏幕
+        public bool IsHiddenOrInvisible => _isSilentlyHidden || !IsVisible;
 
         private readonly CancellationTokenSource cancellationTokenSource = new(); // 取消后台任务的令牌源
         private Quicker.Models.Settings.Appearance _latestAppearance;
@@ -47,6 +48,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         private readonly object _dirtyLock = new(); // 保护 _dirty 的锁
         private bool isInitialized = false; // 初始化标志
         private bool _isShutdown = false; // 资源是否已释放
+        private bool _isSilentlyHidden;
         private bool _refreshScheduled; // 刷新调度中
         private string CommonStyle;
 
@@ -666,24 +668,65 @@ namespace Quicker.Windows.MainWindows.MainWindow
         {
             if (buttonManager.isClosing) return; // 菜单交互中，保持显示
             if (AppStateManager.Pause || AppStateManager.MainWindowPinned) return;
-            this.Hide();
+            HideWindowSilently();
         }
 
-        private void MainWindow_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
+        /// <summary>
+        /// 静默隐藏
+        /// </summary>
+        public void HideWindowSilently()
         {
-            if (Visibility == Visibility.Visible)
+            if (_isShutdown || _isSilentlyHidden) return;
+
+            _isSilentlyHidden = true;
+            Opacity = 0;
+            IsHitTestVisible = false;
+
+            ResetToFirstPage();
+
+            try
             {
-                RefreshOnShow(AppStateManager.CommonState ?? DEFAULT_STYLE);
+                var controller = WpfAnimatedGif.ImageBehavior.GetAnimationController(BackgroundImage);
+                controller?.Pause();
             }
-            else //暂停GIF播放
+            catch { }
+        }
+
+        /// <summary>
+        /// 静默显示
+        /// </summary>
+        public void ShowWindowSilently()
+        {
+            if (_isShutdown) return;
+            bool firstShow = !IsVisible;
+            if (firstShow)
             {
-                try
-                {
-                    var controller = WpfAnimatedGif.ImageBehavior.GetAnimationController(BackgroundImage);
-                    controller?.Pause();
-                }
-                catch { }
+                Opacity = 0;
+                Show();
             }
+
+            _isSilentlyHidden = false;
+            RefreshOnShow(AppStateManager.CommonState ?? DEFAULT_STYLE);
+            Opacity = 1;
+            IsHitTestVisible = true;
+
+            try
+            {
+                var controller = WpfAnimatedGif.ImageBehavior.GetAnimationController(BackgroundImage);
+                controller?.Play();
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// 将全局与通用动作页都切回第一页
+        /// </summary>
+        private void ResetToFirstPage()
+        {
+            if (_isShutdown) return;
+            if (DataContext is not MainWindowViewModel) return;
+            ShowTargetPage(GlobalGrid, GLOBAL_STYLE, 0, 3, 4, GlobalButtonPanel);
+            ShowTargetPage(CommonGrid, CommonStyle, 0, 4, 4, CommonButtonPanel);
         }
 
         // 添加关闭标志防止报错
@@ -700,7 +743,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
             if (button.Tag is ButtonData data)
             {
                 if (!AppStateManager.MainWindowPinned && data.ActionType != ActionType.OpenActionPage)
-                    this.Visibility = Visibility.Collapsed; // 隐藏窗口
+                    HideWindowSilently();
 
                 if (HandleShiftKeyAction(button, buttonType)) return; // 处理Shift键动作
                 using (var actionManager = new ActionManager())
@@ -828,7 +871,6 @@ namespace Quicker.Windows.MainWindows.MainWindow
         private void QuitQuicker(object sender, RoutedEventArgs e)
         {
             TitlePop.IsOpen = false; // 关闭菜单
-            this.Visibility = Visibility.Collapsed; // 隐藏窗口
             (System.Windows.Application.Current as App)?.Shutdown(); // 通过App类正确关闭应用，确保OnExit方法被调用
         }
 
@@ -952,7 +994,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// </summary>
         private void HideMainWindow(object sender, EventArgs e)
         {
-            this.Hide();
+            HideWindowSilently();
         }
 
         /// <summary>

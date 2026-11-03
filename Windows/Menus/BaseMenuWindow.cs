@@ -277,8 +277,8 @@ namespace Quicker.Windows.Menus
         /// </summary>
         public void HideMainWindow()
         {
-            var buttonManager = new ButtonManager();
-            buttonManager.HideMainWindow(GetWindowInstance());
+            var mainwindow = AppStateManager.MainWindowInstance;
+            mainwindow.HideWindowSilently();
         }
 
         /// <summary>
