@@ -975,7 +975,7 @@ namespace Quicker
                 case 1: // 鼠标位置
                     {
                         using var wm = new WindowManager();
-                        wm.SetWindowCenterAtMouse(mainWindow);
+                        wm.SetWindowCenterAtMouse(mainWindow, mainWindow.GetFunctionBarCenterOffsetFromTop());
                     }
                     break;
                 case 2: // 屏幕中心（主屏幕工作区）

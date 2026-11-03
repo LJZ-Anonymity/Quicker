@@ -147,7 +147,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
             if (ShouldCenterAtMouseOnShow)
             {
                 using var wm = new WindowManager();
-                wm.SetWindowCenterAtMouse(this);
+                wm.SetWindowCenterAtMouse(this, GetFunctionBarCenterOffsetFromTop());
                 ShouldCenterAtMouseOnShow = false;
             }
             else if (ShouldCenterOnScreenOnShow) // 首次唤起且强制居中屏幕
@@ -159,6 +159,46 @@ namespace Quicker.Windows.MainWindows.MainWindow
                 this.Top = wa.Top + (wa.Height - this.Height) / 2;
                 ShouldCenterOnScreenOnShow = false;
             }
+        }
+
+        #endregion
+
+        #region 窗口定位辅助
+
+        /// <summary>
+        /// 计算 FunctionBarGrid 中心点距窗口顶部的距离（DIP），用于让功能栏对齐鼠标。
+        /// </summary>
+        internal double GetFunctionBarCenterOffsetFromTop()
+        {
+            // 布局已完成
+            try
+            {
+                if (FunctionBarGrid != null && FunctionBarGrid.ActualHeight > 0)
+                {
+                    Point p = FunctionBarGrid.TranslatePoint(new Point(0, 0), this);
+                    return p.Y + FunctionBarGrid.ActualHeight / 2.0;
+                }
+            }
+            catch { }
+
+            // 布局未就绪
+            double buttonSize = (DataContext as MainWindowViewModel)?.ButtonSize ?? 60;
+            double buttonGap = (DataContext as MainWindowViewModel)?.ButtonGap ?? 10;
+            if (buttonSize <= 0) buttonSize = 60;
+            if (buttonGap <= 0) buttonGap = 10;
+
+            const double titleBarHeight = 31.0;
+            const double functionBarHeight = 25.5;
+
+            double globalGridHeight = 3 * (buttonSize + buttonGap);
+            double commonGridHeight = 4 * (buttonSize + buttonGap);
+            double gridHeight = titleBarHeight + globalGridHeight + functionBarHeight + commonGridHeight;
+
+            double windowHeight = (ActualHeight > 0) ? ActualHeight
+                                : (!double.IsNaN(Height) && Height > 0 ? Height : 850);
+            double topInset = Math.Max(0, (windowHeight - gridHeight) / 2.0);
+
+            return topInset + titleBarHeight + globalGridHeight + functionBarHeight / 2.0;
         }
 
         #endregion

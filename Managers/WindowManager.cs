@@ -324,36 +324,36 @@ namespace Quicker.Managers
         /// <summary>
         /// 将窗口中心定位到鼠标位置
         /// </summary>
-        public void SetWindowCenterAtMouse(Window window)
+        public void SetWindowCenterAtMouse(Window window, double? centerOffsetYFromTop = null)
         {
             if (!GetCursorPos(out POINT cursorPos)) return;
 
-            // 首次 Show 前 ActualWidth=0，回退到 XAML 里的 Width/Height
+            // 首次 Show 前 ActualWidth/Height=0，回退到 XAML 里的 Width/Height
             double w = window.ActualWidth > 0 ? window.ActualWidth : window.Width;
             double h = window.ActualHeight > 0 ? window.ActualHeight : window.Height;
             if (double.IsNaN(w) || w <= 0) w = 450;
             if (double.IsNaN(h) || h <= 0) h = 850;
 
+            // 参考点：默认窗口中心；否则用调用方给的"距顶距离"
+            double anchorX = w / 2.0;
+            double anchorY = centerOffsetYFromTop ?? (h / 2.0);
+
             // 物理像素 → DIP（未显示时 PresentationSource 为 null，按 100% 处理）
             double scaleX = 1.0, scaleY = 1.0;
-            try
+            var src = PresentationSource.FromVisual(window);
+            if (src?.CompositionTarget != null)
             {
-                var src = PresentationSource.FromVisual(window);
-                if (src?.CompositionTarget != null)
-                {
-                    scaleX = src.CompositionTarget.TransformFromDevice.M11;
-                    scaleY = src.CompositionTarget.TransformFromDevice.M22;
-                }
+                scaleX = src.CompositionTarget.TransformFromDevice.M11;
+                scaleY = src.CompositionTarget.TransformFromDevice.M22;
             }
-            catch { }
 
             // 鼠标物理像素 → DIP
             double mouseDipX = cursorPos.X * scaleX;
             double mouseDipY = cursorPos.Y * scaleY;
 
             // 直接设 Left/Top（DIP），Show 时会应用
-            window.Left = mouseDipX - w / 2;
-            window.Top = mouseDipY - h / 2;
+            window.Left = mouseDipX - anchorX;
+            window.Top = mouseDipY - anchorY;
         }
 
         /// <summary>
