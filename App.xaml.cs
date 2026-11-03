@@ -281,6 +281,16 @@ namespace Quicker
         }
 
         /// <summary>
+        /// 判断指定的鼠标按键在当前设置下是否属于“唤出键”（在外部点击时应直接显示主窗口）
+        /// </summary>
+        private bool IsTriggerKeyForOutside(MouseButton button, OpenMainWindow conditions)
+        {
+            return (button == MouseButton.Button5 && conditions.OpenMainWindowByX2MouseClick) ||
+                   (button == MouseButton.Button4 && conditions.OpenMainWindowByX1MouseClick) ||
+                   (button == MouseButton.Button3 && conditions.OpenMainWindowByMiddleMouseClick);
+        }
+
+        /// <summary>
         /// 检测鼠标点击是否在MainWindow外部
         /// </summary>
         private void IsMouseClickOutsideMainWindow(MouseHookEventArgs e)
@@ -298,17 +308,9 @@ namespace Quicker
 
             if (!isInside)
             {
-                // 判断是否是唤出键
-                var conditions = AppStateManager.OpenMainWindowConditions;
-                bool isOpenKey = (e.Data.Button == MouseButton.Button5 && conditions.OpenMainWindowByX2MouseClick) ||
-                                 (e.Data.Button == MouseButton.Button4 && conditions.OpenMainWindowByX1MouseClick) ||
-                                 (e.Data.Button == MouseButton.Button3 && conditions.OpenMainWindowByMiddleMouseClick);
+                _isOpenKeyClickedOutside = IsTriggerKeyForOutside(e.Data.Button, AppStateManager.OpenMainWindowConditions);
 
-                if (isOpenKey)
-                {
-                    _isOpenKeyClickedOutside = true;
-                }
-                else
+                if (!_isOpenKeyClickedOutside)
                 {
                     // 其他按键点击外部：照常隐藏并清理状态
                     Dispatcher.BeginInvoke(new Action(() =>
@@ -442,6 +444,11 @@ namespace Quicker
             catch { }
             return isMouseOnTestButton; // 返回鼠标是否在测试按钮上
         }
+
+        /// <summary>
+        /// 判断是否是 Ctrl 键
+        /// </summary>
+        private bool IsCtrlKey(KeyCode keyCode) => keyCode == KeyCode.VcLeftControl || keyCode == KeyCode.VcRightControl;
 
         /// <summary>
         /// 获取 Ctrl 键状态
@@ -580,64 +587,32 @@ namespace Quicker
         {
             switch (button)
             {
-                case MouseButton.Button2:
-                    ProcessRightMouseButtonPress(conditions);
-                    break; // 右键按下
-                case MouseButton.Button3:
-                    ProcessMiddleMouseButtonPress(conditions);
-                    break; // 中键按下
-                case MouseButton.Button4:
-                    ProcessX1MouseButtonPress(conditions);
-                    break; // X1鼠标按下
-                case MouseButton.Button5:
-                    ProcessX2MouseButtonPress(conditions);
-                    break; // X2鼠标按下
+                case MouseButton.Button2: // 右键
+                    if (conditions.OpenMainWindowByRightMouseClick_Move)
+                    {
+                        RecordMousePosition();
+                        _ = PrepareMainWindowAsync(startTimer: true);
+                    }
+                    else if (conditions.OpenMainWindowByRightMouseClickLonger)
+                    {
+                        _ = PrepareMainWindowAsync(startTimer: true);
+                    }
+                    break;
+                case MouseButton.Button3: // 中键
+                    if (conditions.OpenMainWindowByMiddleMouseClick)
+                        _ = PrepareMainWindowAsync();
+                    else if (conditions.OpenMainWindowByMiddleMouseClickLonger)
+                        _ = PrepareMainWindowAsync(startTimer: true);
+                    break;
+                case MouseButton.Button4: // X1
+                    if (conditions.OpenMainWindowByX1MouseClick)
+                        _ = PrepareMainWindowAsync();
+                    break;
+                case MouseButton.Button5: // X2
+                    if (conditions.OpenMainWindowByX2MouseClick)
+                        _ = PrepareMainWindowAsync();
+                    break;
             }
-        }
-
-        /// <summary>
-        /// 处理右键按下事件
-        /// </summary>
-        private void ProcessRightMouseButtonPress(OpenMainWindow conditions)
-        {
-            if (conditions.OpenMainWindowByRightMouseClick_Move)
-            {
-                RecordMousePosition();
-                _ = PrepareMainWindowAsync(startTimer: true);
-            }
-            else if (conditions.OpenMainWindowByRightMouseClickLonger)
-            {
-                _ = PrepareMainWindowAsync(startTimer: true);
-            }
-        }
-
-        /// <summary>
-        /// 处理中键按下事件
-        /// </summary>
-        private void ProcessMiddleMouseButtonPress(OpenMainWindow conditions)
-        {
-            if (conditions.OpenMainWindowByMiddleMouseClick)
-                _ = PrepareMainWindowAsync();
-            else if (conditions.OpenMainWindowByMiddleMouseClickLonger)
-                _ = PrepareMainWindowAsync(startTimer: true);
-        }
-
-        /// <summary>
-        /// 处理 X1 鼠标按下事件
-        /// </summary>
-        private void ProcessX1MouseButtonPress(OpenMainWindow conditions)
-        {
-            if (conditions.OpenMainWindowByX1MouseClick)
-                _ = PrepareMainWindowAsync();
-        }
-
-        /// <summary>
-        /// 处理 X2 鼠标按下事件
-        /// </summary>
-        private void ProcessX2MouseButtonPress(OpenMainWindow conditions)
-        {
-            if (conditions.OpenMainWindowByX2MouseClick)
-                _ = PrepareMainWindowAsync();
         }
 
         /// <summary>
@@ -645,51 +620,18 @@ namespace Quicker
         /// </summary>
         private void ProcessMouseButtonRelease(MouseButton button, OpenMainWindow conditions, Convention conventions, TimeSpan pressDuration)
         {
-            switch (button)
-            {
-                case MouseButton.Button3:
-                    ProcessMiddleMouseButtonRelease(conditions, conventions, pressDuration);
-                    break; // 中键松开
-                case MouseButton.Button4:
-                case MouseButton.Button5:
-                    ProcessXMouseButtonRelease(conditions, conventions, pressDuration);
-                    break; // X鼠标松开
-            }
-        }
+            // 如果按住时长超过了长按阈值，则不走短按唤出的逻辑
+            if (pressDuration.TotalMilliseconds > conventions.LongPressThreshold) return;
 
-        /// <summary>
-        /// 处理中键松开事件
-        /// </summary>
-        private void ProcessMiddleMouseButtonRelease(OpenMainWindow conditions, Convention conventions, TimeSpan pressDuration)
-        {
-            if (pressDuration.TotalMilliseconds <= conventions.LongPressThreshold &&
-                conditions.OpenMainWindowByMiddleMouseClick)
+            bool isMiddleClick = button == MouseButton.Button3 && conditions.OpenMainWindowByMiddleMouseClick;
+            bool isXClick = (button == MouseButton.Button4 || button == MouseButton.Button5) &&
+                            (conditions.OpenMainWindowByX1MouseClick || conditions.OpenMainWindowByX2MouseClick);
+
+            if (isMiddleClick || isXClick)
             {
                 if (_isOpenKeyClickedOutside)
                 {
-                    var win = AppStateManager.MainWindowInstance;
-                    if (win != null) Dispatcher.BeginInvoke(new Action(() => ShowMainWindowInstance(win)), DispatcherPriority.Normal);
-                }
-                else
-                {
-                    HideOrShowMainWindow();
-                }
-            }
-        }
-
-        /// <summary>
-        /// 处理 X 鼠标按下事件
-        /// </summary>
-        private void ProcessXMouseButtonRelease(OpenMainWindow conditions, Convention conventions, TimeSpan pressDuration)
-        {
-            if ((conditions.OpenMainWindowByX1MouseClick ||
-                 conditions.OpenMainWindowByX2MouseClick) &&
-                pressDuration.TotalMilliseconds <= conventions.LongPressThreshold)
-            {
-                if (_isOpenKeyClickedOutside)
-                {
-                    var win = AppStateManager.MainWindowInstance;
-                    if (win != null) Dispatcher.BeginInvoke(new Action(() => ShowMainWindowInstance(win)), DispatcherPriority.Normal);
+                    ShowMainWindowAsyncSafe(AppStateManager.MainWindowInstance);
                 }
                 else
                 {
@@ -703,7 +645,7 @@ namespace Quicker
         /// </summary>
         private void ProcessControlKeyPress(KeyCode keyCode, OpenMainWindow conditions)
         {
-            if ((keyCode == KeyCode.VcLeftControl || keyCode == KeyCode.VcRightControl) &&
+            if (IsCtrlKey(keyCode) &&
                 (conditions.OpenMainWindowByCtrl_MiddleMouseClick ||
                  conditions.OpenMainWindowByCtrl_RightMouseClick ||
                  conditions.OpenMainWindowByCtrl))
@@ -721,8 +663,7 @@ namespace Quicker
         /// </summary>
         private void ProcessControlKeyRelease(KeyCode keyCode, OpenMainWindow conditions, Convention conventions, TimeSpan pressDuration)
         {
-            if ((keyCode == KeyCode.VcLeftControl ||
-                 keyCode == KeyCode.VcRightControl) &&
+            if (IsCtrlKey(keyCode) &&
                 conditions.OpenMainWindowByCtrl &&
                 pressDuration.TotalMilliseconds <= conventions.LongPressThreshold)
             {
@@ -837,7 +778,7 @@ namespace Quicker
         {
             if (win == null) return;
 
-            // 【关键修改】在 Show 之前，瞬间把窗口移动到正确位置
+            // 在 Show 之前，瞬间把窗口移动到正确位置
             if (new WindowInteropHelper(win).Handle != IntPtr.Zero)
             {
                 int conditions = forceCondition ?? AppStateManager.OpenMainWindowConditions.WindowStartupLocation;
@@ -878,6 +819,15 @@ namespace Quicker
         {
             if (Dispatcher.CheckAccess()) ToggleMainWindow();
             else Dispatcher.BeginInvoke(new Action(ToggleMainWindow), DispatcherPriority.Normal);
+        }
+
+        /// <summary>
+        /// 异步安全地显示主窗口（回到 UI 线程）
+        /// </summary>
+        private void ShowMainWindowAsyncSafe(MainWindow win)
+        {
+            if (win == null) return;
+            Dispatcher.BeginInvoke(new Action(() => ShowMainWindowInstance(win)), DispatcherPriority.Normal);
         }
 
         /// <summary>
