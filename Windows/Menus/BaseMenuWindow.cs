@@ -282,15 +282,6 @@ namespace Quicker.Windows.Menus
         }
 
         /// <summary>
-        /// 关闭主窗口
-        /// </summary>
-        public void CloseMainWindow()
-        {
-            var buttonManager = new ButtonManager();
-            buttonManager.CloseMainWindow(GetWindowInstance());
-        }
-
-        /// <summary>
         /// 延时关闭菜单
         /// </summary>
         public async Task CloseMenuAsync()

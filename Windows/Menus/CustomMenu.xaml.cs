@@ -34,12 +34,8 @@ namespace Quicker.Windows.Menus
         // 弹出面板窗口
         private void ShowMainWindow(object sender, RoutedEventArgs e)
         {
-            base.Dispatcher.Invoke(new Action(() =>
-            {
-                app.PreLoadMainWindow(); // 调用App类中的PreLoadMainWindow方法
-                app.CloseOrShowMainWindow(); // 调用App类中的CloseOrShowMainWindow方法
-            })); // 调用Dispatcher.Invoke方法确保在主线程中执行
-            base.Visibility = Visibility.Hidden; // 隐藏当前窗口
+            app.ShowMainWindow(sender, e); // 显示主面板
+            base.Visibility = Visibility.Hidden; // 隐藏当前菜单窗口
         }
 
         // 弹出设置窗口

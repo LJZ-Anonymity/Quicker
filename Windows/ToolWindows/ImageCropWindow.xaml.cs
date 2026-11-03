@@ -1,21 +1,17 @@
-﻿using ImageSharpImage = SixLabors.ImageSharp.Image;
-using Rectangle = System.Windows.Shapes.Rectangle;
+﻿using Rectangle = System.Windows.Shapes.Rectangle;
 using Quicker.UserControls.SettingWindow;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Formats.Gif;
-using SixLabors.ImageSharp.Processing;
 using Point = System.Windows.Point;
 using System.Windows.Media.Imaging;
 using System.Windows.Controls;
 using Path = System.IO.Path;
 using System.Windows.Shapes;
-using SixLabors.ImageSharp;
 using System.Windows.Input;
 using System.Windows.Media;
 using Quicker.Managers;
 using Quicker.Helpers;
 using System.Windows;
 using WpfAnimatedGif;
+using ImageMagick;
 using System.IO;
 
 namespace Quicker.Windows.ToolWindows
@@ -718,9 +714,11 @@ namespace Quicker.Windows.ToolWindows
                     ms.Seek(0, SeekOrigin.Begin);
 
                     // 用ImageSharp加载BMP流并保存为指定格式
-                    using (var image = ImageSharpImage.Load(ms))
+                    using (var image = new MagickImage(ms))
                     {
-                        SaveImageWithEncoder(image, outputPath, format);
+                        image.Quality = 90; // 设置JPG/WebP等有损格式的质量
+                        image.Format = GetMagickFormat(format); // 强制指定输出格式
+                        image.Write(outputPath); // 保存到目标路径
                     }
                 }
                 return true;
@@ -732,35 +730,20 @@ namespace Quicker.Windows.ToolWindows
         }
 
         /// <summary>
-        /// 使用指定的编码器保存图片
+        /// 辅助方法：将字符串扩展名映射为 MagickFormat
         /// </summary>
-        /// <param name="image">图片对象</param>
-        /// <param name="outputPath">输出路径</param>
-        /// <param name="format">格式</param>
-        private void SaveImageWithEncoder(ImageSharpImage image, string outputPath, string format)
+        private MagickFormat GetMagickFormat(string format)
         {
-            switch (format)
+            return format.ToLower() switch
             {
-                case ".jpg":
-                case ".jpeg":
-                    image.Save(outputPath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder());
-                    break;
-                case ".bmp":
-                    image.Save(outputPath, new SixLabors.ImageSharp.Formats.Bmp.BmpEncoder());
-                    break;
-                case ".gif":
-                    image.Save(outputPath, new GifEncoder());
-                    break;
-                case ".webp":
-                    image.Save(outputPath, new SixLabors.ImageSharp.Formats.Webp.WebpEncoder());
-                    break;
-                case ".tiff":
-                    image.Save(outputPath, new SixLabors.ImageSharp.Formats.Tiff.TiffEncoder());
-                    break;
-                default:
-                    image.Save(outputPath, new SixLabors.ImageSharp.Formats.Png.PngEncoder()); // 兜底
-                    break;
-            }
+                ".jpg" or ".jpeg" => MagickFormat.Jpeg,
+                ".bmp" => MagickFormat.Bmp,
+                ".gif" => MagickFormat.Gif,
+                ".webp" => MagickFormat.WebP,
+                ".tiff" or ".tif" => MagickFormat.Tiff,
+                ".png" => MagickFormat.Png,
+                _ => MagickFormat.Png, // 兜底
+            };
         }
 
         /// <summary>
@@ -770,7 +753,6 @@ namespace Quicker.Windows.ToolWindows
         /// <param name="cropRect">裁剪区域</param>
         /// <param name="dir">保存目录</param>
         /// <param name="filePath">保存路径</param>
-        /// <returns>保存成功返回 true，否则 false</returns>
         private bool SaveGifAnimation(string originalFilePath, Int32Rect cropRect, string dir, string filePath)
         {
             try
@@ -778,11 +760,15 @@ namespace Quicker.Windows.ToolWindows
                 if (!Directory.Exists(dir))
                     Directory.CreateDirectory(dir);
 
-                using (var image = ImageSharpImage.Load(originalFilePath))
+                using (var collection = new MagickImageCollection(originalFilePath))
                 {
-                    // 直接对整个图像进行裁剪，ImageSharp会自动处理所有帧
-                    image.Mutate(ctx => ctx.Crop(new SixLabors.ImageSharp.Rectangle(cropRect.X, cropRect.Y, cropRect.Width, cropRect.Height)));
-                    image.Save(filePath, new GifEncoder()); // 保存为GIF，保留所有元数据
+                    foreach (var frame in collection)
+                    {
+                        frame.Crop(new MagickGeometry(cropRect.X, cropRect.Y, (uint)cropRect.Width, (uint)cropRect.Height));
+                        frame.ResetPage();
+                    }
+
+                    collection.Write(filePath);
                 }
                 return true;
             }

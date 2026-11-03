@@ -282,7 +282,7 @@
                             </Rectangle.Style>
                         </Rectangle>
                     </Button>
-                    <Button Style="{StaticResource Task}" Click="CloseMainWindow" ToolTip="关闭面板窗口" HorizontalAlignment="Right" Margin="0,0,3,0" AllowDrop="True" Drop="CloseMainWindowButton_Drop">
+                    <Button Style="{StaticResource Task}" Click="HideMainWindow" ToolTip="关闭面板窗口" HorizontalAlignment="Right" Margin="0,0,3,0" AllowDrop="True" Drop="CloseMainWindowButton_Drop">
                         <Rectangle Width="20" Height="20" Fill="{Binding DataContext.ToolbarIconColor, RelativeSource={RelativeSource AncestorType=Window}}">
                             <Rectangle.OpacityMask>
                                 <ImageBrush ImageSource="/Resources/Images/CloseWindow.png"/>
@@ -309,7 +309,6 @@
                 <Grid x:Name="FunctionBarGrid" VerticalAlignment="Center" Height="25" Grid.Row="2" Background="{Binding ToolbarColor}">
                     <TextBlock x:Name="CommonTextBlock" Text="默认" HorizontalAlignment="Left" VerticalAlignment="Center" Foreground="{Binding DataContext.ToolbarIconColor, RelativeSource={RelativeSource AncestorType=Window}}" TextAlignment="Center" MouseDown="CommonTextBlock_MouseDown" Margin="10,0" Cursor="Hand"/>
                     <StackPanel x:Name="GlobalButtonPanel" Margin="77.6,0,77.6,13" Orientation="Horizontal" HorizontalAlignment="Center"/>
-                    <Grid x:Name="CenterPointGrid" Visibility="Hidden" HorizontalAlignment="Center" VerticalAlignment="Center" Height="1" Width="1"/>
                     <StackPanel x:Name="CommonButtonPanel" Margin="0,13,0,0" Orientation="Horizontal" HorizontalAlignment="Center"/>
                     <Button x:Name="SearchButton" HorizontalAlignment="Right" Margin="0,0,58,0" Style="{StaticResource Task}" Click="SearchButton_Click" ToolTip="搜索">
                         <Rectangle Width="14" Height="14" Fill="{Binding DataContext.ToolbarIconColor, RelativeSource={RelativeSource AncestorType=Window}}">

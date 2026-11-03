@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using Quicker.Models.Settings;
+using System.ComponentModel;
 using Quicker.Database.Core;
 using System.Windows.Media;
 using Quicker.Managers;
@@ -332,5 +333,42 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// </summary>
         /// <param name="name">属性名</param>
         protected void OnPropertyChanged(string name) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+        /// <summary>
+        /// 直接应用指定的外观设置（供事件实时刷新）
+        /// </summary>
+        public void ApplyAppearance(Appearance appearance)
+        {
+            if (appearance == null) return;
+            BackgroundImagePath = appearance.BackgroundImagePath;
+            BackgroundImageOpacity = appearance.BackgroundImageOpacity;
+            Win11CornerRadius = appearance.Win11CornerRadius;
+            BackgroundColor = appearance.BackgroundColor;
+            ButtonSize = appearance.ButtonSize;
+            ButtonGap = appearance.ButtonGap;
+            ToolbarColor = appearance.ToolbarColor;
+            BorderWidth = appearance.BorderWidth;
+            ButtonCornerRadius = appearance.ButtonCornerRadius;
+            BorderColor = appearance.BorderColor;
+            BlankButtonColor = appearance.BlankButtonColor;
+            BlankButtonMouseOverColor = appearance.BlankButtonMouseOverColor;
+            FontSize = appearance.FontSize;
+            FontWeight = Quicker.Converters.FontWeightConverter.IndexToFontWeight(appearance.FontWeight);
+            ActionButtonColor = appearance.ActionButtonColor;
+            ActionButtonMouseOverColor = appearance.ActionButtonMouseOverColor;
+            ShowActionButtonMouseOver = appearance.ShowActionButtonMouseOver;
+            ButtonTextColor = appearance.ButtonTextColor;
+            ToolbarIconColor = appearance.ToolbarIconColor;
+            Blur = appearance.Blur;
+        }
+
+        // 保留原来的 ReloadAppearance，改成调用 ApplyAppearance
+        public bool ReloadAppearance()
+        {
+            var appearance = SettingDatabase.GetAppearanceSettings()?.FirstOrDefault();
+            bool sizeChanged = ButtonSize != appearance.ButtonSize || ButtonGap != appearance.ButtonGap;
+            ApplyAppearance(appearance);
+            return sizeChanged;
+        }
     }
 }

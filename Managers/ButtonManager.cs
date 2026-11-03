@@ -111,6 +111,9 @@ namespace Quicker.Managers
                 RefreshButtonDisplay(SourceButton, targetData, 60, isMainWindow); // 更新 sourceButton 的内容
             RefreshButtonDisplay(targetButton, sourceData, 60, isMainWindow); // 更新 targetButton 的内容
             SourceButton = null; // 清空源按钮
+
+            AppStateManager.NotifyActionPageChanged(tableName1);
+            if (tableName1 != tableName2) AppStateManager.NotifyActionPageChanged(tableName2);
         }
 
         /// <summary>
@@ -458,35 +461,60 @@ namespace Quicker.Managers
         /// <summary>
         /// 加载动作图标
         /// </summary>
-        /// <param name="buttonInformation"> 按钮数据 </param>
-        /// <param name="isMainWindow"> 是否为主窗口 </param>
-        /// <returns> 图像对象 </returns>
         private Image LoadActionIcon(ButtonData buttonInformation, bool isMainWindow)
         {
             var appearance = SettingDatabase.GetAppearanceSettings().FirstOrDefault();
             double buttonSize = isMainWindow ? appearance.ButtonSize : 65;
             double imageSize = buttonSize / 2.0;
-            Image image = new()
+            var image = new Image
             {
                 Width = imageSize,
                 Height = imageSize,
                 Stretch = Stretch.Uniform,
                 VerticalAlignment = VerticalAlignment.Center,
                 HorizontalAlignment = HorizontalAlignment.Center,
-                Source = new BitmapImage(new Uri(buttonInformation.ImagePath))
+                Source = LoadIconSource(buttonInformation.ImagePath, imageSize)
             };
 
-            image.Effect = appearance.ShowActionIconShadow == true
-            ? new DropShadowEffect
+            if (appearance.ShowActionIconShadow == true)
             {
-                Color = Colors.Black,
-                BlurRadius = 8,
-                ShadowDepth = 2,
-                Opacity = 0.5
+                image.Effect = new DropShadowEffect
+                {
+                    Color = Colors.Black,
+                    BlurRadius = 8,
+                    ShadowDepth = 2,
+                    Opacity = 0.5
+                };
             }
-            : null; // 判断是否需要阴影
 
             return image;
+        }
+
+        /// <summary>
+        /// 以显示尺寸的 2 倍（给高 DPI 留余量）解码图标，避免按原图（512/256）解码造成大对象堆膨胀
+        /// </summary>
+        private static BitmapImage LoadIconSource(string path, double displaySize)
+        {
+            var bmp = new BitmapImage();
+            bmp.BeginInit();
+            bmp.CacheOption = BitmapCacheOption.OnLoad;
+            bmp.DecodePixelWidth = Math.Max(16, (int)(displaySize * 2));
+            bmp.UriSource = new Uri(path);
+            bmp.EndInit();
+            bmp.Freeze(); // 跨线程共享 + 减少 GC 压力
+            return bmp;
+        }
+
+        /// <summary>
+        /// 重新读取行为相关设置（当前只有 HideTooltip），供常驻窗口在显示时刷新
+        /// </summary>
+        public void ReloadConventions()
+        {
+            var convention = SettingDatabase.GetAllConventions().FirstOrDefault();
+            if (convention != null)
+            {
+                shouldHideTooltip = convention.HideTooltip;
+            }
         }
 
         /// <summary>
@@ -494,7 +522,6 @@ namespace Quicker.Managers
         /// </summary>
         /// <param name="buttonInformation"> 按钮数据 </param>
         /// <param name="maxWidth"> 最大宽度 </param>
-        /// <returns> 文本块对象 </returns>
         private TextBlock LoadActionTitle(ButtonData buttonInformation, double maxWidth, bool isMainWindow)
         {
             var appearance = SettingDatabase.GetAppearanceSettings().FirstOrDefault();
@@ -812,19 +839,6 @@ namespace Quicker.Managers
                 "EditSceneMenu" => new EditSceneMenu(tableName), // 假设需要场景标签
                 _ => throw new ArgumentException($"未知菜单类型: {menuType}")
             };
-        }
-
-        /// <summary>
-        /// 关闭面板窗口
-        /// </summary>
-        /// <param name="window"> 要关闭面板窗口的窗口 </param>
-        public void CloseMainWindow(Window window)
-        {
-            if (Application.Current == null) return; // 如果当前应用程序不存在，直接返回
-            var windowList = Application.Current.Windows.OfType<MainWindow>(); // 查找所有主窗口
-            foreach (var w in windowList)
-                w.Close(); // 关闭所有主窗口
-            window.Close(); // 关闭面板窗口
         }
 
         /// <summary>

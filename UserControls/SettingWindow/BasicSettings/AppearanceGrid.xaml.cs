@@ -1,6 +1,4 @@
-﻿using SixLabors.ImageSharp.Formats.Png.Chunks;
-using Color = System.Windows.Media.Color;
-using Image = SixLabors.ImageSharp.Image;
+﻿using Color = System.Windows.Media.Color;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using Point = System.Windows.Point;
@@ -12,7 +10,6 @@ using Quicker.Database.Core;
 using System.ComponentModel;
 using System.Windows.Input;
 using System.Windows.Media;
-using SixLabors.ImageSharp;
 using System.Diagnostics;
 using Quicker.Managers;
 using System.Text.Json;
@@ -21,6 +18,7 @@ using System.Windows;
 using WpfAnimatedGif;
 using Quicker.Models;
 using System.Text;
+using ImageMagick;
 using System.IO;
 
 namespace Quicker.UserControls.SettingWindow.BasicSettings
@@ -31,6 +29,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
 
         private WeakReference<Quicker.Windows.MainWindows.SettingWindow> weakSettingWindow; // 弱引用设置窗口
         private readonly ButtonManager buttonManager = new(); // 添加按钮管理器
+        private DispatcherTimer _colorChangeDebounceTimer; // 颜色变化防抖计时器
         private readonly List<string> _tempFiles = new(); // 临时文件列表，用于清理
         private DispatcherTimer _settingsChangeTimer; // 设置变化检测计时器
         private bool _isLoadingGlobalButtons = false; // 是否正在加载全局按钮
@@ -38,8 +37,8 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         private SolidColorBrush _currentBrush; // 当前选中的颜色画刷
         private bool _isInitializing = true; // 是否正在初始化
         private Button _currentColorButton; // 记录当前按钮
+        private bool _pendingColorFlush; // 是否有未 flush 的颜色变更
         SettingManager settingManager; // 设置管理器
-
         #endregion
 
         #region INotifyPropertyChanged
@@ -275,8 +274,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         }
         #endregion
 
-        #region 复选框事件
-        // 复选框点击事件
+        #region 复选框点击事件
         private void CheckBox_Click(object sender, RoutedEventArgs e)
         {
             var checkBox = sender as CheckBox; // 获取CheckBox控件
@@ -303,7 +301,8 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
                     return; // 其它CheckBox不处理
             }
             SettingDatabase.UpdateAppearance(settingManager.appearanceConditions); // 更新外观设置到数据库
-            
+            AppStateManager.NotifyAppearanceChanged(settingManager.appearanceConditions);
+
             // 在非初始化期间才刷新预览
             if (!_isInitializing)
             {
@@ -333,17 +332,55 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         // 处理颜色选择器颜色变化事件
         private void PopupColorPicker_SelectedColorChanged(object sender, ColorChangedEventArgs e)
         {
-            if (_currentBrush != null)
+            if (_currentBrush == null || settingManager == null) return;
+
+            // 拖动过程只更新内存和当前 UI 反馈，不写库、不通知
+            _currentBrush.Color = e.NewColor;
+            UpdateAppearanceColorProperty(_currentBrush, e.NewColor);
+
+            if (_currentColorButton != null && _currentColorButton.Name == "TextColorButton")
             {
-                _currentBrush.Color = e.NewColor;
-                UpdateAppearanceColorProperty(_currentBrush, e.NewColor);
-                if (_currentColorButton != null && _currentColorButton.Name == "TextColorButton") // 如果当前是文字颜色按钮，顺便同步ViewModel属性
-                {
-                    ButtonTextColorBrush.Color = e.NewColor;
-                    settingManager.appearanceConditions.ButtonTextColor = e.NewColor.ToString(); // 同步更新数据库字段
-                }
-                SettingDatabase.UpdateAppearance(settingManager.appearanceConditions);
+                ButtonTextColorBrush.Color = e.NewColor;
+                settingManager.appearanceConditions.ButtonTextColor = e.NewColor.ToString();
             }
+
+            ScheduleColorChangeFlush(); // 防抖
+        }
+
+        /// <summary>
+        /// 颜色变化防抖：拖动时仅更新内存，停止后再统一写库与通知
+        /// </summary>
+        private void ScheduleColorChangeFlush()
+        {
+            if (_colorChangeDebounceTimer == null)
+            {
+                _colorChangeDebounceTimer = new DispatcherTimer
+                {
+                    Interval = TimeSpan.FromMilliseconds(150)
+                };
+                _colorChangeDebounceTimer.Tick += ColorChangeDebounceTimer_Tick;
+            }
+            _pendingColorFlush = true;
+            _colorChangeDebounceTimer.Stop();
+            _colorChangeDebounceTimer.Start();
+        }
+
+        private void ColorChangeDebounceTimer_Tick(object sender, EventArgs e)
+        {
+            _colorChangeDebounceTimer.Stop();
+            FlushColorChange();
+        }
+
+        /// <summary>
+        /// 立即写库并通知 MainWindow 刷新（只在停止拖动或弹窗关闭时调用）
+        /// </summary>
+        private void FlushColorChange()
+        {
+            if (!_pendingColorFlush || settingManager == null) return;
+            _pendingColorFlush = false;
+
+            SettingDatabase.UpdateAppearance(settingManager.appearanceConditions);
+            AppStateManager.NotifyAppearanceChanged(settingManager.appearanceConditions);
         }
 
         // 按钮名到属性名的映射字典
@@ -393,6 +430,15 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
                 _settingsChangeTimer.Tick -= SettingsChangeTimer_Tick;
                 _settingsChangeTimer = null;
             }
+
+            // 清理颜色防抖计时器
+            if (_colorChangeDebounceTimer != null)
+            {
+                _colorChangeDebounceTimer.Stop();
+                _colorChangeDebounceTimer.Tick -= ColorChangeDebounceTimer_Tick;
+                _colorChangeDebounceTimer = null;
+            }
+            _pendingColorFlush = false;
 
             // 清理UI元素
             GlobalGrid.Children.Clear(); // 清空按钮
@@ -589,8 +635,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         }
         #endregion
 
-        #region 滑块事件
-        // 滑块值改变事件，统一处理所有相关Slider
+        #region 滑块改变事件
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             var slider = sender as Slider; // 获取Slider控件
@@ -619,6 +664,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
                     return;
             }
             SettingDatabase.UpdateAppearance(settingManager.appearanceConditions); // 更新外观设置到数据库
+            AppStateManager.NotifyAppearanceChanged(settingManager.appearanceConditions);
             if (!_isInitializing) // 在非初始化期间才刷新预览
             {
                 LoadGlobalButtonsForPreview(); // 刷新预览区按钮内容和样式
@@ -655,6 +701,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
                 }
                 ApplyGlobalFontFamily(); // 每次字体选择后应用全局字体
                 SettingDatabase.UpdateAppearance(settingManager.appearanceConditions); // 更新外观设置到数据库
+                AppStateManager.NotifyAppearanceChanged(settingManager.appearanceConditions);
             }
         }
 
@@ -695,6 +742,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             if(settingManager == null) return; // 防止空引用
             settingManager.appearanceConditions.EnablePreview = EnablePreviewCheckBox.IsChecked == true; // 同步复选框状态到缓存
             SettingDatabase.UpdateAppearance(settingManager.appearanceConditions); // 更新外观设置到数据库
+            AppStateManager.NotifyAppearanceChanged(settingManager.appearanceConditions);
             ViewPreviewBorder.Visibility = (Visibility)(EnablePreviewCheckBox.IsChecked == true ? 0 : 2); // 切换预览区可见性
             if (EnablePreviewCheckBox.IsChecked == true) // 如果开启预览
             {
@@ -721,6 +769,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
                 settingManager.appearanceConditions.EnablePreview = currentPreviewSetting;
                 RefreshInterfaceDisplay(); // 刷新界面
                 SettingDatabase.UpdateAppearance(settingManager.appearanceConditions); // 更新数据库
+                AppStateManager.NotifyAppearanceChanged(settingManager.appearanceConditions);
             }
         }
         #endregion
@@ -933,13 +982,13 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         // 文本框文本变化时，保存背景图片路径
         private void BackgroundImagePathTextBox_TextChanged(object sender, RoutedEventArgs e)
         {
-            SettingDatabase.UpdateAppearance(settingManager.appearanceConditions); // 更新外观设置到数据库
             settingManager.appearanceConditions.BackgroundImagePath = BackgroundImagePathTextBox.Text; // 保存路径到缓存
+            SettingDatabase.UpdateAppearance(settingManager.appearanceConditions); // 更新外观设置到数据库
+            AppStateManager.NotifyAppearanceChanged(settingManager.appearanceConditions);
         }
         #endregion
 
         #region 外观分享与导入
-
         // 点击按钮分享外观
         private void ShareSaveAppearanceButton_Click(object sender, RoutedEventArgs e)
         {
@@ -972,20 +1021,22 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         /// </summary>
         /// <param name="inputPath">原始图片路径（支持jpg、bmp、gif等）</param>
         /// <param name="outputPath">输出PNG图片路径</param>
+
         private void ConvertImageToPng(string inputPath, string outputPath)
         {
             try
             {
-                using (var image = SixLabors.ImageSharp.Image.Load(inputPath))
+                // 使用 Magick.NET 读取并转换为 PNG
+                using (var image = new MagickImage(inputPath))
                 {
-                    image.Save(outputPath, new SixLabors.ImageSharp.Formats.Png.PngEncoder());
+                    image.Write(outputPath, MagickFormat.Png);
                 }
             }
             catch
             {
                 ShowToast("图片格式不受支持或文件损坏，已自动使用默认图片导出外观。", ToastType.Error);
                 string defaultPath = GetAppearanceCarrierImagePath(); // 获取默认图片路径
-                // 防止死循环：如果inputPath已经是默认图片，则不再递归
+                                                                      // 防止死循环：如果inputPath已经是默认图片，则不再递归
                 if (!string.Equals(inputPath, defaultPath, StringComparison.OrdinalIgnoreCase))
                 {
                     ConvertImageToPng(defaultPath, outputPath);
@@ -1030,26 +1081,23 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         }
 
         /// <summary>
-        /// 将 JSON 数据写入 PNG 图片的 tEXt 块，实现外观参数嵌入（ImageSharp 版本）
+        /// 将 JSON 数据写入 PNG 图片的 tEXt 块，实现外观参数嵌入
         /// </summary>
         /// <param name="inputPngPath">输入PNG路径（载体图片）</param>
         /// <param name="outputPngPath">输出PNG路径（保存路径）</param>
         /// <param name="json">要嵌入的 JSON 数据</param>
         private void WriteAppearanceToPng(string inputPngPath, string outputPngPath, string json)
         {
-            // 用 ImageSharp 读取图片，写入 tEXt 块
-            using (var image = SixLabors.ImageSharp.Image.Load(inputPngPath))
+            using (var image = new MagickImage(inputPngPath))
             {
-                var pngMeta = image.Metadata.GetPngMetadata();
+                // 将 JSON 转为 Base64 避免特殊字符问题
                 string base64 = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(json));
-                // 先移除同名块，避免重复
-                var toRemove = pngMeta.TextData.Where(t => t.Keyword == "QuickerAppearance").ToList();
-                foreach (var item in toRemove)
-                {
-                    pngMeta.TextData.Remove(item);
-                }
-                pngMeta.TextData.Add(new PngTextData("QuickerAppearance", base64, null, null));
-                image.Save(outputPngPath);
+
+                // 设置元数据属性，Magick.NET 保存为 PNG 时会自动作为 tEXt 块写入
+                image.SetAttribute("QuickerAppearance", base64);
+
+                // 保存图片
+                image.Write(outputPngPath, MagickFormat.Png);
             }
         }
 
@@ -1105,25 +1153,24 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         }
 
         /// <summary>
-        /// 从 PNG 文件导入外观数据，返回 Appearance 对象，失败返回 null
+        /// 从 PNG 文件导入外观数据
         /// </summary>
         /// <param name="pngPath">PNG 文件路径</param>
         /// <returns>Appearance 对象或 null</returns>
         private Appearance ImportAppearanceFromPng(string pngPath)
         {
-            string json = null;
-            using (var image = Image.Load(pngPath))
+            string base64 = null;
+
+            using (var image = new MagickImage(pngPath))
             {
-                var pngMeta = image.Metadata.GetPngMetadata();
-                var textData = pngMeta.TextData.FirstOrDefault(t => t.Keyword == "QuickerAppearance");
-                // 使用更安全的方式检查是否找到了数据
-                if (textData != null && !string.IsNullOrEmpty(textData.Value))
-                {
-                    json = Encoding.UTF8.GetString(Convert.FromBase64String(textData.Value));
-                }
+                // 读取 tEXt 块中的属性
+                base64 = image.GetAttribute("QuickerAppearance");
             }
-            if (string.IsNullOrEmpty(json))
+
+            if (string.IsNullOrEmpty(base64))
                 return null;
+
+            string json = Encoding.UTF8.GetString(Convert.FromBase64String(base64));
             return JsonSerializer.Deserialize<Appearance>(json);
         }
 
@@ -1194,6 +1241,8 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             SettingDatabase.UpdateAppearance(appearance); // 更新数据库
             settingManager.appearanceConditions = appearance; // 应用到缓存
             RefreshInterfaceDisplay(); // 刷新界面显示
+            AppStateManager.NotifyAppearanceChanged(settingManager.appearanceConditions);
+
             // 保证导入后预览区可见
             EnablePreviewCheckBox.IsChecked = true;
             EnablePreviewCheckBox_Click(null, null);
@@ -1201,17 +1250,20 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
 
         /// <summary>
         /// 去除 PNG 图片的 tEXt/iTXt/zTXt 元数据并复制到指定路径
-        /// 用于处理导入Appearance对象的背景图片，将其去除文本块后复制到本地
         /// </summary>
         /// <param name="srcPath"> 源 PNG 文件路径 </param>
         /// <param name="destPath"> 目标 PNG 文件路径 </param>
         private void RemoveTextChunkAndCopy(string srcPath, string destPath)
         {
-            using (var image = Image.Load(srcPath)) // 用 ImageSharp 读取图片像素并去除所有 tEXt/iTXt/zTXt 元数据
+            using (var image = new MagickImage(srcPath))
             {
-                var pngMeta = image.Metadata.GetPngMetadata();
-                pngMeta.TextData.Clear(); // 移除所有文本块
-                image.Save(destPath);
+                image.Strip();
+                foreach (var attrName in image.AttributeNames.ToList())
+                {
+                    image.RemoveAttribute(attrName);
+                }
+
+                image.Write(destPath, MagickFormat.Png);
             }
         }
         #endregion
@@ -1242,6 +1294,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             RestoreUserOptions(currentOptions); // 恢复用户选项设置
             RefreshInterfaceDisplay(); // 刷新界面显示
             SettingDatabase.UpdateAppearance(settingManager.appearanceConditions); // 保存到数据库
+            AppStateManager.NotifyAppearanceChanged(settingManager.appearanceConditions);
         }
 
         /// <summary>
@@ -1461,6 +1514,17 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         {
             DefaultAppearanceSettingButton.BorderThickness = new Thickness(0);
             DarkThemeSettingButton.BorderThickness = new Thickness(0, 0, 0, 2);
+        }
+
+        /// <summary>
+        /// 颜色选择器关闭时，立即 flush 一次，防止最后一次颜色变化未落地
+        /// </summary>
+        private void ColorPickerPopup_Closed(object sender, EventArgs e)
+        {
+            if (_colorChangeDebounceTimer != null && _colorChangeDebounceTimer.IsEnabled)
+                _colorChangeDebounceTimer.Stop();
+
+            FlushColorChange();
         }
     }
 }

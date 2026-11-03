@@ -296,7 +296,6 @@ namespace Quicker.Windows.Menus
             base.HideMainWindow(); // 隐藏操作菜单窗口
             AddActionWindow addWindow = new(ButtonID, TableName, 0); // 创建添加动作窗口
             addWindow.Show(); // 显示添加动作窗口
-            base.CloseMainWindow(); // 关闭操作菜单窗口
         }
 
         // 复制动作
@@ -516,10 +515,6 @@ namespace Quicker.Windows.Menus
             catch (Exception ex)
             {
                 actionManager.ShowToast($"打开路径失败：{ex.Message}", ToastType.Error);
-            }
-            finally
-            {
-                base.CloseMainWindow(); // 关闭操作菜单窗口
             }
         }
 

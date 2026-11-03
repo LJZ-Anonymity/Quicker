@@ -628,6 +628,8 @@ namespace Quicker.Windows.MainWindows
         {
             if (sender is Button TargetButton)
                 buttonManager.Button_Drop(sender, e, false, type); // 处理拖放事件
+
+            AppStateManager.NotifyActionPageChanged(type);
         }
 
         // 鼠标左键按下事件
@@ -696,6 +698,8 @@ namespace Quicker.Windows.MainWindows
                 db3.UpdateActionPageTable(type, type + canvasCount.ToString(), GetActionPageInfo().ActionPageName); // 更新动作页数据表
                 MainListView.Items.Add(GenerateCanvas(canvasCount, type)); // 生成画布
             }
+
+            AppStateManager.NotifySceneListChanged(type);
         }
 
         /// <summary>
@@ -775,6 +779,8 @@ namespace Quicker.Windows.MainWindows
                     buttonManager.RefreshButtonDisplay(targetButton, data, 60, false); // 刷新按钮显示
                 }
             }
+
+            AppStateManager.NotifyActionPageChanged(type);
         }
 
         // 鼠标移动时检查是否满足拖拽条件
@@ -814,6 +820,8 @@ namespace Quicker.Windows.MainWindows
                     db3.SwapActionPage(type, sourceIndex, targetIndex); // 更新数据库动作页数据
                     UpdateCanvasInListView(sourceIndex, type); // 更新 ListView 中的特定 Canvas
                     UpdateCanvasInListView(targetIndex, type); // 更新 ListView 中的特定 Canvas
+
+                    AppStateManager.NotifyActionPageChanged(type);
                 }
             }
         }
@@ -945,6 +953,9 @@ namespace Quicker.Windows.MainWindows
                 db3.DeleteActionPageTable(type); // 删除动作页数据表
             }
             LoadCanvas(type); // 刷新界面
+
+            AppStateManager.NotifyActionPageChanged(type);
+            AppStateManager.NotifySceneListChanged(type);
         }
 
         // 点击按钮添加场景
@@ -1062,6 +1073,12 @@ namespace Quicker.Windows.MainWindows
                         if (!new List<string> { "_global", "common", "taskbar", "desktop" }.Contains(type)) // 如果不是默认场景
                             db3.DeleteScene(type); // 删除场景数据表
                     }
+
+                    AppStateManager.NotifyActionPageChanged(type);
+                    AppStateManager.NotifyActionPageChanged(targetSceneData.SceneName);
+                    AppStateManager.NotifySceneListChanged(type);
+                    AppStateManager.NotifySceneListChanged(targetSceneData.SceneName);
+
                     TypeChanged(targetSceneData.SceneName); // 刷新界面
                 }
             }

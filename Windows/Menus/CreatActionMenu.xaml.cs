@@ -431,7 +431,6 @@ namespace Quicker.Windows.Menus
             base.HideMainWindow(); // 隐藏操作菜单窗口
             AddActionWindow addWindow = new(ButtonID, TableName, 1); // 传递当前按钮和类型
             addWindow.Show(); // 显示窗口
-            base.CloseMainWindow(); // 关闭主窗口
         }
 
         // 打开文件
@@ -441,7 +440,6 @@ namespace Quicker.Windows.Menus
             base.HideMainWindow(); // 隐藏操作菜单窗口
             AddActionWindow addWindow = new(ButtonID, TableName, 2); // 传递当前按钮和类型
             addWindow.Show(); // 显示窗口
-            base.CloseMainWindow(); // 关闭主窗口
         }
 
         // 打开文件夹
@@ -451,7 +449,6 @@ namespace Quicker.Windows.Menus
             base.HideMainWindow(); // 隐藏操作菜单窗口
             AddActionWindow addWindow = new(ButtonID, TableName, 3); // 传递当前按钮和类型
             addWindow.Show(); // 显示窗口
-            base.CloseMainWindow(); // 关闭主窗口
         }
 
         // 打开网址
@@ -461,7 +458,6 @@ namespace Quicker.Windows.Menus
             base.HideMainWindow(); // 隐藏操作菜单窗口
             AddActionWindow addWindow = new(ButtonID, TableName, 4); // 传递当前按钮和类型
             addWindow.Show(); // 显示窗口
-            base.CloseMainWindow(); // 关闭主窗口
         }
 
         // 创建打开文件动作
@@ -538,7 +534,6 @@ namespace Quicker.Windows.Menus
             base.HideMainWindow(); // 隐藏操作菜单窗口
             AddActionWindow addWindow = new(ButtonID, TableName, 5); // 传递当前按钮和类型
             addWindow.Show(); // 显示窗口
-            base.CloseMainWindow(); // 关闭主窗口
         }
         #endregion
 

@@ -274,10 +274,11 @@
 
   <ItemGroup>
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
-    <PackageReference Include="SharpHook" Version="7.1.0" />
-    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
-    <PackageReference Include="Svg" Version="3.4.7" />
-    <PackageReference Include="System.Data.SQLite" Version="1.0.119" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="15.0.0" />
+    <PackageReference Include="SharpHook" Version="8.0.1" />
+    <PackageReference Include="SQLitePCLRawEx.bundle_e_sqlite3" Version="2.1.0" />
+    <PackageReference Include="Svg" Version="3.4.8" />
+    <PackageReference Include="System.Data.SQLite" Version="2.0.4" />
     <PackageReference Include="WpfAnimatedGif" Version="2.0.2" />
   </ItemGroup>
 

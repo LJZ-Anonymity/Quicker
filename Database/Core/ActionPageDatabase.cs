@@ -445,8 +445,17 @@ namespace Quicker.Database.Core
         /// <returns> 动作页数据 </returns>
         public ActionPageData GetActionPageData(string tableName, int actionPageIndex)
         {
-            using var connection = OpenConnection(); // 打开数据库连接
-            string selectQuery = $"SELECT * FROM [{tableName + "ActionPage"}] WHERE DefaultActionPageName = @DefaultActionPageName"; // 获取动作页数据表的SQL语句
+            using var connection = OpenConnection();
+            string table = tableName + "ActionPage";
+
+            using (var check = new SQLiteCommand(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=@n", connection))
+            {
+                check.Parameters.AddWithValue("@n", table);
+                if (check.ExecuteScalar() == null) return null; // 表不存在当作没有数据
+            }
+
+            string selectQuery = $"SELECT * FROM [{table}] WHERE DefaultActionPageName = @DefaultActionPageName";
             using var command = new SQLiteCommand(selectQuery, connection); // 创建SQLiteCommand对象
             command.Parameters.AddWithValue("@DefaultActionPageName", tableName + actionPageIndex.ToString()); // 添加参数
             using var reader = command.ExecuteReader(); // 执行查询SQL语句

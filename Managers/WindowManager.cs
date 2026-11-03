@@ -10,6 +10,7 @@ namespace Quicker.Managers
 {
     public class WindowManager : IDisposable
     {
+        #region 一些Dll函数
         // 设置窗口位置和大小
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
@@ -27,6 +28,12 @@ namespace Quicker.Managers
             public int Y; // 鼠标Y坐标
         }
 
+        // 窗口置顶相关常量
+        private const int HWND_TOPMOST = -1; // 置顶
+        private const int SWP_NOSIZE = 0x0001; // 不调整大小
+        private const int SWP_NOMOVE = 0x0002; // 不调整位置
+        private const int SWP_NOZORDER = 0x0004; // 不调整Z轴顺序
+
         // 查找窗口句柄
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern nint FindWindow(string lpClassName, string lpWindowName); // 查找窗口句柄
@@ -34,12 +41,6 @@ namespace Quicker.Managers
         // 设置前台窗口
         [DllImport("user32.dll")]
         private static extern bool SetForegroundWindow(nint hWnd); // 设置前台窗口
-
-        // 窗口置顶相关常量
-        private const int HWND_TOPMOST = -1; // 置顶
-        private const int SWP_NOSIZE = 0x0001; // 不调整大小
-        private const int SWP_NOMOVE = 0x0002; // 不调整位置
-        private const int SWP_NOZORDER = 0x0004; // 不调整Z轴顺序
 
         // 获取当前活动窗口句柄
         [DllImport("user32.dll")]
@@ -69,6 +70,21 @@ namespace Quicker.Managers
         // 判断是否全屏
         [DllImport("user32.dll")]
         public static extern bool GetClientRect(IntPtr hWnd, out RECT rect); // 窗口客户区矩形
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetParent(IntPtr hWnd); // 获取父窗口句柄
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+        [DllImport("user32.dll")]
+        private static extern uint GetDpiForWindow(IntPtr hWnd);
+
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmGetWindowAttribute(IntPtr hwnd, int dwAttribute, out RECT pvAttribute, int cbAttribute);
+
+        private const int DWMWA_EXTENDED_FRAME_BOUNDS = 9;
 
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
@@ -112,6 +128,7 @@ namespace Quicker.Managers
         private static extern IntPtr GetShellWindow();
 
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam); // 枚举窗口委托
+        #endregion
 
         /// <summary>
         /// 将窗口置顶
@@ -121,15 +138,6 @@ namespace Quicker.Managers
         {
             nint hWnd = new WindowInteropHelper(window).Handle; // 获取窗口句柄
             SetWindowPos(hWnd, new nint(HWND_TOPMOST), 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE); // 设置窗口置顶
-        }
-
-        /// <summary>
-        /// 将菜单窗口置顶
-        /// </summary>
-        /// <param name="menuWindow"> 菜单窗口对象 </param>
-        public void SetWindowTopmost(Quicker.Windows.Menus.BaseMenuWindow menuWindow)
-        {
-            SetWindowTopmost((Window)menuWindow);
         }
 
         /// <summary>
@@ -155,18 +163,6 @@ namespace Quicker.Managers
         public nint GetCurrentForegroundWindow()
         {
             return GetForegroundWindow(); // 获取当前活动窗口句柄
-        }
-
-        /// <summary>
-        /// 获取窗口标题
-        /// </summary>
-        /// <param name="hWnd"> 窗口句柄 </param>
-        /// <returns> 窗口标题 </returns>
-        public string GetWindowText(nint hWnd)
-        {
-            StringBuilder text = new StringBuilder(256); // 窗口标题缓冲区
-            GetWindowText(hWnd, text, text.Capacity); // 获取窗口标题
-            return text.ToString(); // 返回窗口标题
         }
 
         /// <summary>
@@ -227,7 +223,6 @@ namespace Quicker.Managers
         /// 创建窗口对象
         /// </summary>
         /// <param name="windowType"> 窗口类型 </param>
-        /// <returns> 窗口对象 </returns>
         private Window CreateWindow(string windowType)
         {
             switch (windowType)
@@ -266,7 +261,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 获取焦点窗口的进程名称
         /// </summary>
-        /// <returns> 进程名称 </returns>
         public string GetProcessName()
         {
             nint foregroundWindow = GetCurrentForegroundWindow(); // 获取当前活动窗口句柄
@@ -288,12 +282,6 @@ namespace Quicker.Managers
         {
             await Task.Delay(1000); // 延迟100毫秒
             window.Close(); // 关闭窗口
-        }
-
-        // 延时关闭菜单窗口
-        public async Task CloseMenuAsync(Quicker.Windows.Menus.BaseMenuWindow menuWindow)
-        {
-            await CloseMenuAsync((Window)menuWindow);
         }
 
         /// <summary>
@@ -319,15 +307,6 @@ namespace Quicker.Managers
         }
 
         /// <summary>
-        /// 将菜单窗口定位到鼠标位置附近
-        /// </summary>
-        /// <param name="menuWindow"> 要定位的菜单窗口 </param>
-        public void SetWindowPositionNearMouse(Quicker.Windows.Menus.BaseMenuWindow menuWindow)
-        {
-            SetWindowPositionNearMouse((Window)menuWindow);
-        }
-
-        /// <summary>
         /// 将窗口左下角定位到鼠标位置附近
         /// </summary>
         /// <param name="window"> 要定位的窗口 </param>
@@ -343,45 +322,130 @@ namespace Quicker.Managers
         }
 
         /// <summary>
-        /// 将菜单窗口左下角定位到鼠标位置附近
-        /// </summary>
-        /// <param name="menuWindow"> 要定位的菜单窗口 </param>
-        public void SetWindowBottomLeftNearMouse(Quicker.Windows.Menus.BaseMenuWindow menuWindow)
-        {
-            SetWindowBottomLeftNearMouse((Window)menuWindow);
-        }
-
-        /// <summary>
-        /// 获取窗口标题
-        /// </summary>
-        /// <param name="hWnd"> 窗口句柄 </param>
-        /// <returns> 窗口标题 </returns>
-        public string GetWindowTitle(IntPtr hWnd)
-        {
-            int length = GetWindowTextLength(hWnd); // 获取窗口标题长度
-            if (length == 0) return string.Empty; // 如果长度为0，返回空字符串
-            StringBuilder title = new StringBuilder(length + 1); // 创建标题缓冲区
-            GetWindowText(hWnd, title, title.Capacity); // 获取窗口标题
-            return title.ToString(); // 返回窗口标题
-        }
-
-        /// <summary>
         /// 将窗口中心定位到鼠标位置
         /// </summary>
-        /// <param name="window"> 要定位的窗口 </param>
         public void SetWindowCenterAtMouse(Window window)
         {
-            GetCursorPos(out POINT cursorPos); // 获取鼠标位置
+            if (!GetCursorPos(out POINT cursorPos)) return;
 
-            // 计算窗口中心定位到鼠标位置所需的偏移量
-            int offsetX = (int)(window.ActualWidth / 2); // 窗口宽度的一半
-            int offsetY = (int)(window.ActualHeight / 2); // 窗口高度的一半
+            // 首次 Show 前 ActualWidth=0，回退到 XAML 里的 Width/Height
+            double w = window.ActualWidth > 0 ? window.ActualWidth : window.Width;
+            double h = window.ActualHeight > 0 ? window.ActualHeight : window.Height;
+            if (double.IsNaN(w) || w <= 0) w = 450;
+            if (double.IsNaN(h) || h <= 0) h = 850;
 
-            // 窗口左边界 = 鼠标X坐标 - 窗口宽度的一半（使窗口中心对齐鼠标）
-            int left = cursorPos.X - offsetX; // 窗口左边界
-            int top = cursorPos.Y - offsetY; // 窗口上边界
+            // 物理像素 → DIP（未显示时 PresentationSource 为 null，按 100% 处理）
+            double scaleX = 1.0, scaleY = 1.0;
+            try
+            {
+                var src = PresentationSource.FromVisual(window);
+                if (src?.CompositionTarget != null)
+                {
+                    scaleX = src.CompositionTarget.TransformFromDevice.M11;
+                    scaleY = src.CompositionTarget.TransformFromDevice.M22;
+                }
+            }
+            catch { }
 
-            SetWindowPosition(window, left, top); // 设置窗口位置
+            // 鼠标物理像素 → DIP
+            double mouseDipX = cursorPos.X * scaleX;
+            double mouseDipY = cursorPos.Y * scaleY;
+
+            // 直接设 Left/Top（DIP），Show 时会应用
+            window.Left = mouseDipX - w / 2;
+            window.Top = mouseDipY - h / 2;
+        }
+
+        /// <summary>
+        /// 获取窗口 DPI 缩放系数（1.0 = 96 DPI）
+        /// </summary>
+        private static double GetWindowDpiScale(IntPtr hWnd)
+        {
+            try
+            {
+                uint dpi = GetDpiForWindow(hWnd);
+                if (dpi > 0) return dpi / 96.0;
+            }
+            catch { }
+            return 1.0;
+        }
+
+        /// <summary>
+        /// 获取窗口矩形并转换为 WPF 的 DIP 坐标（支持高 DPI、最大化窗口、多屏）
+        /// </summary>
+        public bool TryGetWindowRectInDips(IntPtr hWnd,
+            out double left, out double top, out double width, out double height)
+        {
+            left = top = width = height = 0;
+            if (hWnd == IntPtr.Zero) return false;
+
+            RECT rect;
+            bool ok;
+            // 最大化窗口：GetWindowRect 会包含屏幕外的边框阴影，用 DWM 扩展边框修正
+            if (IsZoomed(hWnd) &&
+                DwmGetWindowAttribute(hWnd, DWMWA_EXTENDED_FRAME_BOUNDS, out rect,
+                    Marshal.SizeOf<RECT>()) == 0)
+            {
+                ok = true;
+            }
+            else
+            {
+                ok = GetWindowRect(hWnd, out rect);
+            }
+            if (!ok) return false;
+
+            double scale = GetWindowDpiScale(hWnd);
+            left = rect.left / scale;
+            top = rect.top / scale;
+            width = (rect.right - rect.left) / scale;
+            height = (rect.bottom - rect.top) / scale;
+            return true;
+        }
+
+        /// <summary>
+        /// 将窗口居中到当前前台窗口（按 DIP 对齐，夹取到前台窗口所在屏幕的工作区）
+        /// </summary>
+        public bool CenterWindowOnForeground(Window window)
+        {
+            IntPtr fg = GetCurrentForegroundWindow();
+            if (fg == IntPtr.Zero) return false;
+
+            // 排除自身，避免"居中到自己的旧位置"
+            IntPtr self = new WindowInteropHelper(window).EnsureHandle();
+            if (fg == self) return false;
+
+            if (!TryGetWindowRectInDips(fg,
+                out double fgLeft, out double fgTop, out double fgWidth, out double fgHeight))
+                return false;
+
+            // 未布局前 ActualWidth 为 0，回退到 Width；两者都无效则放弃
+            double w = window.ActualWidth > 0 ? window.ActualWidth : window.Width;
+            double h = window.ActualHeight > 0 ? window.ActualHeight : window.Height;
+            if (double.IsNaN(w) || w <= 0) return false;
+            if (double.IsNaN(h) || h <= 0) return false;
+
+            double left = fgLeft + (fgWidth - w) / 2;
+            double top = fgTop + (fgHeight - h) / 2;
+
+            // 夹取到前台窗口所在屏幕的工作区（DIP）
+            try
+            {
+                var screen = System.Windows.Forms.Screen.FromHandle(fg);
+                var wa = screen.WorkingArea;
+                double scale = GetWindowDpiScale(fg);
+                double waLeft = wa.Left / scale;
+                double waTop = wa.Top / scale;
+                double waWidth = wa.Width / scale;
+                double waHeight = wa.Height / scale;
+
+                left = Math.Max(waLeft, Math.Min(left, waLeft + waWidth - w));
+                top = Math.Max(waTop, Math.Min(top, waTop + waHeight - h));
+            }
+            catch { } // 屏幕查询失败就保持居中值
+
+            window.Left = left;
+            window.Top = top;
+            return true;
         }
 
         // 释放资源
@@ -393,7 +457,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 判断鼠标是否在任务栏上
         /// </summary>
-        /// <returns> 是否在任务栏上 </returns>
         public bool IsMouseOnTaskbar()
         {
             try
@@ -425,25 +488,35 @@ namespace Quicker.Managers
         /// <summary>
         /// 判断鼠标是否在桌面上
         /// </summary>
-        /// <returns> 是否在桌面上 </returns>
         public bool IsMouseOnDesktop()
         {
             try
             {
-                IntPtr foregroundWindow = GetCurrentForegroundWindow(); // 获取当前前台窗口句柄
-                if (foregroundWindow == IntPtr.Zero) return true; // 如果前台窗口为空，说明鼠标在桌面上
+                GetCursorPos(out POINT cursorPos);
+                IntPtr hWnd = WindowFromPoint(new System.Drawing.Point(cursorPos.X, cursorPos.Y));
+                if (hWnd == IntPtr.Zero) return false;
 
-                // 获取前台窗口的类名
-                StringBuilder className = new StringBuilder(256);
-                GetClassName(foregroundWindow, className, className.Capacity);
-                string classNameStr = className.ToString().ToLower();
-                return classNameStr.Contains("progman") || classNameStr.Contains("workerw"); // 如果前台窗口不是桌面窗口，则认为鼠标不在桌面上
+                // 桌面图标窗口可能挂在 WorkerW / Progman 下面，需要沿父窗口链向上找
+                IntPtr current = hWnd;
+                for (int depth = 0; depth < 8 && current != IntPtr.Zero; depth++)
+                {
+                    StringBuilder className = new StringBuilder(256);
+                    GetClassName(current, className, className.Capacity);
+                    string cls = className.ToString().ToLowerInvariant();
+
+                    if (cls == "progman" || cls == "workerw")
+                        return true;
+
+                    if (cls == "shell_traywnd" || cls == "shell_secondarytraywnd")
+                        return false; // 鼠标在任务栏上，不算桌面
+
+                    current = GetParent(current);
+                }
+                return false;
             }
             catch
             {
-                // 如果API调用失败，回退到检查前台窗口的方法
-                IntPtr foregroundWindow = GetCurrentForegroundWindow();
-                return foregroundWindow == IntPtr.Zero;
+                return false;
             }
         }
     }
