@@ -78,12 +78,10 @@ namespace Quicker
             CheckAppUpdate(); // 检查应用更新
             CheckAndUpdateDatabase(); // 检查并升级数据库
             RestoreGlobalFontFamilyFromDatabase(); // 恢复全局字体设置
+            InitializeMainWindow();
             InitializeTimer(); // 初始化定时器
             InitializeTaskbar(); // 初始化托盘图标
             InitializeHookAsync(); // 初始化钩子
-            InitializeMainWindow(); // 预初始化主窗口
-            ShowNotification(); // 弹出消息提醒
-
             this.MainWindow = null; // 设置主窗口为null，避免应用程序在没有窗口时退出
         }
 
@@ -107,7 +105,7 @@ namespace Quicker
                 MessageWindow messageWindow = new("Quicker", "Quicker已经在运行，不能启动多个实例！"); // 创建消息窗口
                 messageWindow.ShowInTaskbar = true; // 显示在任务栏
                 messageWindow.ShowDialog(); // 显示消息窗口
-                Application.Current.Shutdown(); // 如果不是新实例，关闭当前实例
+                Environment.Exit(0);
             }
         }
 
@@ -161,17 +159,14 @@ namespace Quicker
         /// <summary>
         /// 弹出消息提醒
         /// </summary>
-        private async void ShowNotification()
+        private void ShowNotification()
         {
-            await Task.Run(() =>
+            var Convention = SettingDatabase.GetAllConventions().FirstOrDefault(); // 获取设置
+            if (Convention.ShowNotification) // 如果设置中允许显示消息提醒
             {
-                var Convention = SettingDatabase.GetAllConventions().FirstOrDefault(); // 获取设置
-                if (Convention.ShowNotification) // 如果设置中允许显示消息提醒
-                {
-                    using var toast = new ToastManager(); // 消息提醒管理器
-                    toast.Show("成功启动！", ToastType.Common); // 弹出消息提醒
-                }
-            }); // 异步执行
+                using var toast = new ToastManager(); // 消息提醒管理器
+                toast.Show("成功启动！", ToastType.Common); // 弹出消息提醒
+            }
         }
 
         /// <summary>
@@ -179,19 +174,24 @@ namespace Quicker
         /// </summary>
         private void InitializeMainWindow()
         {
-            Dispatcher.BeginInvoke(DispatcherPriority.Background, new Action(() =>
+            // 使用 Loaded 优先级，比 Background 快得多，能在界面框架渲染后立刻执行
+            Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
             {
-                // 用户可能已经抢先唤起了主窗口，此时不再重复创建
+                // 用户可能已经抢先唤起了主窗口，不再重复创建
                 if (AppStateManager.MainWindowInstance != null) return;
                 try
                 {
                     var win = new MainWindow();
-                    win.Initialize();
                     AppStateManager.MainWindowInstance = win;
+                    win.Initialize();
                 }
                 catch
                 {
                     AppStateManager.MainWindowInstance = null;
+                }
+                finally
+                {
+                    ShowNotification();
                 }
             }));
         }
@@ -1021,24 +1021,20 @@ namespace Quicker
             DisposeTaskbarIcon();
             DisposeHook();
 
-            // 在后台线程异步保存使用时间，不阻塞退出流程
-            _ = Task.Run(() =>
+            try
             {
-                try
+                double currentSessionTime = (DateTime.Now - AppStateManager.RecordedTime).TotalSeconds;
+                if (currentSessionTime > 0)
                 {
-                    double currentSessionTime = (DateTime.Now - AppStateManager.RecordedTime).TotalSeconds;
-                    if (currentSessionTime > 0)
+                    var convention = SettingDatabase.GetAllConventions().FirstOrDefault();
+                    if (convention != null)
                     {
-                        var convention = SettingDatabase.GetAllConventions().FirstOrDefault();
-                        if (convention != null)
-                        {
-                            convention.TotalUsageTime += currentSessionTime;
-                            SettingDatabase.SaveTotalUsageTime(convention.TotalUsageTime);
-                        }
+                        convention.TotalUsageTime += currentSessionTime;
+                        SettingDatabase.SaveTotalUsageTime(convention.TotalUsageTime);
                     }
                 }
-                catch { }
-            });
+            }
+            catch { }
 
             AppStateManager.Dispose();
             SingleInstanceManager.ReleaseMutex();

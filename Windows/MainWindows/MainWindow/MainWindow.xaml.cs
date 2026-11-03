@@ -282,14 +282,14 @@ namespace Quicker.Windows.MainWindows.MainWindow
             var vm = DataContext as MainWindowViewModel;
             if (vm == null) return;
 
-            // 1. 场景变化：整块通用区重建
+            // 场景变化：整块通用区重建
             if (!string.Equals(CommonStyle, commonState, StringComparison.Ordinal))
             {
                 OnCommonStyleChanged(commonState);
                 ClearDirtyByPrefix("page:", "scenes:"); // 场景变了，原表的脏位已无意义
             }
 
-            // 2. 外观变更
+            // 外观变更
             if (ConsumeDirty("appearance"))
             {
                 if (_latestAppearance != null)
@@ -308,15 +308,15 @@ namespace Quicker.Windows.MainWindows.MainWindow
                 RebuildAllPages();
             }
 
-            // 3. 行为设置变更
+            // 行为设置变更
             if (ConsumeDirty("conventions"))
                 buttonManager.ReloadConventions();
 
-            // 4. 锁定状态
+            // 锁定状态
             if (ConsumeDirty("lock"))
                 vm.IsLocked = AppStateManager.Locked;
 
-            // 5. 页面数据变更：按表精确刷新
+            // 页面数据变更：按表精确刷新
             foreach (var table in ConsumeDirtyByPrefix("page:"))
             {
                 if (string.Equals(table, GLOBAL_STYLE, StringComparison.Ordinal))
@@ -325,7 +325,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
                     RebuildPages(CommonGrid, CommonStyle, 4);
             }
 
-            // 6. 场景页数变更
+            // 场景页数变更
             foreach (var table in ConsumeDirtyByPrefix("scenes:"))
             {
                 if (string.Equals(table, GLOBAL_STYLE, StringComparison.Ordinal))
@@ -684,7 +684,6 @@ namespace Quicker.Windows.MainWindows.MainWindow
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             SetMainWindowState(); // 需要窗口句柄
-            this.Activate();
         }
 
         /// <summary>

@@ -106,7 +106,7 @@ namespace Quicker.Helpers
                 EnsureDirectoryExists(directory);
             }
 
-            LogDirectorie(); // 记录路径
+            //LogDirectorie(); // 记录路径
         }
 
         // 日志记录（修改路径部分）
@@ -203,10 +203,6 @@ namespace Quicker.Helpers
                 var content = new[]
                 {
                     "# Quicker 应用数据根目录配置",
-                    "# 可填写绝对或相对路径（相对路径相对于程序目录）",
-                    "# 示例：",
-                    "#   D:/QuickerData",
-                    "#   path=D:/QuickerData",
                     string.Concat("path=", defaultRoot)
                 };
                 File.WriteAllLines(configPath, content);
