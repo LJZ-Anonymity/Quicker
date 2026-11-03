@@ -60,6 +60,7 @@ namespace Quicker
 
         private Action<string, string> _trayIconChangedHandler; // 托盘图标改变事件
         private readonly HashSet<KeyCode> _downKeys = new(); // 按下的键集合
+        private bool _isOpenKeyClickedOutside = false; // 是否在外部按下了唤出键
         private KeyCode? _lastKeyCode = null; // 上一个按键码
         private string _previewRunningPath; // 预览运行图标路径
         private string _previewPausedPath; // 预览暂停图标路径
@@ -284,6 +285,7 @@ namespace Quicker
         /// </summary>
         private void IsMouseClickOutsideMainWindow(MouseHookEventArgs e)
         {
+            _isOpenKeyClickedOutside = false; // 每次按下重置标志位
             var win = AppStateManager.MainWindowInstance;
             if (win == null || win.IsHiddenOrInvisible || AppStateManager.MainWindowPinned || AppStateManager.Pause)
                 return;
@@ -291,19 +293,33 @@ namespace Quicker
             bool isInside = Dispatcher.Invoke(() =>
             {
                 if (win.IsHiddenOrInvisible || !win.IsLoaded) return true;
-                return win.IsPointInsideMainWindowOrMenus(e.Data.X, e.Data.Y); // 主窗口和菜单一起判定
+                return win.IsPointInsideMainWindowOrMenus(e.Data.X, e.Data.Y);
             });
 
             if (!isInside)
             {
-                Dispatcher.BeginInvoke(new Action(() =>
+                // 判断是否是唤出键
+                var conditions = AppStateManager.OpenMainWindowConditions;
+                bool isOpenKey = (e.Data.Button == MouseButton.Button5 && conditions.OpenMainWindowByX2MouseClick) ||
+                                 (e.Data.Button == MouseButton.Button4 && conditions.OpenMainWindowByX1MouseClick) ||
+                                 (e.Data.Button == MouseButton.Button3 && conditions.OpenMainWindowByMiddleMouseClick);
+
+                if (isOpenKey)
                 {
-                    if (!win.IsHiddenOrInvisible)
+                    _isOpenKeyClickedOutside = true;
+                }
+                else
+                {
+                    // 其他按键点击外部：照常隐藏并清理状态
+                    Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        win.HideWindowSilently();
-                        ResetInteractionState();
-                    }
-                }));
+                        if (!win.IsHiddenOrInvisible)
+                        {
+                            win.HideWindowSilently();
+                            ResetInteractionState();
+                        }
+                    }));
+                }
             }
         }
 
@@ -649,7 +665,15 @@ namespace Quicker
             if (pressDuration.TotalMilliseconds <= conventions.LongPressThreshold &&
                 conditions.OpenMainWindowByMiddleMouseClick)
             {
-                HideOrShowMainWindow();
+                if (_isOpenKeyClickedOutside)
+                {
+                    var win = AppStateManager.MainWindowInstance;
+                    if (win != null) Dispatcher.BeginInvoke(new Action(() => ShowMainWindowInstance(win)), DispatcherPriority.Normal);
+                }
+                else
+                {
+                    HideOrShowMainWindow();
+                }
             }
         }
 
@@ -660,9 +684,17 @@ namespace Quicker
         {
             if ((conditions.OpenMainWindowByX1MouseClick ||
                  conditions.OpenMainWindowByX2MouseClick) &&
-                pressDuration.TotalMilliseconds <= conventions.LongPressThreshold) // 使用毫秒比较
+                pressDuration.TotalMilliseconds <= conventions.LongPressThreshold)
             {
-                HideOrShowMainWindow();
+                if (_isOpenKeyClickedOutside)
+                {
+                    var win = AppStateManager.MainWindowInstance;
+                    if (win != null) Dispatcher.BeginInvoke(new Action(() => ShowMainWindowInstance(win)), DispatcherPriority.Normal);
+                }
+                else
+                {
+                    HideOrShowMainWindow();
+                }
             }
         }
 
@@ -754,7 +786,7 @@ namespace Quicker
         public async void ShowMainWindow(object sender, RoutedEventArgs e)
         {
             var win = await PrepareMainWindowAsync(forceCondition: 2);
-            ShowMainWindowInstance(win);
+            ShowMainWindowInstance(win, 2);
         }
 
         /// <summary>
@@ -781,28 +813,17 @@ namespace Quicker
 
                 AppStateManager.CommonState = windowType;
 
-                // 优先使用外部传入的强制条件，否则读取用户配置
                 int conditions = forceCondition ?? AppStateManager.OpenMainWindowConditions.WindowStartupLocation;
 
-                // 通过句柄是否创建来精确判断是否首次唤起
+                // 只有首次创建句柄前，才在此时设置初始位置
                 if (new WindowInteropHelper(win).Handle == IntPtr.Zero)
                 {
                     if (conditions == 1)
-                    {
                         win.ShouldCenterAtMouseOnShow = true;
-                    }
                     else if (conditions == 2)
-                    {
                         win.ShouldCenterOnScreenOnShow = true;
-                    }
                     else
-                    {
                         SetMainWindowPosition(win, conditions);
-                    }
-                }
-                else
-                {
-                    SetMainWindowPosition(win, conditions);
                 }
 
                 return win;
@@ -810,11 +831,18 @@ namespace Quicker
         }
 
         /// <summary>
-        /// 显示并激活主窗口。要求 UI 线程调用。
+        /// 显示并激活主窗口。要求 UI 线程调用
         /// </summary>
-        private void ShowMainWindowInstance(MainWindow win)
+        private void ShowMainWindowInstance(MainWindow win, int? forceCondition = null)
         {
             if (win == null) return;
+
+            // 【关键修改】在 Show 之前，瞬间把窗口移动到正确位置
+            if (new WindowInteropHelper(win).Handle != IntPtr.Zero)
+            {
+                int conditions = forceCondition ?? AppStateManager.OpenMainWindowConditions.WindowStartupLocation;
+                SetMainWindowPosition(win, conditions);
+            }
 
             win.ShowWindowSilently();
 
