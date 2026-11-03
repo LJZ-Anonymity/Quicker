@@ -16,6 +16,7 @@ using Quicker.Database.Core;
 using System.Windows.Media;
 using System.Windows.Input;
 using System.Windows.Forms;
+using Quicker.Converters;
 using Quicker.Managers;
 using Quicker.Helpers;
 using System.Windows;
@@ -353,18 +354,18 @@ namespace Quicker.Windows.MainWindows.MainWindow
             {
                 if (_latestAppearance != null)
                 {
-                    vm.ApplyAppearance(_latestAppearance); // 直接应用内存里的最新数据
+                    vm.ApplyAppearance(_latestAppearance);
                     _latestAppearance = null;
                 }
                 else
                 {
-                    vm.ReloadAppearance(); // 兜底从数据库读取
+                    vm.ReloadAppearance();
                 }
 
                 try { iconManager.SetImageWithGifSupport(BackgroundImage, vm.BackgroundImagePath); } catch { }
 
-                // 无论尺寸是否变化，强制重建页面
-                RebuildAllPages();
+                // 同步页面切换按钮的颜色
+                RefreshPageButtonColors();
             }
 
             // 行为设置变更
@@ -400,10 +401,22 @@ namespace Quicker.Windows.MainWindows.MainWindow
             }
         }
 
-        private void RebuildAllPages()
+        /// <summary>
+        /// 刷新页面切换按钮（小圆点）的颜色，无需重建
+        /// </summary>
+        private void RefreshPageButtonColors()
         {
-            RebuildPages(GlobalGrid, GLOBAL_STYLE, 3);
-            RebuildPages(CommonGrid, CommonStyle, 4);
+            // 更新全局页面切换按钮
+            foreach (Button btn in GlobalButtonPanel.Children.OfType<Button>())
+            {
+                btn.Background = btn.Name == $"{GLOBAL_STYLE}{GloblePageIndex}" ? SelectedBrush : UnSelectedBrush;
+            }
+
+            // 更新通用页面切换按钮
+            foreach (Button btn in CommonButtonPanel.Children.OfType<Button>())
+            {
+                btn.Background = btn.Name == $"{CommonStyle}{CommonPageIndex}" ? SelectedBrush : UnSelectedBrush;
+            }
         }
 
         /// <summary>
@@ -611,10 +624,10 @@ namespace Quicker.Windows.MainWindows.MainWindow
         private Grid GeneratePageGrid(Panel parent, string gridType, int pageIndex, int rows, int cols)
         {
             var grid = new Grid { Name = $"{gridType}{pageIndex}" }; // 创建Grid
-            AddGridRows(grid, rows, ((MainWindowViewModel)this.DataContext).ButtonGap); // 添加行定义
-            AddGridColumns(grid, cols, ((MainWindowViewModel)this.DataContext).ButtonGap); // 添加列定义
+            AddGridRows(grid, rows); // 行定义
+            AddGridColumns(grid, cols); // 列定义
             // 添加按钮到Grid
-            AddButtonsToGrid(grid, pageIndex, rows, cols, gridType, (Style)FindResource("Button"), ((MainWindowViewModel)this.DataContext).ButtonSize);
+            AddButtonsToGrid(grid, pageIndex, rows, cols, gridType, (Style)FindResource("Button"));
             parent.Children.Add(grid); // 添加到父容器
             return grid;
         }
@@ -624,17 +637,27 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// </summary>
         /// <param name="grid">目标Grid</param>
         /// <param name="rows">行数</param>
-        /// <param name="gap">行间距</param>
-        private void AddGridRows(Grid grid, int rows, double gap)
+        private void AddGridRows(Grid grid, int rows)
         {
+            var converter = new DoubleToGridLengthConverter();
+
             for (int i = 0; i < rows * 2 - 1; i++)
             {
-                grid.RowDefinitions.Add(new RowDefinition
+                var rowDef = new RowDefinition();
+                if (i % 2 != 0)
                 {
-                    Height = (i % 2 == 0)
-                        ? new GridLength(1, GridUnitType.Auto)
-                        : new GridLength(gap)
-                });
+                    var binding = new System.Windows.Data.Binding("ButtonGap")
+                    {
+                        Source = this.DataContext,
+                        Converter = converter
+                    };
+                    rowDef.SetBinding(RowDefinition.HeightProperty, binding);
+                }
+                else
+                {
+                    rowDef.Height = new GridLength(1, GridUnitType.Auto);
+                }
+                grid.RowDefinitions.Add(rowDef);
             }
         }
 
@@ -643,17 +666,27 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// </summary>
         /// <param name="grid">目标Grid</param>
         /// <param name="cols">列数</param>
-        /// <param name="gap">列间距</param>
-        private void AddGridColumns(Grid grid, int cols, double gap)
+        private void AddGridColumns(Grid grid, int cols)
         {
+            var converter = new DoubleToGridLengthConverter();
+
             for (int j = 0; j < cols * 2 - 1; j++)
             {
-                grid.ColumnDefinitions.Add(new ColumnDefinition
+                var colDef = new ColumnDefinition();
+                if (j % 2 != 0)
                 {
-                    Width = (j % 2 == 0)
-                        ? new GridLength(1, GridUnitType.Auto)
-                        : new GridLength(gap)
-                });
+                    var binding = new System.Windows.Data.Binding("ButtonGap")
+                    {
+                        Source = this.DataContext,
+                        Converter = converter
+                    };
+                    colDef.SetBinding(ColumnDefinition.WidthProperty, binding);
+                }
+                else
+                {
+                    colDef.Width = new GridLength(1, GridUnitType.Auto);
+                }
+                grid.ColumnDefinitions.Add(colDef);
             }
         }
 
@@ -666,8 +699,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// <param name="cols">列数</param>
         /// <param name="gridType">Grid类型</param>
         /// <param name="style">按钮样式</param>
-        /// <param name="size">按钮尺寸</param>
-        private void AddButtonsToGrid(Grid grid, int pageIndex, int rows, int cols, string gridType, Style style, double size)
+        private void AddButtonsToGrid(Grid grid, int pageIndex, int rows, int cols, string gridType, Style style)
         {
             for (int row = 0; row < rows; row++)
             {
@@ -675,7 +707,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
                 {
                     int buttonIndex = pageIndex * 100 + (row + 1) * 10 + (col + 1);
                     string buttonName = $"{gridType}{buttonIndex}";
-                    Button button = CreateButton(buttonName, style, size);
+                    Button button = CreateButton(buttonName, style);
                     // 设置行列（注意：有间隔，实际行列号*2）
                     Grid.SetRow(button, row * 2);
                     Grid.SetColumn(button, col * 2);
@@ -691,17 +723,19 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// </summary>
         /// <param name="name">按钮名称</param>
         /// <param name="style">按钮样式</param>
-        /// <param name="size">按钮尺寸</param>
         /// <returns>新建的Button对象</returns>
-        private Button CreateButton(string name, Style style, double size)
+        private Button CreateButton(string name, Style style)
         {
-            return new Button
-            {
-                Name = name,
-                Style = style,
-                Width = size,
-                Height = size
-            };
+            var btn = new Button { Name = name, Style = style };
+
+            // 使用完整的命名空间
+            var widthBinding = new System.Windows.Data.Binding("ButtonSize") { Source = this.DataContext };
+            var heightBinding = new System.Windows.Data.Binding("ButtonSize") { Source = this.DataContext };
+
+            btn.SetBinding(FrameworkElement.WidthProperty, widthBinding);
+            btn.SetBinding(FrameworkElement.HeightProperty, heightBinding);
+
+            return btn;
         }
 
         /// <summary>
@@ -715,7 +749,8 @@ namespace Quicker.Windows.MainWindows.MainWindow
             BindButtonEvents(button); // 绑定事件
             var buttonData = db2.GetButtonDataByID(buttonIndex, gridType); // 获取按钮数据
             button.Tag = buttonData; // 绑定数据
-            buttonManager.RefreshButtonDisplay(button, buttonData, 60, true); // 刷新显示
+            var vm = DataContext as MainWindowViewModel;
+            buttonManager.RefreshButtonDisplay(button, buttonData, vm.ButtonSize, true); // 刷新显示
         }
 
         /// <summary>
@@ -1030,7 +1065,8 @@ namespace Quicker.Windows.MainWindows.MainWindow
 
             if (button == null) return; // 如果按钮不存在，直接返回
             var buttonData = db2.GetButtonDataByID(buttonID, tableName); // 从数据库中获取按钮数据
-            buttonManager.RefreshButtonDisplay(button, buttonData, 60, true); // 更新按钮内容
+            var vm = DataContext as MainWindowViewModel;
+            buttonManager.RefreshButtonDisplay(button, buttonData, vm.ButtonSize, true); // 更新按钮内容
             NotifyActionPageChanged(tableName);
         }
 
@@ -1134,19 +1170,57 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// </summary>
         private void Button_MouseEnter(object sender, MouseEventArgs e)
         {
-            if (sender is Button btn)
+            if (sender is Button btn && DataContext is MainWindowViewModel vm)
             {
-                var appearance = SettingDatabase.GetAppearanceSettings().FirstOrDefault();
                 if (btn.Tag != null) // 有数据的按钮，执行放大动画
                 {
-                    AnimateButtonScale(btn, appearance);
+                    if (vm.ShowActionButtonMouseOver)
+                    {
+                        AnimateButtonScale(btn);
+                    }
                 }
                 else // 空按钮，显示添加图片
                 {
-                    var conventions = SettingDatabase.GetAllConventions().FirstOrDefault();
-                    ShowAddImageOnButton(btn, appearance, conventions);
+                    if (vm.ShowAddImage)
+                    {
+                        ShowAddImageOnButton(btn, vm.ButtonSize);
+                    }
                 }
             }
+        }
+
+        /// <summary>
+        /// 动画按钮缩放
+        /// </summary>
+        private void AnimateButtonScale(Button btn)
+        {
+            var border = VisualTreeHelper.FindVisualChild<Border>(btn);
+            if (border == null) return;
+
+            var scale = new ScaleTransform(1, 1);
+            border.RenderTransformOrigin = new Point(0.5, 0.5);
+            border.RenderTransform = scale;
+
+            var animX = new DoubleAnimation(1.05, TimeSpan.FromMilliseconds(100));
+            var animY = new DoubleAnimation(1.05, TimeSpan.FromMilliseconds(100));
+            scale.BeginAnimation(ScaleTransform.ScaleXProperty, animX);
+            scale.BeginAnimation(ScaleTransform.ScaleYProperty, animY);
+        }
+
+        /// <summary>
+        /// 在按钮上显示添加图片
+        /// </summary>
+        private void ShowAddImageOnButton(Button btn, double buttonSize)
+        {
+            double imageSize = buttonSize / 2.0;
+            btn.Content = new Image
+            {
+                Source = new BitmapImage(new Uri("pack://application:,,,/Resources/Images/Add.png")),
+                Stretch = Stretch.Uniform,
+                Height = imageSize,
+                Width = imageSize,
+                Opacity = 0.5
+            };
         }
 
         /// <summary>

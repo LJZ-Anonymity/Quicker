@@ -363,12 +363,10 @@ namespace Quicker.Windows.MainWindows.MainWindow
         }
 
         // 保留原来的 ReloadAppearance，改成调用 ApplyAppearance
-        public bool ReloadAppearance()
+        public void ReloadAppearance()
         {
             var appearance = SettingDatabase.GetAppearanceSettings()?.FirstOrDefault();
-            bool sizeChanged = ButtonSize != appearance.ButtonSize || ButtonGap != appearance.ButtonGap;
             ApplyAppearance(appearance);
-            return sizeChanged;
         }
     }
 }

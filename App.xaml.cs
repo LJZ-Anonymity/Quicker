@@ -817,7 +817,6 @@ namespace Quicker
             if (win == null) return;
 
             win.ShowWindowSilently();
-            win.Activate();
 
             if (!double.IsNaN(win.Left)) AppStateManager.Left = (float)win.Left;
             if (!double.IsNaN(win.Top)) AppStateManager.Top = (float)win.Top;
