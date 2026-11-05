@@ -286,7 +286,7 @@ namespace Quicker.Managers
             ButtonData buttonData = new ButtonData
             {
                 ButtonID = buttonID,
-                Title = GetWebsiteNameFromUrl(url),
+                Title = DomainHelper.GetWebsiteNameFromUrl(url),
                 Location = url,
                 ImagePath = iconPath,
                 Data3 = 0.ToString(),
@@ -294,22 +294,6 @@ namespace Quicker.Managers
                 ActionType = ActionType.OpenWebsite,
             };
             ActionSaveHelper.SaveAction(buttonData, tableName, notify: true);
-        }
-
-        /// <summary>
-        /// 从URL中获取网站名称
-        /// </summary>
-        public string GetWebsiteNameFromUrl(string url)
-        {
-            try
-            {
-                Uri uri = new Uri(url);
-                return uri.Host;
-            }
-            catch
-            {
-                return url;
-            }
         }
 
         /// <summary>

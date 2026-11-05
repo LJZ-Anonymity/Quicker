@@ -19,14 +19,6 @@ namespace Quicker.Windows.MainWindows
 {
     public partial class SearchWindow : Window
     {
-        private static readonly string[] KnownTldSuffixes = new[]
-        {
-            ".com", ".cn", ".net", ".org", ".io", ".gov", ".edu", ".co", ".me",
-            ".top", ".xyz", ".tech", ".site", ".info", ".biz", ".cc", ".tv",
-            ".uk", ".de", ".jp", ".ru", ".in", ".fr", ".it", ".es", ".nl",
-            ".au", ".ca", ".br", ".mx", ".se", ".no", ".fi", ".pl",
-            ".app", ".dev", ".ai", ".cloud"
-        };
         public bool IsPinned
         {
             get { return (bool)GetValue(IsPinnedProperty); }
@@ -261,29 +253,13 @@ namespace Quicker.Windows.MainWindows
             if (string.IsNullOrEmpty(text)) // 若已经空了，直接返回空，避免拼出无效的 http://
                 return string.Empty;
 
-            if (!EndsWithKnownTld(text)) // 若主机名不以常见 TLD 结尾，则补全为 .com；否则保留原样
+            if (!DomainHelper.EndsWithKnownTld(text))
                 text += ".com";
 
             // 选择协议：保留用户已给出的 http/https，否则默认使用 https
             string schemeToUse = string.IsNullOrEmpty(originalScheme) ? "https" : originalScheme.ToLowerInvariant();
             string finalUrl = schemeToUse + "://" + text;
             return finalUrl;
-        }
-
-        /// <summary>
-        /// 检查给定的主机名是否以已知的顶级域名后缀结尾
-        /// </summary>
-        /// <param name="host">主机名字符串</param>
-        /// <returns> 是否以已知的顶级域名后缀结尾 </returns>
-        private static bool EndsWithKnownTld(string host)
-        {
-            if (string.IsNullOrEmpty(host)) return false;
-            foreach (var tld in KnownTldSuffixes)
-            {
-                if (host.EndsWith(tld, StringComparison.OrdinalIgnoreCase))
-                    return true;
-            }
-            return false;
         }
 
         // 置顶切换

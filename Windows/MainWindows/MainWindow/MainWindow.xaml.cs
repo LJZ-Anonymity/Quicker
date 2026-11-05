@@ -1159,6 +1159,8 @@ namespace Quicker.Windows.MainWindows.MainWindow
             {
                 searchWindow = new SearchWindow(); // 创建搜索窗口
                 searchWindow.Show(); // 显示窗口
+                if(!AppStateManager.MainWindowPinned)
+                    HideWindowSilently();
             }
             else
             {

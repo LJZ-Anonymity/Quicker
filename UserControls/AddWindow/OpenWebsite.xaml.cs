@@ -1,16 +1,17 @@
-﻿using System.Windows.Media.Imaging;
-using Quicker.Windows.ToolWindows;
-using Quicker.Windows.AddWindows;
-using System.Windows.Controls;
-using Quicker.Database.Core;
-using System.Windows.Media;
-using System.Diagnostics;
+﻿using Quicker.Database.Core;
+using Quicker.Helpers;
 using Quicker.Managers;
-using System.Windows;
 using Quicker.Models;
-using WpfAnimatedGif;
-using System.Net;
+using Quicker.Windows.AddWindows;
+using Quicker.Windows.ToolWindows;
+using System.Diagnostics;
 using System.IO;
+using System.Net;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using WpfAnimatedGif;
 
 namespace Quicker.UserControls.AddWindow
 {
@@ -219,7 +220,7 @@ namespace Quicker.UserControls.AddWindow
                 ImageSource icon = await _iconManager.GetWebsiteIconAsync(url); // 注意：这里需要调用新的异步方法
                 if (string.IsNullOrWhiteSpace(_addWindow.TitleTextBox.Text)) // 如果标题为空，则自动获取网站名称
                 {
-                    _addWindow.TitleTextBox.Text = _buttonManager.GetWebsiteNameFromUrl(url);
+                    _addWindow.TitleTextBox.Text = DomainHelper.GetWebsiteNameFromUrl(url);
                 }
 
                 if (icon == null) return;
@@ -239,16 +240,6 @@ namespace Quicker.UserControls.AddWindow
         #endregion
 
         #region 辅助方法
-
-        /// <summary>
-        /// 解析网站地址和浏览器地址
-        /// </summary>
-        /// <param name="info">地址和浏览器地址</param>
-        /// <returns>网站地址和浏览器地址数组</returns>
-        private string[] GetLocationAndBrowser(string info)
-        {
-            return info.Split(';');
-        }
 
         // 清理资源
         private void CleanupResources()
