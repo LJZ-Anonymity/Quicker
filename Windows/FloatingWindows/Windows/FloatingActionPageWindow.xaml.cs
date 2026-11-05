@@ -63,7 +63,7 @@ namespace Quicker.Windows.FloatingWindows.Windows
                 if (buttonData != null) // 有数据的情况
                 {
                     button.Tag = buttonData;
-                    buttonManager.RefreshButtonDisplay(button, buttonData, (int)viewModel.ButtonSize, true);
+                    buttonManager.RefreshButtonDisplay(button, buttonData, viewModel.ButtonSize);
                 }
                 else // 没有数据的情况
                 {

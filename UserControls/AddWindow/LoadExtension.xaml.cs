@@ -21,7 +21,6 @@ namespace Quicker.UserControls.AddWindow
         #region 字段和属性
         
         private Quicker.Windows.AddWindows.AddActionWindow _addWindow; // AddWindow 的引用
-        private readonly ButtonManager _buttonManager = new(); // 按钮管理器接口
         private readonly IconManager _iconManager = new(); // 图标管理器接口
         private ButtonDatabase _buttonDb = new(); // 按钮数据库
         private string _selectedPath; // 选中的文件夹路径
@@ -133,7 +132,7 @@ namespace Quicker.UserControls.AddWindow
         private void CopyLocation(object sender, RoutedEventArgs e)
         {
             string clipboardText = System.Windows.Clipboard.GetText(); // 获取剪贴板文本
-            LocationTextBox.Text = _buttonManager.ProcessLocation(clipboardText); // 设置地址栏文本
+            LocationTextBox.Text = ButtonManager.ProcessLocation(clipboardText); // 设置地址栏文本
             try
             {
                 LoadExtensionInfo(LocationTextBox.Text); // 加载扩展信息

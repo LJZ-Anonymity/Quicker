@@ -164,7 +164,7 @@ namespace Quicker.UserControls.AddWindow
         private void CopyLocation(object sender, RoutedEventArgs e)
         {
             string clipboardText = System.Windows.Clipboard.GetText(); // 获取剪贴板文本
-            string processedLocation = _buttonManager.ProcessLocation(clipboardText); // 处理地址
+            string processedLocation = ButtonManager.ProcessLocation(clipboardText); // 处理地址
             ProcessLocationFromClipboard(processedLocation); // 处理剪贴板中的地址
             OpenFilePopup.IsOpen = false; // 关闭弹出菜单
         }

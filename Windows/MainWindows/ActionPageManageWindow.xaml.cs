@@ -195,7 +195,7 @@ namespace Quicker.Windows.MainWindows
                     if (child is not Button button) continue;
                     int buttonId = int.Parse(button.Name.Replace(type, ""));
                     var data = db2.GetButtonDataByID(buttonId, type);
-                    buttonManager.RefreshButtonDisplay(button, data, 60, false);
+                    buttonManager.RefreshButtonDisplay( button, data, ButtonManager.ManageWindowButtonSize, ButtonManager.ManageWindowTitleMaxWidth);
                     button.Background = isDarkModle
                         ? (data != null ? actionDarkModleButtonBrush : blankButtonBrush)
                         : (data != null ? actionButtonBrush : blankButtonBrush);
@@ -641,7 +641,7 @@ namespace Quicker.Windows.MainWindows
                     uniformGrid.Children.Add(button); // 将按钮添加到画布
 
                     var data = db2.GetButtonDataByID(int.Parse(buttonName.Replace(style, "")), type); // 获取按钮数据
-                    buttonManager.RefreshButtonDisplay(button, data, 60, false); // 刷新按钮显示
+                    buttonManager.RefreshButtonDisplay(button, data, ButtonManager.ManageWindowButtonSize, ButtonManager.ManageWindowTitleMaxWidth);
 
                     button.Background = isDarkModle
                         ? (button.Tag is ButtonData ? actionDarkModleButtonBrush : blankButtonBrush)
@@ -771,7 +771,7 @@ namespace Quicker.Windows.MainWindows
             if (button.Tag is ButtonData data) // 如果按钮有数据
             {
                 if(showUsedTimes) // 如果显示使用次数
-                    buttonManager.RefreshButtonDisplay(button, data, 60, false); // 刷新按钮显示
+                    buttonManager.RefreshButtonDisplay(button, data, ButtonManager.ManageWindowButtonSize, ButtonManager.ManageWindowTitleMaxWidth);
                 button.Background = isDarkModle
                     ? new SolidColorBrush((Color)ColorConverter.ConvertFromString("DarkGray"))
                     : actionButtonBrush; // 设置按钮背景颜色
@@ -802,7 +802,7 @@ namespace Quicker.Windows.MainWindows
         {
             if (sender is Button TargetButton)
             {
-                buttonManager.Button_Drop(sender, e, false, type); // 处理拖放事件
+                buttonManager.Button_Drop( sender, e, ButtonManager.ManageWindowButtonSize, ButtonManager.ManageWindowTitleMaxWidth, type);
                 NotifyActionPageChanged(type);
             }
         }
@@ -951,7 +951,7 @@ namespace Quicker.Windows.MainWindows
                 if(childs is Button targetButton && targetButton.Name.Contains(button.ToString()))
                 {
                     ButtonData data = db2.GetButtonDataByID(int.Parse(targetButton.Name.Replace(type, "")), type); // 获取按钮数据
-                    buttonManager.RefreshButtonDisplay(targetButton, data, 60, false); // 刷新按钮显示
+                    buttonManager.RefreshButtonDisplay(targetButton, data, ButtonManager.ManageWindowButtonSize, ButtonManager.ManageWindowTitleMaxWidth);
                 }
             }
 

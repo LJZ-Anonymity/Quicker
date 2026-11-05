@@ -755,7 +755,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
             button.Tag = buttonData; // 为空时 Tag 就是 null
 
             var vm = DataContext as MainWindowViewModel;
-            buttonManager.RefreshButtonDisplay(button, buttonData, vm.ButtonSize, true); // 刷新显示
+            buttonManager.RefreshButtonDisplay(button, buttonData, vm.ButtonSize);
         }
 
         /// <summary>
@@ -952,7 +952,9 @@ namespace Quicker.Windows.MainWindows.MainWindow
             if (sender is Button TargetButton)
             {
                 string buttonType = GetButtonType(sender);
-                buttonManager.Button_Drop(sender, e, true, buttonType);
+                double buttonSize = ((MainWindowViewModel)DataContext).ButtonSize;
+                double titleMaxWidth = ButtonManager.GetTitleMaxWidthForButtonSize(buttonSize);
+                buttonManager.Button_Drop(sender, e, buttonSize, titleMaxWidth, buttonType);
                 NotifyActionPageChanged(buttonType);
             }
         }
@@ -1071,7 +1073,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
             if (button == null) return; // 如果按钮不存在，直接返回
             var buttonData = db2.GetButtonDataByID(buttonID, tableName); // 从数据库中获取按钮数据
             var vm = DataContext as MainWindowViewModel;
-            buttonManager.RefreshButtonDisplay(button, buttonData, vm.ButtonSize, true); // 更新按钮内容
+            buttonManager.RefreshButtonDisplay(button, buttonData, vm.ButtonSize);
             NotifyActionPageChanged(tableName);
         }
 

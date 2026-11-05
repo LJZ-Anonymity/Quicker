@@ -220,35 +220,22 @@ namespace Quicker.Windows.AddWindows
             }
         }
 
-        // 保存动作
+        /// <summary>
+        /// 保存动作
+        /// </summary>
         private void Save()
         {
-            var editor = ActionInfoGrid.Children[0] as IActionEditor; // 获取动作编辑器
+            if (ActionInfoGrid.Children.Count == 0) return; // 编辑器尚未加载
+            if (ActionInfoGrid.Children[0] is not IActionEditor editor) return;
 
-            // 图标一次性搞定，由父窗口负责
-            string savedIconPath = ButtonImage.Visibility == Visibility.Visible
-                ? SaveIconToLocal()
-                : "";
-
-            var oldData = db2.GetButtonDataByID(ButtonID, TableName);
-
-            var buttonData = new ButtonData
-            {
-                ButtonID = ButtonID,
-                Title = TitleTextBox.Text,
-                Description = DescriptionTextBox.Text,
-                ImagePath = savedIconPath,
-                Location = editor.GetLocation(),
-                ActionType = editor.GetActionType(),
-                Data1 = editor.GetData1(),
-                Data2 = editor.GetData2(),
-                Data3 = editor.GetData3(),
-                CreateTime = oldData?.CreateTime ?? DateTime.Now,
-                UsedTimes = oldData?.UsedTimes ?? 0
-            };
-
-            db2.UpdateAction(buttonData, TableName);
-            AppStateManager.NotifyActionPageChanged(TableName);
+            // 图标保存依赖 UI 状态（ButtonImage.Visibility / Source），留在窗口里
+            ActionSaveHelper.SaveAction(
+                ButtonID,
+                TableName,
+                (Models.IActionEditor)editor,
+                TitleTextBox.Text,
+                DescriptionTextBox.Text,
+                () => ButtonImage.Visibility == Visibility.Visible ? SaveIconToLocal() : "");
 
             Close();
         }

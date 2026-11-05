@@ -73,7 +73,7 @@ namespace Quicker.UserControls.AddWindow
         private async void CopyLocation(object sender, RoutedEventArgs e)
         {
             string clipboardText = System.Windows.Clipboard.GetText(); // 获取剪贴板文本
-            LocationTextBox.Text = _buttonManager.ProcessLocation(clipboardText); // 设置地址栏文本
+            LocationTextBox.Text = ButtonManager.ProcessLocation(clipboardText); // 设置地址栏文本
             OpenWebsitePopup.IsOpen = false; // 关闭弹出菜单
             await FetchWebsiteIcon();
         }

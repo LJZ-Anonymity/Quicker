@@ -26,7 +26,7 @@ namespace Quicker.Windows.FloatingWindows.Windows
         public FloatingActionWindow(int buttonID, string tableName)
         {
             InitializeComponent();
-            
+
             // 创建并设置ViewModel
             viewModel = new FloatingActionWindowViewModel(buttonID, tableName);
             this.DataContext = viewModel;
@@ -67,7 +67,7 @@ namespace Quicker.Windows.FloatingWindows.Windows
         {
             if (viewModel.ButtonData != null)
             {
-                buttonManager.RefreshButtonDisplay(Button, viewModel.ButtonData, (int)viewModel.ButtonSize, true); // 刷新按钮显示
+                buttonManager.RefreshButtonDisplay(Button, viewModel.ButtonData, viewModel.ButtonSize);
             }
         }
 

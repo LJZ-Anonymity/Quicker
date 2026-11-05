@@ -9,13 +9,13 @@ namespace Quicker.Models
     /// </summary>
     public class AppInfo : INotifyPropertyChanged
     {
-        // ==================== 展示信息 ====================
+        // 展示信息
         public string Name { get; set; }
         public string Location { get; set; }
         public ImageSource Icon { get; set; }
         public string Tag { get; set; }
 
-        // ==================== 搜索支持 ====================
+        // 搜索支持
         private string _searchText;
         public string SearchText
         {
@@ -35,7 +35,6 @@ namespace Quicker.Models
         public HighlightTextData TagAndSearchText =>
             new HighlightTextData { Text = Tag, Keyword = SearchText };
 
-        // ==================== INotifyPropertyChanged ====================
         public event PropertyChangedEventHandler PropertyChanged;
 
         protected void OnPropertyChanged(string name)
