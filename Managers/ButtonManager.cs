@@ -20,11 +20,6 @@ namespace Quicker.Managers
 {
     public class ButtonManager
     {
-        [System.Runtime.InteropServices.DllImport("user32.dll")]
-        private static extern short GetAsyncKeyState(int vKey);
-        private const int VK_LCONTROL = 0xA2;
-        private const int VK_RCONTROL = 0xA3;
-
         /// <summary>
         /// 管理窗口（ActionPageManageWindow）中按钮的固定渲染尺寸
         /// 与该窗口硬编码的画布高度（280 / 215）保持一致
@@ -54,7 +49,7 @@ namespace Quicker.Managers
         {
             e.Handled = true; // 标记事件已处理
             Button button = sender as Button; // 获取按钮
-            bool isCtrlPressed = IsCtrlPressed(); // Ctrl键是否按下
+            bool isCtrlPressed = App.GetCtrlKeyState(); // Ctrl键是否按下
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 e.Effects = button.Tag == null ? DragDropEffects.Copy : DragDropEffects.None;
@@ -863,12 +858,6 @@ namespace Quicker.Managers
             };
             ActionSaveHelper.SaveAction(buttonData, tableName, notify: false);
             return true;
-        }
-
-        public static bool IsCtrlPressed()
-        {
-            return (GetAsyncKeyState(VK_LCONTROL) & 0x8000) != 0 ||
-                   (GetAsyncKeyState(VK_RCONTROL) & 0x8000) != 0;
         }
     }
 }

@@ -59,7 +59,7 @@ namespace Quicker
         private const string DESKTOP_STYLE = "desktop";
 
         private Action<string, string> _trayIconChangedHandler; // 托盘图标改变事件
-        private readonly HashSet<KeyCode> _downKeys = new(); // 按下的键集合
+        private readonly static HashSet<KeyCode> _downKeys = new(); // 按下的键集合
         private bool _isOpenKeyClickedOutside = false; // 是否在外部按下了唤出键
         private KeyCode? _lastKeyCode = null; // 上一个按键码
         private string _previewRunningPath; // 预览运行图标路径
@@ -453,7 +453,7 @@ namespace Quicker
         /// <summary>
         /// 获取 Ctrl 键状态
         /// </summary>
-        private bool GetCtrlKeyState()
+        public static bool GetCtrlKeyState()
         {
             return _downKeys.Contains(KeyCode.VcLeftControl) ||
                    _downKeys.Contains(KeyCode.VcRightControl);
