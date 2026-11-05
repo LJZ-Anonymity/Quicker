@@ -20,7 +20,7 @@ namespace Quicker.UserControls.AddWindow
     /// <summary>
     /// OpenFile 控件用于处理文件、应用程序和文件夹的选择和打开
     /// </summary>
-    public partial class OpenFile : UserControl, AddActionWindow.IActionEditor
+    public partial class OpenFile : UserControl, IActionEditor
     {
         #region 字段
 

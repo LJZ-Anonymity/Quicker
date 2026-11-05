@@ -45,15 +45,6 @@ namespace Quicker.Windows.AddWindows
         public string TableName { get; private set; } // 表名
         public int Choice { get; private set; } // 选择添加动作类型
 
-        public interface IActionEditor
-        {
-            ActionType GetActionType();
-            string GetLocation();
-            string GetData1();
-            string GetData2();
-            string GetData3();
-        } // 各控件语义化的字段
-
         /*
          * 构造函数参数说明：
          * choice：
@@ -225,14 +216,13 @@ namespace Quicker.Windows.AddWindows
         /// </summary>
         private void Save()
         {
-            if (ActionInfoGrid.Children.Count == 0) return; // 编辑器尚未加载
+            if (ActionInfoGrid.Children.Count == 0) return;
             if (ActionInfoGrid.Children[0] is not IActionEditor editor) return;
 
-            // 图标保存依赖 UI 状态（ButtonImage.Visibility / Source），留在窗口里
             ActionSaveHelper.SaveAction(
                 ButtonID,
                 TableName,
-                (Models.IActionEditor)editor,
+                editor,
                 TitleTextBox.Text,
                 DescriptionTextBox.Text,
                 () => ButtonImage.Visibility == Visibility.Visible ? SaveIconToLocal() : "");

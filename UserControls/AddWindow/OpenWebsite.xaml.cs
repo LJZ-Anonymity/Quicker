@@ -17,7 +17,7 @@ namespace Quicker.UserControls.AddWindow
     /// <summary>
     /// OpenWebsite 控件用于处理网站打开相关操作
     /// </summary>
-    public partial class OpenWebsite : UserControl,AddActionWindow.IActionEditor
+    public partial class OpenWebsite : UserControl, IActionEditor
     {
         #region 字段
 

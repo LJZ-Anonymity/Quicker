@@ -16,7 +16,7 @@ namespace Quicker.UserControls.AddWindow
     /// <summary>
     /// 扩展加载控件
     /// </summary>
-    public partial class LoadExtension : UserControl,AddActionWindow.IActionEditor
+    public partial class LoadExtension : UserControl, IActionEditor
     {
         #region 字段和属性
         
