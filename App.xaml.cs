@@ -622,11 +622,9 @@ namespace Quicker
         {
             // 如果按住时长超过了长按阈值，则不走短按唤出的逻辑
             if (pressDuration.TotalMilliseconds > conventions.LongPressThreshold) return;
-
             bool isMiddleClick = button == MouseButton.Button3 && conditions.OpenMainWindowByMiddleMouseClick;
-            bool isXClick = (button == MouseButton.Button4 || button == MouseButton.Button5) &&
-                            (conditions.OpenMainWindowByX1MouseClick || conditions.OpenMainWindowByX2MouseClick);
-
+            bool isXClick = (button == MouseButton.Button4 && conditions.OpenMainWindowByX1MouseClick) ||
+                            (button == MouseButton.Button5 && conditions.OpenMainWindowByX2MouseClick);
             if (isMiddleClick || isXClick)
             {
                 if (_isOpenKeyClickedOutside)
