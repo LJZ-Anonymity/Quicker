@@ -79,7 +79,7 @@ namespace Quicker.Windows.Menus
             }
             catch (System.IO.IOException)
             {
-                using var toast = new ToastManager(); // 创建Toast管理器
+                var toast = new ToastManager(); // 创建Toast管理器
                 toast.Show("加载场景" + data.SceneName + " 图标失败。", ToastType.Error); // 显示Toast提示
                 image.Source = new BitmapImage(new Uri("/Resources/Images/Quicker_Enabled.png", UriKind.Relative)); // 设置默认图标
             }
@@ -90,7 +90,6 @@ namespace Quicker.Windows.Menus
         /// 生成按钮文字
         /// </summary>
         /// <param name="data"> 场景数据 </param>
-        /// <returns> 按钮文字 </returns>
         private TextBlock GenerateTextBlock(SceneData data)
         {
             TextBlock textBlock = new()
@@ -121,7 +120,6 @@ namespace Quicker.Windows.Menus
         // 关闭窗口前释放资源
         protected override void OnClosed(EventArgs e)
         {
-            GC.Collect(); // 强制垃圾回收
             base.OnClosed(e); // 调用基类的 OnClosed 方法
         }
     }

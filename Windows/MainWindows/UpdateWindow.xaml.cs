@@ -145,7 +145,7 @@ namespace Quicker.Windows.MainWindows
         // 显示更新失败消息
         private void ShowUpdateFailedMessage()
         {
-            using var toast = new ToastManager(); // 创建Toast提示
+            var toast = new ToastManager(); // 创建Toast提示
             toast.Show("获取更新失败！", ToastType.Common); // 显示Toast提示
         }
 

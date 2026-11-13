@@ -161,7 +161,6 @@ namespace Quicker.Database.Upgrade.Versions
         /// <summary>
         /// 为 Convention 表添加托盘图标字段
         /// </summary>
-        /// <param name="connection"> 数据库连接 </param>
         private void AddTrayIconColumnsIfNotExist(SQLiteConnection connection)
         {
             // 直接插入 TrayIconPathRunning 字段
@@ -179,7 +178,6 @@ namespace Quicker.Database.Upgrade.Versions
         /// <summary>
         /// 为 Convention 表添加菜单动画字段
         /// </summary>
-        /// <param name="connection"> 数据库连接 </param>
         private void AddUseMenuAnimationColumnIfNotExist(SQLiteConnection connection)
         {
             using (var cmd = new SQLiteCommand("ALTER TABLE Convention ADD COLUMN UseMenuAnimation BOOLEAN DEFAULT 1", connection))
@@ -191,7 +189,6 @@ namespace Quicker.Database.Upgrade.Versions
         /// <summary>
         /// 为 Convention 表添加 IsDarkTheme 字段
         /// </summary>
-        /// <param name="connection"> 数据库连接 </param>
         private void AddIsDarkThemeColumnIfNotExist(SQLiteConnection connection)
         {
             const string sql = "ALTER TABLE Convention ADD COLUMN IsDarkTheme BOOLEAN DEFAULT 0";
@@ -204,7 +201,6 @@ namespace Quicker.Database.Upgrade.Versions
         /// <summary>
         /// 重命名表名
         /// </summary>
-        /// <param name="connection"> 数据库连接 </param>
         /// <param name="manager"> 数据库更新管理器 </param>
         public void RenameDefaultTables(SQLiteConnection connection, DatabaseUpdateManager manager)
         {
@@ -227,7 +223,6 @@ namespace Quicker.Database.Upgrade.Versions
         /// <summary>
         /// 重命名表
         /// </summary>
-        /// <param name="connection"> 数据库连接 </param>
         /// <param name="oldName"> 旧表名 </param>
         /// <param name="newName"> 新表名 </param>
         public void RenameTable(SQLiteConnection connection, string oldName, string newName)

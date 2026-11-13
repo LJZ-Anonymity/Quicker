@@ -39,17 +39,10 @@ namespace Quicker.Windows.Menus
             base.Visibility = Visibility.Hidden; // 隐藏当前菜单窗口
         }
 
-        // 弹出设置窗口
-        private void OpenSettingWindow(object sender, RoutedEventArgs e)
-        {
-            WindowHelper.OpenTargetWindow("SettingWindow"); // 打开设置窗口
-        }
-
+        // 打开设置窗口
+        private void OpenSettingWindow(object sender, RoutedEventArgs e) => WindowHelper.OpenTargetWindow("SettingWindow");
         // 打开动作管理窗口
-        private void OpenActionPageManageWindow(object sender, RoutedEventArgs e)
-        {
-            WindowHelper.OpenTargetWindow("ActionPageManageWindow"); // 打开动作管理窗口
-        }
+        private void OpenActionPageManageWindow(object sender, RoutedEventArgs e) => WindowHelper.OpenTargetWindow("ActionPageManageWindow");
 
         // 暂停Quicker
         private void PauseQuicker(object sender, RoutedEventArgs e)
@@ -93,12 +86,7 @@ namespace Quicker.Windows.Menus
 
         // 关闭窗口前释放资源
         protected override void OnClosed(EventArgs e)
-        {            
-            // 强制垃圾回收，确保资源及时释放
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
-            
+        {
             base.OnClosed(e); // 调用基类的 OnClosed 方法
         }
     }

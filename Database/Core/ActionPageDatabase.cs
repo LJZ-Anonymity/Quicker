@@ -8,19 +8,13 @@ namespace Quicker.Database.Core
 {
     public class ActionPageDatabase
     {
-        // 使用AppPathHelper获取数据库连接字符串
-        private static string GetConnectionString()
-        {
-            return DatabaseHelper.GetConnectionString("ActionPage.db");
-        }
-
         // 确保数据库目录存在
-        private static void EnsureDatabaseDirectoryExists()
-        {
-            DatabaseHelper.EnsureDatabaseDirectoryExists();
-        }
-
+        private static void EnsureDatabaseDirectoryExists() => Directory.CreateDirectory(AppPathHelper.DatabaseFolder);
+        // 使用AppPathHelper获取数据库连接字符串
+        private static string GetConnectionString() => DatabaseHelper.GetConnectionString("ActionPage.db");
         // 数据库连接
+        public SQLiteConnection OpenConnection() => DatabaseHelper.OpenConnection("ActionPage.db");
+
         private readonly ButtonDatabase db2 = new(); // 按钮数据库
 
         public ActionPageDatabase()
@@ -32,11 +26,6 @@ namespace Quicker.Database.Core
                 SQLiteConnection.CreateFile(dbFilePath); // 创建数据库文件
                 InitializeDatabase(); // 初始化数据库表
             }
-        }
-
-        public SQLiteConnection OpenConnection()
-        {
-            return DatabaseHelper.OpenConnection("ActionPage.db");
         }
 
         // 初始化数据库
@@ -88,7 +77,6 @@ namespace Quicker.Database.Core
         /// <summary>
         /// 创建并初始化数据表
         /// </summary>
-        /// <param name="connection"> 数据库连接 </param>
         /// <param name="sceneTag"> 场景标签 </param>
         private static void CreateAndInitTableStatic(SQLiteConnection connection, string sceneTag)
         {
@@ -115,7 +103,9 @@ namespace Quicker.Database.Core
             InsertSceneData(connection, sceneData);
         }
 
-        // 插入场景数据
+        /// <summary>
+        /// 插入场景数据
+        /// </summary>
         private static void InsertSceneData(SQLiteConnection connection, SceneData sceneData)
         {
             string insertQuery = @"
@@ -221,7 +211,6 @@ namespace Quicker.Database.Core
         /// 获取是否自动返回第一页
         /// </summary>
         /// <param name="sceneTag"> 场景标签 </param>
-        /// <returns> 是否自动返回到第一个页面 </returns>
         public bool GetAutoReturnToFirstPage(string sceneTag)
         {
             using var connection = OpenConnection(); // 打开数据库连接
@@ -274,7 +263,6 @@ namespace Quicker.Database.Core
         /// 判断Scenes表中是否存在指定SceneTag的数据
         /// </summary>
         /// <param name="sceneTag">场景标签</param>
-        /// <returns>是否存在</returns>
         public bool SceneExists(string sceneTag)
         {
             using var connection = OpenConnection(); // 打开数据库连接
@@ -289,7 +277,6 @@ namespace Quicker.Database.Core
         /// 获取场景数据
         /// </summary>
         /// <param name="sceneTag"> 场景标签 </param>
-        /// <returns> 场景数据 </returns>
         public SceneData GetSceneData(string sceneTag)
         {
             using var connection = OpenConnection(); // 打开数据库连接
@@ -315,7 +302,6 @@ namespace Quicker.Database.Core
         /// <summary>
         /// 获取所有场景数据
         /// </summary>
-        /// <returns> 所有场景数据 </returns>
         public List<SceneData> GetAllSceneData()
         {
             var conditions = new List<SceneData>(); // 场景数据表
@@ -518,7 +504,6 @@ namespace Quicker.Database.Core
         /// 生成场景标题
         /// </summary>
         /// <param name="sceneData"> 场景数据 </param>
-        /// <returns> 场景标题 </returns>
         public string GetSceneTitle(SceneData sceneData)
         {
             switch (sceneData.SceneName)
@@ -558,31 +543,20 @@ namespace Quicker.Database.Core
         /// </summary>
         /// <param name="tableName"> 动作页数据表名称 </param>
         /// <param name="actionPageIndex"> 动作页索引 </param>
-        /// <returns> 动作页大小 </returns>
         public string GetActionPageSize(string tableName, int actionPageIndex)
         {
-            using var connection = OpenConnection(); // 打开数据库连接
-            var buttonDatas = db2.GetPagesOfButtons(tableName, actionPageIndex); // 获取动作页按钮数据
-            int size = 0; // 动作页大小
-            foreach (var buttonData in buttonDatas)
+            var buttonDatas = db2.GetButtonDataByPage(tableName, actionPageIndex);
+
+            int totalSize = 0;
+            foreach (var buttonData in buttonDatas.Values)
             {
-                // 计算每个按钮占用的内存大小
-                size += buttonData.Title?.Length * 2 ?? 0; // 标题字符串长度 * 2 (UTF-16)
-                size += buttonData.Location?.Length * 2 ?? 0; // 位置字符串长度 * 2
-                size += buttonData.ImagePath?.Length * 2 ?? 0; // 图片路径字符串长度 * 2
-                size += buttonData.Data1?.Length * 2 ?? 0; // 数据1字符串长度 * 2
-                size += buttonData.Data2?.Length * 2 ?? 0; // 数据2字符串长度 * 2
-                size += buttonData.Data3?.Length * 2 ?? 0; // 数据3字符串长度 * 2
-                size += buttonData.Description?.Length * 2 ?? 0; // 描述字符串长度 * 2
-                size += 4; // ActionType (enum)
-                size += 4; // ButtonID (int)
-                size += 8; // CreateTime (DateTime)
-                size += 8; // LatestEditTime (DateTime)
-                size += 4; // UsedTimes (int)
+                totalSize += ButtonDatabase.CalculateActionSizeInBytes(buttonData);
             }
-            size = DataSizeHelper.ConversionData(size); // 转换数据
-            string sizeString = DataSizeHelper.ConversionUnits(size); // 转换单位
-            return $"{size} {sizeString}"; // 返回动作页大小
+
+            int convertedSize = DataSizeHelper.ConversionData(totalSize);
+            string sizeString = DataSizeHelper.ConversionUnits(convertedSize);
+
+            return $"{convertedSize} {sizeString}";
         }
 
         /// <summary>

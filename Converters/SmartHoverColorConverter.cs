@@ -65,8 +65,7 @@ namespace Quicker.Converters
         /// <param name="culture"> 区域性 </param>
         /// <returns> 转换回原值 </returns>
         /// <exception cref="NotImplementedException"></exception>
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-            => throw new NotImplementedException(); // 不支持反向转换
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
 
         /// <summary>
         /// 获取颜色的亮度值

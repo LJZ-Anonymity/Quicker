@@ -38,9 +38,6 @@ namespace Quicker.Windows.EditWindows
         }
 
         // 取消编辑动作页
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close(); // 关闭窗口
-        }
+        private void CancelButton_Click(object sender, RoutedEventArgs e) => Close(); // 关闭窗口
     }
 }

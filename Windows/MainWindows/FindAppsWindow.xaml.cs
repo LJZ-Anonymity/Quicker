@@ -61,10 +61,7 @@ namespace Quicker.Windows.MainWindows
         }
 
         // UI加载完成后加载应用
-        private void LoadApplications(object sender, EventArgs e)
-        {
-            LoadApplications(); // 调用加载应用的方法
-        }
+        private void LoadApplications(object sender, EventArgs e) => LoadApplications();
 
         // 加载应用
         private async void LoadApplications()
@@ -113,7 +110,6 @@ namespace Quicker.Windows.MainWindows
         /// 获取Visual的ScrollViewer
         /// </summary>
         /// <param name="visual"> 要查找的Visual </param>
-        /// <returns> ScrollViewer</returns>
         private ScrollViewer GetScrollViewer(Visual visual)
         {
             for (int i = 0; i < VisualTreeHelper.GetChildrenCount(visual); i++)
@@ -299,10 +295,7 @@ namespace Quicker.Windows.MainWindows
         }
 
         // 关闭FindAppsWindow
-        private void CloseThisWindow(object sender, RoutedEventArgs e)
-        {
-            this.Close(); // 关闭窗口
-        }
+        private void CloseThisWindow(object sender, RoutedEventArgs e) => Close();
 
         // 复制应用地址
         private void CopyLocation(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -317,7 +310,7 @@ namespace Quicker.Windows.MainWindows
                     if (!string.IsNullOrEmpty(directoryPath))
                     {                        
                         Clipboard.SetText(directoryPath); // 复制目录路径到剪贴板
-                        using var toast = new ToastManager(); // 消息提醒管理器
+                        var toast = new ToastManager(); // 消息提醒管理器
                         toast.Show("文件夹路径已复制到剪贴板！", ToastType.Common); // 弹出消息提醒
                     }
                 }
@@ -325,14 +318,8 @@ namespace Quicker.Windows.MainWindows
         }
 
         // 同步滚动条数据
-        private void VerticalScrollBar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            scrollViewer.ScrollToVerticalOffset(VerticalScrollBar.Value);
-        }
-        private void HorizontalScrollBar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            scrollViewer.ScrollToHorizontalOffset(HorizontalScrollBar.Value);
-        }
+        private void VerticalScrollBar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) => scrollViewer.ScrollToVerticalOffset(VerticalScrollBar.Value);
+        private void HorizontalScrollBar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) => scrollViewer.ScrollToHorizontalOffset(HorizontalScrollBar.Value);
         private void ListViewScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
             if (scrollViewer == null) return;
@@ -379,9 +366,6 @@ namespace Quicker.Windows.MainWindows
 
             // 调用基类的 OnClosed 方法
             base.OnClosed(e); // 调用基类的 OnClosed 方法
-            GC.Collect(); // 强制垃圾回收
-            GC.WaitForPendingFinalizers(); // 等待垃圾回收完成
-            GC.Collect(); // 强制垃圾回收
         }
     }
 }

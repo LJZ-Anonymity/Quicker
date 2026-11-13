@@ -63,7 +63,6 @@ namespace Quicker.Converters
         /// <param name="parameter">参数</param>
         /// <param name="culture">区域信息</param>
         /// <returns>抛出异常</returns>
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 }

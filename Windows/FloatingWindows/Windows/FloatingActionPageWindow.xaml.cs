@@ -16,9 +16,9 @@ namespace Quicker.Windows.FloatingWindows.Windows
         public int ActionPageIndex { get; private set; } // 当前按钮所在的页面索引
         public string TableName { get; private set; } // 表名
 
-        private readonly ActionPageDatabase db3 = new(); // 动作页面数据库
-        private readonly ButtonManager buttonManager = new(); // 按钮管理器
-        private readonly FloatingActionPageWindowViewModel viewModel; // ViewModel
+        private readonly FloatingActionPageWindowViewModel viewModel;
+        private readonly ButtonManager buttonManager = new();
+        private readonly ActionPageDatabase db3 = new();
 
         public FloatingActionPageWindow(int actionPageIndex, string tableName)
         {
@@ -75,7 +75,7 @@ namespace Quicker.Windows.FloatingWindows.Windows
         }
 
         /// <summary>
-        /// ActionButton点击事件处理
+        /// 执行按钮动作
         /// </summary>
         private async void ActionButton_Click(object sender, RoutedEventArgs e)
         {
@@ -88,31 +88,22 @@ namespace Quicker.Windows.FloatingWindows.Windows
         }
 
         /// <summary>
-        /// 标题栏鼠标左键按下事件处理
+        /// 标题栏鼠标左键按下拖动窗口
         /// </summary>
-        private void TitleGrid_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            DragMove(); // 允许拖动窗口
-        }
+        private void TitleGrid_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e) => DragMove(); // 允许拖动窗口
 
         /// <summary>
-        /// 固定到桌面按钮点击事件处理
+        /// 固定到桌面
         /// </summary>
-        private void PinToDesktop(object sender, RoutedEventArgs e)
-        {
-            viewModel.IsPinned = !viewModel.IsPinned; // 切换固定状态
-        }
+        private void PinToDesktop(object sender, RoutedEventArgs e) => viewModel.IsPinned = !viewModel.IsPinned; // 切换固定状态
 
         /// <summary>
-        /// 关闭窗口按钮点击事件处理
+        /// 关闭窗口
         /// </summary>
-        private void CloseWindow(object sender, RoutedEventArgs e)
-        {
-            this.Close(); // 关闭窗口
-        }
+        private void CloseWindow(object sender, RoutedEventArgs e) => Close(); // 关闭窗口
 
         /// <summary>
-        /// 右键菜单点击事件处理
+        /// 右键菜单
         /// </summary>
         private void TitleGrid_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -121,7 +112,7 @@ namespace Quicker.Windows.FloatingWindows.Windows
         }
 
         /// <summary>
-        /// 按钮右键菜单点击事件处理
+        /// 按钮右键菜单
         /// </summary>
         private void ActionButton_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -141,7 +132,6 @@ namespace Quicker.Windows.FloatingWindows.Windows
                 button.Content = null;
             }
 
-            buttonManager?.Dispose(); // 释放管理器
             viewModel?.Dispose(); // 清理ViewModel
             this.DataContext = null; // 清理数据上下文
         }

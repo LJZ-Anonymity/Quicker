@@ -8,7 +8,7 @@ using System.Windows;
 
 namespace Quicker.Managers
 {
-    public class SettingManager : IDisposable
+    public class SettingManager
     {
         private const string DefaultButtonColor1 = "#FFE0E0E0"; // 默认按钮颜色
         private const string SelectedButtonColor1 = "#FFF4F4F4"; // 选中按钮颜色
@@ -74,7 +74,6 @@ namespace Quicker.Managers
         /// </summary>
         /// <typeparam name="T">设置缓存类型</typeparam>
         /// <param name="source">源设置对象</param>
-        /// <returns>克隆的设置对象</returns>
         private T CloneSettingsCache<T>(T source) where T : class
         {
             if (source == null) return null; // 如果源设置对象为空，返回空
@@ -235,10 +234,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 改变Button类型2样式
         /// </summary>
-        /// <param name="targetButton"> 目标Button </param>
-        /// <param name="stackPanel"> 目标StackPanel </param>
-        /// <param name="targetGrid"> 目标Grid </param>
-        /// <param name="fatherGrid"> 父级Grid </param>
         public async Task ButtonStyle2_Click(Button targetButton, UserControl targetGrid, Grid fatherGrid, Grid stackPanelGrid)
         {
             var existingGrid = fatherGrid.Children.OfType<UserControl>().FirstOrDefault(); // 获取第一个 UserControl 子元素
@@ -265,8 +260,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 设置Button类型2背景色
         /// </summary>
-        /// <param name="sender"> 目标Button </param>
-        /// <param name="targetGrid"> 目标Grid </param>
         public void ButtonStyle2_MouseLeave(object sender, UserControl targetGrid, Grid fatherGrid)
         {
             Button button = sender as Button; // 获取Button
@@ -278,8 +271,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 设置Button类型3边框
         /// </summary>
-        /// <param name="clickedButton"> 被点击的Button </param>
-        /// <param name="buttonPanelGrid"> Button面板Grid </param>
         public void ButtonStyle3_Click(Button clickedButton, Grid buttonPanelGrid)
         {
             foreach (var button in buttonPanelGrid.Children.OfType<Button>()) // 遍历Button容器中所有Button，设置边框
@@ -289,7 +280,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 判断当前设置是否与原始设置相同
         /// </summary>
-        /// <returns>是否相同</returns>
         public bool IsSettingsChanged()
         {
             // 判断常规设置是否变化
@@ -312,7 +302,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 判断主要外观设置（除预览设置外）是否与原始外观设置相同
         /// </summary>
-        /// <returns>是否相同</returns>
         public bool IsMainAppearanceSettingsChanged()
         {
             if (_originalAppearanceConditions == null || appearanceConditions == null)
@@ -339,22 +328,6 @@ namespace Quicker.Managers
                 }
             }
             return false;
-        }
-
-        /// <summary>
-        /// 判断预览设置是否与原始预览设置相同
-        /// </summary>
-        /// <returns>是否相同</returns>
-        public bool IsPreviewSettingChanged()
-        {
-            if (_originalAppearanceConditions == null || appearanceConditions == null)
-                return false;
-
-            // 只检查预览相关属性
-            var originalPreview = _originalAppearanceConditions.EnablePreview;
-            var currentPreview = appearanceConditions.EnablePreview;
-
-            return !originalPreview.Equals(currentPreview);
         }
         
         /// <summary>
@@ -386,48 +359,5 @@ namespace Quicker.Managers
             }
             return true; // 所有属性都相等，返回true
         }
-
-        #region IDisposable实现
-
-        private bool _disposed = false; // 是否已释放资源标志
-
-        // 手动释放资源
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this); // 告知垃圾回收器不需要调用终结器
-        }
-
-        // 释放资源
-        protected virtual void Dispose(bool disposing)
-        {
-            if (_disposed) return; // 如果已经释放，直接返回
-            if (disposing)
-            {
-                // 释放托管资源
-                // 清除原始设置缓存
-                _originalConventions = null;
-                _originalOpenMainWindowConditions = null;
-                _originalBlacklistSettings = null;
-                _originalAppearanceConditions = null;
-                
-                // 清除当前设置缓存
-                conventions = null;
-                openMainWindowConditions = null;
-                blacklistSettings = null;
-                appearanceConditions = null;
-            }
-
-            // 释放非托管资源
-            _disposed = true; // 标记为已释放
-        }
-
-        // 析构函数
-        ~SettingManager()
-        {
-            Dispose(false);
-        }
-
-        #endregion
     }
 }

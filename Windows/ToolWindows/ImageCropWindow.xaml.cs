@@ -13,6 +13,7 @@ using System.Windows;
 using WpfAnimatedGif;
 using ImageMagick;
 using System.IO;
+using Quicker.Models;
 
 namespace Quicker.Windows.ToolWindows
 {
@@ -52,7 +53,6 @@ namespace Quicker.Windows.ToolWindows
         /// <summary>
         /// 裁剪完成时调用的方法，触发 CropCompleted 事件并关闭窗口。
         /// </summary>
-        /// <param name="path">裁剪后图片的保存路径</param>
         private void OnCropCompleted(string path)
         {
             CropCompleted?.Invoke(this, path);
@@ -81,7 +81,6 @@ namespace Quicker.Windows.ToolWindows
         /// <summary>
         /// 加载图片并显示到CropImage控件，同时处理GIF动图和提示
         /// </summary>
-        /// <param name="filePath">图片路径</param>
         private void LoadAndDisplayImage(string filePath)
         {
             var iconManager = new IconManager(); // 创建IconManager实例
@@ -392,9 +391,7 @@ namespace Quicker.Windows.ToolWindows
         /// <summary>
         /// 获取所有调整手柄的集合
         /// </summary>
-        private Rectangle[] GetAllResizeHandles()
-        {
-            return new[]
+        private Rectangle[] GetAllResizeHandles() => new[]
             {
                 ResizeHandleTopLeft,
                 ResizeHandleTopRight,
@@ -405,12 +402,10 @@ namespace Quicker.Windows.ToolWindows
                 ResizeHandleLeft,
                 ResizeHandleRight
             };
-        }
 
         /// <summary>
         /// 更新所有调整手柄的填充颜色
         /// </summary>
-        /// <param name="brush">要应用的画刷</param>
         private void UpdateAllResizeHandles(Brush brush)
         {
             foreach (var handle in GetAllResizeHandles())
@@ -433,28 +428,13 @@ namespace Quicker.Windows.ToolWindows
         }
 
         // 顺时针旋转90°
-        private void RotateRightButton_Click(object sender, RoutedEventArgs e)
-        {
-            ApplyTransform(new RotateTransform(90, 0.5, 0.5), true);
-        }
-
+        private void RotateRightButton_Click(object sender, RoutedEventArgs e) => ApplyTransform(new RotateTransform(90, 0.5, 0.5), true);
         // 逆时针旋转90°
-        private void RotateLeftButton_Click(object sender, RoutedEventArgs e)
-        {
-            ApplyTransform(new RotateTransform(-90, 0.5, 0.5), true);
-        }
-
+        private void RotateLeftButton_Click(object sender, RoutedEventArgs e) => ApplyTransform(new RotateTransform(-90, 0.5, 0.5), true);
         // 垂直翻转
-        private void FlipVerticalButton_Click(object sender, RoutedEventArgs e)
-        {
-            ApplyTransform(new ScaleTransform(1, -1, 0.5, 0.5), false);
-        }
-
+        private void FlipVerticalButton_Click(object sender, RoutedEventArgs e) => ApplyTransform(new ScaleTransform(1, -1, 0.5, 0.5), false);
         // 水平翻转
-        private void FlipHorizontalButton_Click(object sender, RoutedEventArgs e)
-        {
-            ApplyTransform(new ScaleTransform(-1, 1, 0.5, 0.5), false);
-        }
+        private void FlipHorizontalButton_Click(object sender, RoutedEventArgs e) => ApplyTransform(new ScaleTransform(-1, 1, 0.5, 0.5), false);
 
         /// <summary>
         /// 通用变换方法
@@ -521,7 +501,6 @@ namespace Quicker.Windows.ToolWindows
         /// <param name="dir"> 保存目录 </param>
         /// <param name="filePath"> 保存路径 </param>
         /// <param name="originalFilePath"> 原图路径 </param>
-        /// <returns>实际保存路径，失败返回 null </returns>
         private string SaveOriginalImageWithFallback(BitmapSource bitmapSource, string dir, string filePath, string originalFilePath)
         {
             if (bitmapSource == null)
@@ -568,7 +547,6 @@ namespace Quicker.Windows.ToolWindows
         /// <param name="dir"> 保存目录 </param>
         /// <param name="filePath"> 保存路径 </param>
         /// <param name="originalFilePath"> 原图路径 </param>
-        /// <returns>实际保存路径，失败返回 null </returns>
         private string SaveCroppedImageWithFallback(BitmapSource bitmapSource, Int32Rect cropRect, string dir, string filePath, string originalFilePath)
         {
             if (TrySaveGifAnimation(originalFilePath, cropRect, dir, filePath, out string gifPath)) return gifPath; // 尝试GIF动图裁剪
@@ -584,7 +562,6 @@ namespace Quicker.Windows.ToolWindows
         /// <param name="dir">保存目录</param>
         /// <param name="filePath">目标文件路径</param>
         /// <param name="gifPath">输出：GIF文件路径</param>
-        /// <returns>成功返回true，否则false</returns>
         private bool TrySaveGifAnimation(string originalFilePath, Int32Rect cropRect, string dir, string filePath, out string gifPath)
         {
             gifPath = null;
@@ -605,14 +582,10 @@ namespace Quicker.Windows.ToolWindows
         /// 检查是否为GIF文件
         /// </summary>
         /// <param name="filePath">文件路径</param>
-        /// <returns>是否为GIF文件</returns>
-        private bool IsGifFile(string filePath)
-        {
-            return !string.IsNullOrEmpty(filePath) && 
+        private bool IsGifFile(string filePath) => !string.IsNullOrEmpty(filePath) && 
                    Path.GetExtension(filePath).ToLower() == ".gif" &&
                    _originalBitmapSource is BitmapImage bmpImg && 
                    bmpImg.UriSource != null;
-        }
 
         /// <summary>
         /// 尝试保存为PNG格式
@@ -621,7 +594,6 @@ namespace Quicker.Windows.ToolWindows
         /// <param name="cropRect">裁剪区域</param>
         /// <param name="dir">保存目录</param>
         /// <param name="filePath">文件路径</param>
-        /// <returns>成功返回true，否则false</returns>
         private bool TrySaveAsPng(BitmapSource bitmapSource, Int32Rect cropRect, string dir, string filePath)
         {
             try
@@ -650,7 +622,6 @@ namespace Quicker.Windows.ToolWindows
         /// <param name="dir">保存目录</param>
         /// <param name="filePath">文件路径</param>
         /// <param name="originalFilePath">原始文件路径</param>
-        /// <returns>保存成功返回文件路径，失败返回null</returns>
         private string TrySaveAsOriginalFormat(BitmapSource bitmapSource, Int32Rect cropRect, string dir, string filePath, string originalFilePath)
         {
             try
@@ -676,7 +647,6 @@ namespace Quicker.Windows.ToolWindows
         /// 检查原始文件是否有效
         /// </summary>
         /// <param name="originalFilePath">原始文件路径</param>
-        /// <returns>文件是否有效</returns>
         private bool IsValidOriginalFile(string originalFilePath)
         {
             return !string.IsNullOrEmpty(originalFilePath) && File.Exists(originalFilePath);
@@ -699,7 +669,6 @@ namespace Quicker.Windows.ToolWindows
         /// <param name="cropRect">裁剪区域</param>
         /// <param name="outputPath">输出路径</param>
         /// <param name="format">目标格式</param>
-        /// <returns>成功返回true，否则false</returns>
         private bool SaveCroppedImageAsFormat(BitmapSource bitmapSource, Int32Rect cropRect, string outputPath, string format)
         {
             try
@@ -785,7 +754,6 @@ namespace Quicker.Windows.ToolWindows
         /// <param name="bitmapSource">原始图片源</param>
         /// <param name="cropRect">输出：裁剪区域</param>
         /// <param name="scaleInfo">输出：缩放信息</param>
-        /// <returns>成功返回 true，否则 false</returns>
         private bool TryGetCropRect(BitmapSource bitmapSource, out Int32Rect cropRect, out (double scale, double offsetX, double offsetY) scaleInfo)
         {
             cropRect = new Int32Rect(); // 裁剪区域
@@ -854,15 +822,12 @@ namespace Quicker.Windows.ToolWindows
         /// <param name="type">消息类型</param>
         private void ShowToast(string message, ToastType type)
         {
-            using var toast = new ToastManager();
+            var toast = new ToastManager();
             toast.Show(message, type);
         }
 
         // 点击按钮关闭窗口
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            Close(); // 关闭窗口
-        }
+        private void CancelButton_Click(object sender, RoutedEventArgs e) => Close();
 
         // 点击按钮弹出颜色选择器
         private void ColorButton_Click(object sender, RoutedEventArgs e)
@@ -910,11 +875,6 @@ namespace Quicker.Windows.ToolWindows
             _originalBitmapSource = null;
             _currentColorButton = null;
             CropCompleted = null;
-
-            // 强制垃圾回收
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
         }
 
         /// <summary>

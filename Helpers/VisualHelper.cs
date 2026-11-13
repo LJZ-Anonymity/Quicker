@@ -16,7 +16,6 @@ namespace Quicker.Helpers
         /// </summary>
         /// <typeparam name="T">要查找的元素类型</typeparam>
         /// <param name="depObj">起始依赖对象</param>
-        /// <returns>指定类型的所有子元素集合</returns>
         public static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
         {
             if (depObj == null) yield break;
@@ -40,7 +39,6 @@ namespace Quicker.Helpers
         /// </summary>
         /// <typeparam name="T">要查找的元素类型</typeparam>
         /// <param name="depObj">起始依赖对象</param>
-        /// <returns>找到的第一个指定类型子元素，如果未找到则返回null</returns>
         public static T FindVisualChild<T>(DependencyObject depObj) where T : DependencyObject
         {
             if (depObj == null) return null;
@@ -67,7 +65,6 @@ namespace Quicker.Helpers
         /// <typeparam name="T">要查找的元素类型</typeparam>
         /// <param name="depObj">起始依赖对象</param>
         /// <param name="name">元素名称</param>
-        /// <returns>找到的指定类型和名称的子元素，如果未找到则返回null</returns>
         public static T FindVisualChildByName<T>(DependencyObject depObj, string name) where T : DependencyObject
         {
             if (depObj == null || string.IsNullOrEmpty(name)) return null;
@@ -97,7 +94,6 @@ namespace Quicker.Helpers
         /// </summary>
         /// <typeparam name="T">要查找的父元素类型</typeparam>
         /// <param name="depObj">起始依赖对象</param>
-        /// <returns>找到的指定类型父元素，如果未找到则返回null</returns>
         public static T FindVisualParent<T>(DependencyObject depObj) where T : DependencyObject
         {
             if (depObj == null) return null;
@@ -116,7 +112,6 @@ namespace Quicker.Helpers
         /// </summary>
         /// <typeparam name="T">要查找的父元素类型</typeparam>
         /// <param name="child">起始依赖对象</param>
-        /// <returns>找到的指定类型父元素，如果未找到则返回null</returns>
         public static T FindParent<T>(DependencyObject child) where T : DependencyObject
         {
             while (child != null)
@@ -137,7 +132,6 @@ namespace Quicker.Helpers
         /// </summary>
         /// <param name="parent">父级元素</param>
         /// <param name="name">Grid 名称</param>
-        /// <returns>名为指定名称的 Grid</returns>
         public static Grid FindGridByName(DependencyObject parent, string name)
         {
             return FindVisualChildByName<Grid>(parent, name);
@@ -148,7 +142,6 @@ namespace Quicker.Helpers
         /// </summary>
         /// <param name="parent">父级元素</param>
         /// <param name="name">Button 名称</param>
-        /// <returns>名为指定名称的 Button</returns>
         public static Button FindButtonByName(DependencyObject parent, string name)
         {
             return FindVisualChildByName<Button>(parent, name);
@@ -163,7 +156,6 @@ namespace Quicker.Helpers
         /// </summary>
         /// <param name="element">要检查的元素</param>
         /// <param name="name">要匹配的名称</param>
-        /// <returns>如果元素具有指定名称则返回true，否则返回false</returns>
         private static bool IsElementWithName(DependencyObject element, string name)
         {
             if (element is FrameworkElement fe)

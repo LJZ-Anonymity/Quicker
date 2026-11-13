@@ -391,7 +391,7 @@ namespace Quicker.Managers
             }
             catch
             {
-                using var toast = new ToastManager();
+                var toast = new ToastManager();
                 toast.Show($"图标加载失败：动作{buttonInformation.Title}的图标被移动或删除", ToastType.Error);
             }
         }
@@ -565,10 +565,7 @@ namespace Quicker.Managers
         }
 
         // 鼠标左键释放时重置状态
-        public void Button_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            isDragging = false;
-        }
+        public void Button_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e) => isDragging = false;
 
         /// <summary>
         /// 动态调整TextBlock的字体大小以适应最大宽度
@@ -691,11 +688,7 @@ namespace Quicker.Managers
         /// <summary>
         /// 检查扩展是否支持右键菜单
         /// </summary>
-        public bool CheckExtensionHasContextMenu(Button button)
-        {
-            var extensionModule = LoadExtensionModule(button);
-            return extensionModule?.HasContextMenu ?? false;
-        }
+        public bool CheckExtensionHasContextMenu(Button button) => LoadExtensionModule(button)?.HasContextMenu ?? false;
 
         /// <summary>
         /// 尝试加载扩展的右键菜单
@@ -785,15 +778,6 @@ namespace Quicker.Managers
             int buttonID = int.Parse(SourceButton.Name.Replace($"{tableName}", ""));
             db2.DeleteAction(buttonID, tableName);
             mainWindow.UpdateButtonContent(buttonID, tableName);
-        }
-
-        // 手动释放资源
-        public void Dispose()
-        {
-            iconManager?.Dispose();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
         }
 
         /// <summary>

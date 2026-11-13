@@ -43,6 +43,7 @@ using Quicker.Managers;
 using Quicker.Helpers;
 using System.Windows;
 using SharpHook.Data;
+using Quicker.Models;
 using SharpHook;
 using System.IO;
 
@@ -88,10 +89,7 @@ namespace Quicker
         /// <summary>
         /// 初始化应用程序目录
         /// </summary>
-        private void InitializeAppDirectories()
-        {
-            AppPathHelper.EnsureAllDirectoriesExist();
-        }
+        private void InitializeAppDirectories() => AppPathHelper.EnsureAllDirectoriesExist();
 
         /// <summary>
         /// 互斥锁，确保单例运行
@@ -164,7 +162,7 @@ namespace Quicker
             var Convention = SettingDatabase.GetAllConventions().FirstOrDefault(); // 获取设置
             if (Convention.ShowNotification) // 如果设置中允许显示消息提醒
             {
-                using var toast = new ToastManager(); // 消息提醒管理器
+                var toast = new ToastManager(); // 消息提醒管理器
                 toast.Show("成功启动！", ToastType.Common); // 弹出消息提醒
             }
         }
@@ -205,7 +203,7 @@ namespace Quicker
             var appearance = SettingDatabase.GetAppearanceSettings().FirstOrDefault();
             if (appearance == null)
             {
-                using var toast = new ToastManager();
+                var toast = new ToastManager();
                 toast.Show("获取字体设置失败！", ToastType.Error);
                 return;
             }
@@ -452,11 +450,7 @@ namespace Quicker
         /// <summary>
         /// 获取 Ctrl 键状态
         /// </summary>
-        public static bool GetCtrlKeyState()
-        {
-            return _downKeys.Contains(KeyCode.VcLeftControl) ||
-                   _downKeys.Contains(KeyCode.VcRightControl);
-        }
+        public static bool GetCtrlKeyState() => _downKeys.Contains(KeyCode.VcLeftControl) || _downKeys.Contains(KeyCode.VcRightControl);
 
         #endregion
 
@@ -989,7 +983,7 @@ namespace Quicker
         // 暂停Quicker
         public async void PauseQuicker(object sender, RoutedEventArgs e)
         {
-            using var toast = new ToastManager(); // 消息提醒管理器
+            var toast = new ToastManager(); // 消息提醒管理器
             try
             {
                 hook?.Dispose(); // 销毁当前钩子

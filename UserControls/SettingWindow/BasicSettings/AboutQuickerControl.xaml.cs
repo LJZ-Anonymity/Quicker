@@ -11,6 +11,7 @@ using System.Text.Json;
 using Quicker.Helpers;
 using System.Net.Http;
 using System.Windows;
+using Quicker.Models;
 using System.Text;
 using System.IO;
 
@@ -167,7 +168,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
                 string backupFolderPath = Path.Combine(folderPath, "QuickerData");
                 if (!Directory.Exists(backupFolderPath)) Directory.CreateDirectory(backupFolderPath);
                 CopyFolder(sourceFolderPath, backupFolderPath);
-                using var toast = new ToastManager();
+                var toast = new ToastManager();
                 toast.Show("操作完成！", ToastType.Success);
                 OpenFolder(folderPath);
             }
@@ -201,7 +202,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             }
             catch
             {
-                using var toast = new ToastManager(); // 创建 ToastManager 的实例
+                var toast = new ToastManager(); // 创建 ToastManager 的实例
                 toast.Show("备份失败！", ToastType.Error); // 显示提示
             }
         }
@@ -253,12 +254,12 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
                     Directory.Delete(tempDataPath, true); // 递归删除整个文件夹
                 }
                 Directory.CreateDirectory(tempDataPath); // 重新创建空文件夹
-                using var toastSuccess = new ToastManager();
+                var toastSuccess = new ToastManager();
                 toastSuccess.Show("清理完成！", ToastType.Success);
             }
             catch (Exception ex)
             {
-                using var toastError = new ToastManager();
+                var toastError = new ToastManager();
                 toastError.Show("清理失败：" + ex.Message, ToastType.Error);
             }
         }
@@ -281,7 +282,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             {
                 string selectedPath = folderDialog.SelectedPath;
                 string oldRoot = AppPathHelper.AppDataRoot; // 切换前旧根目录
-                using var toast = new ToastManager();
+                var toast = new ToastManager();
                 if (AppPathHelper.TrySetAppDataRoot(selectedPath, out var resolved))
                 {
                     string newRoot = resolved ?? AppPathHelper.AppDataRoot;

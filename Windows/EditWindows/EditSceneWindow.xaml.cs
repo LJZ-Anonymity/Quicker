@@ -42,10 +42,7 @@ namespace Quicker.Windows.EditWindows
         }
 
         // 点击按钮关闭窗口
-        private void CancelButton_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close(); // 关闭窗口
-        }
+        private void CancelButton_Click(object sender, RoutedEventArgs e) => Close(); // 关闭窗口
 
         // 点击按钮更新场景位置
         private void UpdateLocationButton_Click(object sender, RoutedEventArgs e)

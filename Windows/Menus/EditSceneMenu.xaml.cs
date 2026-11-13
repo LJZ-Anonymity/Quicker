@@ -30,9 +30,7 @@ namespace Quicker.Windows.Menus
         // 重写基类的失焦处理方法
         protected override void HandleDeactivated()
         {
-            // 使用基类的动画关闭方法
             base.CloseWithAnimation();
-            // 调用基类方法以触发ClosingOrHiding事件
             base.HandleDeactivated();
         }
     }

@@ -21,23 +21,16 @@ namespace Quicker.Windows.ToolWindows
         }
 
         // 点击按钮关闭窗口
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            this.Close(); // 关闭窗口
-        }
+        private void Button_Click(object sender, RoutedEventArgs e) => Close();
 
         // 允许拖动窗口
-        private void Grid_MouseDown(object sender, MouseButtonEventArgs e)
-        {
-            DragMove(); // 允许拖动窗口
-        }
+        private void Grid_MouseDown(object sender, MouseButtonEventArgs e) => DragMove();
 
         protected override void OnClosed(EventArgs e)
         {
             TitileTextBlock.Text = null; // 清空标题
             MessageTextBlock.Text = null; // 清空消息
             base.OnClosed(e);
-            GC.Collect(); // 释放内存
         }
     }
 }

@@ -57,7 +57,6 @@ namespace Quicker.Database.Core
         /// <summary>
         /// 获取数据库中所有表名
         /// </summary>
-        /// <returns> 表名列表 </returns>
         public List<string> GetAllTableNames()
         {
             var tableNames = new List<string>(); // 初始化表名列表
@@ -93,7 +92,6 @@ namespace Quicker.Database.Core
         /// 更新对应表中的动作数据
         /// </summary>
         /// <param name="buttonData"> 要更新的动作数据 </param>
-        /// <summary>
         public void UpdateAction(ButtonData buttonData, string tableName)
         {
             using var connection = OpenConnection(); // 打开数据库连接
@@ -126,7 +124,6 @@ namespace Quicker.Database.Core
         /// 通过Button前缀读取对应表格中所有ButtonData
         /// </summary>
         /// <param name="tableName"> Button前缀 </param>
-        /// <returns> ButtonData列表 </returns>
         public List<ButtonData> GetButtonDataByTableName(string tableName)
         {
             var buttonDataList = new List<ButtonData>(); // 初始化ButtonData列表
@@ -191,7 +188,6 @@ namespace Quicker.Database.Core
         /// <param name="connection">数据库连接</param>
         /// <param name="buttonID">原 ButtonID </param>
         /// <param name="pageIndex">原页码</param>
-        /// <returns>新的 ButtonID</returns>
         private int UpdateButtonPageNumber(SQLiteConnection connection, int buttonID, int pageIndex)
         {
             int page = buttonID / 100; // 原页码
@@ -251,7 +247,7 @@ namespace Quicker.Database.Core
             {
                 if (isCtrlPressed)
                 {
-                    using var toast = new ToastManager(); // 实例化 ToastManager
+                    var toast = new ToastManager(); // 实例化 ToastManager
                     toast.Show("目标位置已有动作，不可再添加新动作。", ToastType.Error); // 显示提示
                     return; // 退出函数
                 }
@@ -341,7 +337,6 @@ namespace Quicker.Database.Core
         /// </summary>
         /// <param name="tableName"> Button前缀 </param>
         /// <param name="a"> 数字 A </param>
-        /// <returns> ButtonData列表 </returns>
         public List<ButtonData> GetPagesOfButtons(string tableName, int a)
         {
             List<ButtonData> buttonDatas = GetButtonDataByTableName(tableName); // 获取所有以 pfefix 开头的 ButtonData
@@ -398,7 +393,6 @@ namespace Quicker.Database.Core
         /// 获取总的页面数
         /// </summary>
         /// <param name="tableName"> 目标样式名称 </param>
-        /// <returns> 总页面数 </returns>
         public int GetTotalAntionPageIndex(string tableName)
         {
             using var connection = OpenConnection();
@@ -459,15 +453,27 @@ namespace Quicker.Database.Core
         }
 
         /// <summary>
-        /// 获取动作大小
+        /// 获取动作大小（字节）
         /// </summary>
         /// <param name="tableName"> 动作所在表名 </param>
         /// <param name="buttonID"> 动作ID </param>
-        /// <returns> 动作大小 </returns>
         public int GetActionSize(string tableName, int buttonID)
         {
             var data = GetButtonDataByID(buttonID, tableName); // 获取动作数据
-            int size = 0; // 动作大小
+            if (data == null) return 0; // 增加判空保护
+            return CalculateActionSizeInBytes(data);
+        }
+
+        /// <summary>
+        /// 计算单个动作的估算字节大小
+        /// </summary>
+        /// <param name="data">动作数据</param>
+        /// <returns>字节大小</returns>
+        public static int CalculateActionSizeInBytes(ButtonData data)
+        {
+            if (data == null) return 0;
+
+            int size = 0;
             size += data.Title?.Length * 2 ?? 0; // 标题字符串长度 * 2 (UTF-16)
             size += data.Location?.Length * 2 ?? 0; // 位置字符串长度 * 2
             size += data.ImagePath?.Length * 2 ?? 0; // 图片路径字符串长度 * 2
@@ -475,19 +481,21 @@ namespace Quicker.Database.Core
             size += data.Data2?.Length * 2 ?? 0; // 数据2字符串长度 * 2
             size += data.Data3?.Length * 2 ?? 0; // 数据3字符串长度 * 2
             size += data.Description?.Length * 2 ?? 0; // 描述字符串长度 * 2
+
+            // 固定大小计算
             size += 4; // ActionType (enum)
             size += 4; // ButtonID (int)
             size += 8; // CreateTime (DateTime)
             size += 8; // LatestEditTime (DateTime)
             size += 4; // UsedTimes (int)
-            return size; // 返回动作大小
+
+            return size;
         }
 
         /// <summary>
         /// 通过动作名称获取动作数据，遍历所有表
         /// </summary>
         /// <param name="buttonName"> 动作名称 </param>
-        /// <returns> 动作数据 </returns>
         public (List<ButtonData> buttonDataList, List<string> tableNames) GetButtonbyName(string buttonName)
         {
             var buttonDataList = new List<ButtonData>(); // 实例化列表
@@ -516,7 +524,6 @@ namespace Quicker.Database.Core
         /// 检查表是否存在
         /// </summary>
         /// <param name="tableName"> 要检查的表名 </param>
-        /// <returns> 表是否存在 </returns>
         public bool TableExists(string tableName)
         {
             using var connection = OpenConnection(); // 打开数据库连接

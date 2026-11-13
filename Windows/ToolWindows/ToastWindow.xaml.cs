@@ -6,6 +6,7 @@ using System.Windows.Media;
 using System.Windows.Data;
 using Quicker.Managers;
 using System.Windows;
+using Quicker.Models;
 
 namespace Quicker.Windows.ToolWindows
 {
@@ -149,7 +150,6 @@ namespace Quicker.Windows.ToolWindows
         /// 初始化关闭按钮
         /// </summary>
         /// <param name="border"> 消息边框 </param>
-        /// <returns> 关闭按钮 </returns>
         private Button InitializeCloseButton(Border border)
         {
             var button = new Button { Style = (Style)FindResource("CloseToastButton") }; // 设置按钮样式
@@ -385,7 +385,6 @@ namespace Quicker.Windows.ToolWindows
         /// <param name="targetType"> 目标类型 </param>
         /// <param name="parameter"> 参数 </param>
         /// <param name="culture"> 文化信息 </param>
-        /// <returns> SolidColorBrush </returns>
         public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             if (value is ToastType toastType && ToastColors.TryGetValue(toastType, out var color))

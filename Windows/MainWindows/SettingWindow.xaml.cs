@@ -14,6 +14,7 @@ using Quicker.Managers;
 using Microsoft.Win32;
 using Quicker.Helpers;
 using System.Windows;
+using Quicker.Models;
 using System.IO;
 
 namespace Quicker.Windows.MainWindows
@@ -63,9 +64,6 @@ namespace Quicker.Windows.MainWindows
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e); // 调用基类的 OnClosed 方法
-
-            _settingManager.Dispose(); // 清空缓存
-
             foreach (var child in MenuGrid.Children.OfType<StackPanel>()) // 清理用户控件
             {
                 child.Children.Clear(); // 清空 StackPanel 的子元素
@@ -193,7 +191,7 @@ namespace Quicker.Windows.MainWindows
                 message = "已保存设置！";
             }
             
-            using var toast = new ToastManager(); // 消息提醒管理器
+            var toast = new ToastManager(); // 消息提醒管理器
             toast.Show(message, ToastType.Common); // 弹出消息提醒
         }
 
@@ -201,7 +199,6 @@ namespace Quicker.Windows.MainWindows
         /// 更新开机自启动设置
         /// </summary>
         /// <param name="autostart"> 开机自启动设置 </param>
-        /// <returns> 保存成功标志 </returns>
         private bool UpdateAutostart(bool autostart)
         {
             try
@@ -384,7 +381,6 @@ namespace Quicker.Windows.MainWindows
         /// <summary>
         /// 获取当前页面代码
         /// </summary>
-        /// <returns>页面代码</returns>
         private int GetCurrentPageCode()
         {
             UIElement childElement = GetMainContentElement();
@@ -395,7 +391,6 @@ namespace Quicker.Windows.MainWindows
         /// <summary>
         /// 获取主内容区域的元素
         /// </summary>
-        /// <returns>主内容元素</returns>
         private UIElement GetMainContentElement()
         {
             foreach(UIElement child in ResultGrid.Children)
@@ -410,7 +405,6 @@ namespace Quicker.Windows.MainWindows
         /// 根据元素类型获取页面代码
         /// </summary>
         /// <param name="element">UI元素</param>
-        /// <returns>页面代码</returns>
         private int GetPageCodeByElementType(UIElement element)
         {
             if (element == null) return 0;
@@ -649,7 +643,6 @@ namespace Quicker.Windows.MainWindows
         /// 查找按钮内的TextBlock
         /// </summary>
         /// <param name="btn">按钮</param>
-        /// <returns>TextBlock</returns>
         private TextBlock FindTextBlockInButton(Button btn)
         {
             if (btn.Content is Grid grid)
@@ -668,7 +661,6 @@ namespace Quicker.Windows.MainWindows
         /// </summary>
         /// <param name="original">原始按钮</param>
         /// <param name="keyword">需要高亮的关键字</param>
-        /// <returns>克隆后的按钮（带高亮）</returns>
         private Button CloneButton(Button original, string keyword = "")
         {
             var newBtn = new Button // 新建一个Button实例
@@ -691,7 +683,6 @@ namespace Quicker.Windows.MainWindows
         /// </summary>
         /// <param name="content">原始按钮的Content</param>
         /// <param name="keyword">需要高亮的关键字</param>
-        /// <returns>克隆后的Content对象</returns>
         private object CloneButtonContent(object content, string keyword = "")
         {
             if (content is Grid grid) // 如果是Grid类型，调用专用克隆方法
@@ -704,7 +695,6 @@ namespace Quicker.Windows.MainWindows
         /// </summary>
         /// <param name="grid">原始Grid</param>
         /// <param name="keyword">需要高亮的关键字</param>
-        /// <returns>克隆后的Grid</returns>
         private Grid CloneGridContent(Grid grid, string keyword)
         {
             var newGrid = new Grid { Width = grid.Width };
@@ -722,7 +712,6 @@ namespace Quicker.Windows.MainWindows
         /// 克隆Image控件，复制其常用属性。
         /// </summary>
         /// <param name="img">原始Image控件</param>
-        /// <returns>克隆后的Image控件</returns>
         private Image CloneImageContent(Image img)
         {
             return new Image
@@ -741,7 +730,6 @@ namespace Quicker.Windows.MainWindows
         /// </summary>
         /// <param name="tb">原始TextBlock控件</param>
         /// <param name="keyword">需要高亮的关键字</param>
-        /// <returns>克隆后的TextBlock控件</returns>
         private TextBlock CloneTextBlockContent(TextBlock tb, string keyword)
         {
             var newTb = new TextBlock

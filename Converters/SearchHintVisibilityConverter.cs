@@ -28,7 +28,6 @@ namespace Quicker.Converters
         /// <param name="parameter"> 转换参数 </param>
         /// <param name="culture"> 区域性 </param>
         /// <returns> 未实现 </returns>
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-          => throw new NotImplementedException();
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 }

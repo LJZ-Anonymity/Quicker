@@ -230,7 +230,6 @@ namespace Quicker.Windows.MainWindows
         /// <summary>
         /// 场景类型改变事件
         /// </summary>
-        /// <param name="targetType"> 目标类型 </param>
         private void TypeChanged(string targetType)
         {
             if (type == targetType) return; // 如果目标类型与当前类型相同，直接返回
@@ -281,7 +280,6 @@ namespace Quicker.Windows.MainWindows
         /// <summary>
         /// 生成场景按钮
         /// </summary>
-        /// <param name="filter"></param>
         private void GenerateSceneButtons(string filter = null)
         {
             ActionPagesButtonPanel.Children.Clear(); // 先清空
@@ -299,7 +297,6 @@ namespace Quicker.Windows.MainWindows
         /// </summary>
         /// <param name="sceneData">所有场景数据</param>
         /// <param name="filter">过滤关键字</param>
-        /// <returns>筛选后的场景数据列表</returns>
         private List<SceneData> FilterScenes(IEnumerable<SceneData> sceneData, string filter)
         {
             if (string.IsNullOrEmpty(filter))
@@ -317,7 +314,6 @@ namespace Quicker.Windows.MainWindows
         /// 对场景数据进行排序，默认场景优先，其他场景按原顺序排列。
         /// </summary>
         /// <param name="scenes">待排序的场景数据</param>
-        /// <returns>排序后的场景数据列表</returns>
         private List<SceneData> OrderScenes(List<SceneData> scenes)
         {
             var defaultScenes = new List<string> { "_global", "common", "taskbar", "desktop" };
@@ -362,7 +358,6 @@ namespace Quicker.Windows.MainWindows
         /// </summary>
         /// <param name="sceneData"> 场景数据 </param>
         /// <param name="filter"> 过滤关键字 </param>
-        /// <returns> 按钮内容 </returns>
         private Grid CreateButtonContent(SceneData sceneData, string filter = null)
         {
             Grid buttonContent = new() { Style = (Style)FindResource("SceneButtonContentGrid") }; // 创建网格
@@ -376,7 +371,6 @@ namespace Quicker.Windows.MainWindows
         /// 创建场景图片控件
         /// </summary>
         /// <param name="sceneData"> 场景数据 </param>
-        /// <returns> Image控件 </returns>
         private Image CreateSceneImage(SceneData sceneData)
         {
             const string defaultImagePath = "pack://application:,,,/Resources/Images/Quicker_Enabled.png";
@@ -411,7 +405,6 @@ namespace Quicker.Windows.MainWindows
         /// <param name="resourcePrefix"> 资源前缀 </param>
         /// <param name="packPrefix"> 打包前缀 </param>
         /// <param name="defaultImagePath"> 默认图片路径</param>
-        /// <returns> 图片源 </returns>
         private BitmapImage CreateImageSource(string path, string resourcePrefix, string packPrefix, string defaultImagePath)
         {
             try
@@ -434,7 +427,6 @@ namespace Quicker.Windows.MainWindows
         /// </summary>
         /// <param name="sceneData"> 场景数据 </param>
         /// <param name="filter"> 过滤关键字 </param>
-        /// <returns> TextBlock控件 </returns>
         private TextBlock CreateSceneNameTextBlock(SceneData sceneData, string filter = null)
         {
             TextBlock sceneName = new()
@@ -454,7 +446,6 @@ namespace Quicker.Windows.MainWindows
         /// </summary>
         /// <param name="sceneData"> 场景数据 </param>
         /// <param name="filter"> 过滤关键字 </param>
-        /// <returns> TextBlock控件 </returns>
         private TextBlock CreateSceneTagTextBlock(SceneData sceneData, string filter = null)
         {
             TextBlock sceneTag = new()
@@ -476,7 +467,6 @@ namespace Quicker.Windows.MainWindows
         /// <summary>
         /// 设置场景按钮事件
         /// </summary>
-        /// <param name="button"> 按钮 </param>
         private void SetupButtonEvents(Button button)
         {
             button.MouseDoubleClick += EditSceneButton_Click; // 双击编辑场景信息
@@ -655,7 +645,6 @@ namespace Quicker.Windows.MainWindows
         /// </summary>
         /// <param name="canvasIndex"> 画布索引 </param>
         /// <param name="style"> 画布类型 </param>
-        /// <returns> 画布 </returns>
         private Canvas GenerateCanva(int canvasIndex, string style)
         {
             string canvasName = $"{style}{canvasIndex}"; // 画布名称
@@ -673,7 +662,6 @@ namespace Quicker.Windows.MainWindows
         /// </summary>
         /// <param name="canvasIndex"> 画布索引 </param>
         /// <param name="style"> 画布类型 </param>
-        /// <returns> 标题 </returns>
         private Grid GenerateTitle(int canvasIndex, string style)
         {
             Grid grid = new Grid { Style = (Style)FindResource("ActionPageTitleGrid") }; // 创建网格
@@ -685,7 +673,6 @@ namespace Quicker.Windows.MainWindows
         /// </summary>
         /// <param name="canvasIndex"></param>
         /// <param name="style"></param>
-        /// <returns> 编辑标题按钮 </returns>
         private Button GenerateChangePageButton(int canvasIndex, string style)
         {
             Button pageButton = new Button
@@ -704,7 +691,6 @@ namespace Quicker.Windows.MainWindows
         /// </summary>
         /// <param name="canvasIndex"> 画布索引 </param>
         /// <param name="style"> 画布类型 </param>
-        /// <returns> 编辑动作页按钮 </returns>
         private Button GenerateEditActionPageButton(int canvasIndex, string style)
         {
             Button editPageButton = new Button
@@ -721,7 +707,6 @@ namespace Quicker.Windows.MainWindows
         /// 生成动作页名称
         /// </summary>
         /// <param name="actionPageIndex"> 动作页索引 </param>
-        /// <returns> 动作页名称 </returns>
         private TextBlock GenerateActionPageName(int actionPageIndex)
         {
             var actionPageInfo = db3.GetActionPageData(type, actionPageIndex); // 获取动作页信息
@@ -741,10 +726,7 @@ namespace Quicker.Windows.MainWindows
         }
 
         // 滚动条值改变事件
-        private void ScrollBar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            ScrollViewer.ScrollToHorizontalOffset(ScrollBar.Value); // 滚动到指定位置
-        }
+        private void ScrollBar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e) => ScrollViewer.ScrollToHorizontalOffset(ScrollBar.Value); // 滚动到指定位置
 
         // 鼠标移入按钮改变背景色
         private void Button_MouseEnter(object sender, MouseEventArgs e)
@@ -821,10 +803,7 @@ namespace Quicker.Windows.MainWindows
         }
 
         // 鼠标左键抬起事件
-        private void Button_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            buttonManager.Button_PreviewMouseLeftButtonUp(sender, e); // 处理鼠标左键抬起事件
-        }
+        private void Button_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e) => buttonManager.Button_PreviewMouseLeftButtonUp(sender, e);
 
         // 左键空白 Button 显示创建动作菜单
         private void ShowCreatActionMenu(object sender, RoutedEventArgs e)
@@ -879,7 +858,6 @@ namespace Quicker.Windows.MainWindows
         /// <summary>
         /// 设置动作页信息
         /// </summary>
-        /// <returns> 动作页信息 </returns>
         private ActionPageInfo GetActionPageInfo()
         {
             int canvasCount = MainListView.Items.Count; // 获取画布索引
@@ -939,7 +917,6 @@ namespace Quicker.Windows.MainWindows
         /// <summary>
         /// 编辑动作后刷新按钮显示
         /// </summary>
-        /// <param name="button"> 目标按钮 </param>
         public void UpdateButton(int button)
         {
             int index = button / 100; // 获取按钮所在动作页索引
@@ -965,10 +942,7 @@ namespace Quicker.Windows.MainWindows
         }
 
         // 拖拽经过目标项
-        private void ListView_PreviewDragOver(object sender, DragEventArgs e)
-        {
-            buttonManager.Button_PreviewDragOver(sender, e); // 处理拖放事件
-        }
+        private void ListView_PreviewDragOver(object sender, DragEventArgs e) => buttonManager.Button_PreviewDragOver(sender, e);
 
         // 拖拽完成
         private void ListView_Drop(object sender, DragEventArgs e)
@@ -1043,7 +1017,6 @@ namespace Quicker.Windows.MainWindows
         /// <summary>
         /// 获取绑定按钮
         /// </summary>
-        /// <returns> 绑定按钮 </returns>
         private Button GetBingdingButton()
         {
             EditActionPagePopup.IsOpen = false; // 关闭编辑动作页弹出菜单
@@ -1171,16 +1144,10 @@ namespace Quicker.Windows.MainWindows
         }
 
         // 点击按钮前往顶层场景
-        private void ToTopSceneButton_Click(object sender, RoutedEventArgs e)
-        {
-            TypeChanged("_global"); // 切换类型为全局场景
-        }
+        private void ToTopSceneButton_Click(object sender, RoutedEventArgs e) => TypeChanged("_global"); // 切换类型为全局场景
 
         // 右键显示/隐藏动作使用次数
-        private void AddActionPageButton_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            showUsedTimes = !showUsedTimes; // 切换显示/隐藏使用次数
-        }
+        private void AddActionPageButton_MouseRightButtonDown(object sender, MouseButtonEventArgs e) => showUsedTimes = !showUsedTimes; // 切换显示/隐藏使用次数
 
         // 滚动滚轮移动视图
         private void MainStackPanel_MouseWheel(object sender, MouseWheelEventArgs e)
@@ -1191,10 +1158,7 @@ namespace Quicker.Windows.MainWindows
         }
 
         // 点击勾选框更改设置
-        private void AutoReturnToFirstPageCheckBox_Click(object sender, RoutedEventArgs e)
-        {
-            db3.SetAutoReturnToFirstPage(type, AutoReturnToFirstPageCheckBox.IsChecked == true); // 更改设置
-        }
+        private void AutoReturnToFirstPageCheckBox_Click(object sender, RoutedEventArgs e) => db3.SetAutoReturnToFirstPage(type, AutoReturnToFirstPageCheckBox.IsChecked == true); // 更改设置
 
         // 将动作页拖拽按钮拖放到其他场景按钮上给动作页切换场景
         private void ChangeActionPageScene(object sender, DragEventArgs e)
@@ -1262,7 +1226,6 @@ namespace Quicker.Windows.MainWindows
         /// </summary>
         /// <param name="sceneType"> 场景类型 </param>
         /// <param name="actionPageName"> 动作页名称 </param>
-        /// <returns> 动作页名称 </returns>
         private string GetActionPageName(string sceneType, string actionPageName)
         {
             switch (sceneType)
@@ -1284,7 +1247,7 @@ namespace Quicker.Windows.MainWindows
 
         private void ShowToast(string message, ToastType toastType)
         {
-            using var toast = new ToastManager(); // 消息提醒管理器
+            var toast = new ToastManager(); // 消息提醒管理器
             toast.Show(message, toastType); // 弹出消息提醒
         }
 
@@ -1316,7 +1279,6 @@ namespace Quicker.Windows.MainWindows
             showUsedTimes = false; // 清理是否显示使用次数
             CleanupMainListView(); // 清理主列表视图
             CleanupActionPagesButtonPanel(); // 清理场景按钮面板
-            buttonManager?.Dispose(); // 清理按钮管理器
             SceneImage.Source = null; // 清理场景图片
 
             base.OnClosed(e); // 调用基类的 OnClosed 方法
@@ -1361,7 +1323,6 @@ namespace Quicker.Windows.MainWindows
         /// <summary>
         /// 清理网格
         /// </summary>
-        /// <param name="grid"> 网格 </param>
         private void CleanupGrid(Grid grid)
         {
             while (grid.Children.Count > 0)
@@ -1378,7 +1339,6 @@ namespace Quicker.Windows.MainWindows
         /// <summary>
         /// 清理按钮
         /// </summary>
-        /// <param name="button"> 按钮 </param>
         private void CleanupButton(Button button)
         {
             // 解绑所有事件

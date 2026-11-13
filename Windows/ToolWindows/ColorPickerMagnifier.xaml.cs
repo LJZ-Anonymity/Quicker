@@ -64,10 +64,7 @@ namespace Quicker.Windows.ToolWindows
             InitializeComponent();
         }
 
-        private void ColorPickerMagnifier_Loaded(object sender, RoutedEventArgs e)
-        {
-            UpdatePosition(); // 设置窗口位置在鼠标旁边
-        }
+        private void ColorPickerMagnifier_Loaded(object sender, RoutedEventArgs e) => UpdatePosition(); // 设置窗口位置在鼠标旁边
 
         /// <summary>
         /// 更新窗口位置
@@ -165,7 +162,6 @@ namespace Quicker.Windows.ToolWindows
         /// </summary>
         /// <param name="centerX"> 屏幕中心x坐标（物理像素）</param>
         /// <param name="centerY"> 屏幕中心y坐标（物理像素）</param>
-        /// <returns> 生成的 BitmapSource </returns>
         private BitmapSource GenerateMagnifierBitmapSource(int centerX, int centerY)
         {
             IntPtr screenDC = IntPtr.Zero;
@@ -179,7 +175,7 @@ namespace Quicker.Windows.ToolWindows
                 int halfSize = size / 2;
                 int magnifiedSize = size * MAGNIFICATION;
 
-                // 1. GDI/Win32 捕获屏幕区域
+                // GDI/Win32 捕获屏幕区域
                 screenDC = GetDC(IntPtr.Zero);
                 memDC = CreateCompatibleDC(screenDC);
                 bitmap = CreateCompatibleBitmap(screenDC, size, size);
@@ -250,7 +246,6 @@ namespace Quicker.Windows.ToolWindows
         /// </summary>
         /// <param name="x"> 像素x坐标 </param>
         /// <param name="y"> 像素y坐标 </param>
-        /// <returns> RGB格式的像素颜色 </returns>
         private (byte r, byte g, byte b) GetPixelColor(int x, int y)
         {
             IntPtr hdc = GetDC(IntPtr.Zero);

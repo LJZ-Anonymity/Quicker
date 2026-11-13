@@ -33,7 +33,6 @@ namespace Quicker.UserControls.AddWindow
         private bool isLoading = true; // 是否正在加载
 
         #region IActionEditor
-
         public ActionType GetActionType() => DetermineActionType();
         public string GetLocation() => LocationTextBox.Text;
         public string GetData1() => (RunasAdministrator.IsChecked == true).ToString();
@@ -277,7 +276,7 @@ namespace Quicker.UserControls.AddWindow
                 return;
             }
 
-            using var toast = new ToastManager();
+            var toast = new ToastManager();
             toast.Show("无法解析快捷方式目标!", ToastType.Error);
         }
 
@@ -286,7 +285,6 @@ namespace Quicker.UserControls.AddWindow
         /// </summary>
         /// <param name="lnkFilePath">lnk文件路径</param>
         /// <param name="arguments">输出参数：启动参数</param>
-        /// <returns>目标路径，如果获取失败则返回null</returns>
         private string GetLnkTargetPath(string lnkFilePath, out string arguments)
         {
             arguments = string.Empty;
@@ -362,7 +360,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 设置标题和地址栏
         /// </summary>
-        /// <param name="buttonData">按钮数据</param>
         private void SetButtonTitleAndLocation(ButtonData buttonData)
         {
             if (!string.IsNullOrWhiteSpace(buttonData.Title))
@@ -377,7 +374,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 安全设置图标（带异常处理）
         /// </summary>
-        /// <param name="imagePath">图片路径</param>
         private void SetButtonImageSafe(string imagePath)
         {
             if (!string.IsNullOrEmpty(imagePath))
@@ -389,7 +385,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 设置其他选项（如复选框、下拉框、描述等）
         /// </summary>
-        /// <param name="buttonData">按钮数据</param>
         private void SetOtherOptions(ButtonData buttonData)
         {
             RunasAdministrator.IsChecked = buttonData.Data1 == "True"; // 设置运行方式
@@ -406,7 +401,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 根据路径设置图标
         /// </summary>
-        /// <param name="path">路径</param>
         private void SetIconFromPath(string path)
         {
             string cachedIconPath = _iconManager.CheckCachedIcon(path); // 检查缓存图标
@@ -425,7 +419,7 @@ namespace Quicker.UserControls.AddWindow
                 }
                 else
                 {
-                    using var toast = new ToastManager(); // 创建 ToastManager 实例
+                    var toast = new ToastManager(); // 创建 ToastManager 实例
                     toast.Show("图标提取失败!", ToastType.Error); // 显示错误提示
                 }
             }
@@ -434,7 +428,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 确定动作类型
         /// </summary>
-        /// <returns>动作类型</returns>
         private ActionType DetermineActionType()
         {
             string location = LocationTextBox.Text?.Trim() ?? string.Empty;
@@ -507,9 +500,6 @@ namespace Quicker.UserControls.AddWindow
                 findAppsWindow = null;
             }
 
-            _buttonManager.Dispose(); // 释放按钮管理器
-            _iconManager.Dispose(); // 释放图标管理器
-
             // 重置UI控件状态
             LocationTextBox.Text = "";
             WindowStateComboBox.SelectedIndex = -1;
@@ -556,8 +546,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 获取lnk文件的目标路径
         /// </summary>
-        /// <param name="lnkFilePath">lnk文件路径</param>
-        /// <returns>目标路径，如果获取失败则返回null</returns>
         private string GetLnkTargetPath(string lnkFilePath)
         {
             if (string.IsNullOrEmpty(lnkFilePath) || !File.Exists(lnkFilePath))
@@ -586,8 +574,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 获取lnk文件中的URI协议命令
         /// </summary>
-        /// <param name="lnkFilePath">lnk文件路径</param>
-        /// <returns>URI协议命令，如果获取失败则返回null</returns>
         private string GetLnkUriCommand(string lnkFilePath)
         {
             if (string.IsNullOrEmpty(lnkFilePath) || !File.Exists(lnkFilePath))

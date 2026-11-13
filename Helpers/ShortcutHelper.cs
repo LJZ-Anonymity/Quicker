@@ -11,7 +11,6 @@ namespace Quicker.Helpers
         /// 将按键事件(KeyEventArgs)转换为标准快捷键字符串（如 Ctrl+Alt+S）。
         /// </summary>
         /// <param name="e">按键事件参数</param>
-        /// <returns>标准快捷键字符串</returns>
         public static string GetShortcutString(KeyEventArgs e)
         {
             List<string> keys = new List<string>();
@@ -36,21 +35,15 @@ namespace Quicker.Helpers
         /// <summary>
         /// 判断指定的Key是否为修饰键（Ctrl、Shift、Alt、Windows）。
         /// </summary>
-        /// <param name="key">按键</param>
-        /// <returns>是修饰键返回true，否则返回false</returns>
-        public static bool IsModifierKey(Key key)
-        {
-            return key == Key.LeftCtrl || key == Key.RightCtrl ||
+        public static bool IsModifierKey(Key key) => key == Key.LeftCtrl || key == Key.RightCtrl ||
                    key == Key.LeftShift || key == Key.RightShift ||
                    key == Key.LeftAlt || key == Key.RightAlt ||
                    key == Key.LWin || key == Key.RWin;
-        }
 
         /// <summary>
         /// 获取按键的友好显示名称（如数字、常见符号等）。
         /// </summary>
         /// <param name="key">按键</param>
-        /// <returns>友好显示的按键名称</returns>
         public static string GetFriendlyKeyName(Key key)
         {
             // 主键盘数字
@@ -83,7 +76,6 @@ namespace Quicker.Helpers
         /// </summary>
         /// <param name="shortcut1">第一个快捷键字符串</param>
         /// <param name="shortcut2">第二个快捷键字符串</param>
-        /// <returns>一致返回true，否则返回false</returns>
         public static bool IsShortcutMatch(string shortcut1, string shortcut2)
         {
             return string.Equals(shortcut1, shortcut2, StringComparison.OrdinalIgnoreCase);
@@ -97,7 +89,6 @@ namespace Quicker.Helpers
         /// <param name="shift">Shift是否按下</param>
         /// <param name="alt">Alt是否按下</param>
         /// <param name="win">Win是否按下</param>
-        /// <returns>标准快捷键字符串</returns>
         public static string GetShortcutStringFromHook(
             int virtualKeyCode, bool ctrl, bool shift, bool alt, bool win)
         {

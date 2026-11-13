@@ -119,11 +119,8 @@ namespace Quicker.Windows.FloatingWindows.ViewModels
             ButtonID = buttonID;
             TableName = tableName;
             
-            // 加载外观设置
-            LoadAppearanceSettings();
-            
-            // 加载按钮数据
-            LoadButtonData();
+            LoadAppearanceSettings(); // 加载外观设置
+            LoadButtonData(); // 加载按钮数据
         }
 
         /// <summary>

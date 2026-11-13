@@ -47,10 +47,6 @@ namespace Quicker.Helpers
         [DllImport("user32.dll")]
         private static extern nint GetForegroundWindow(); // 当前活动窗口句柄
 
-        // 获取窗口标题
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern int GetWindowText(nint hWnd, StringBuilder text, int count); // 窗口标题
-
         // 获取窗口进程ID
         [DllImport("user32.dll", SetLastError = true)]
         private static extern uint GetWindowThreadProcessId(nint hWnd, out uint lpdwProcessId); // 窗口进程ID
@@ -103,15 +99,6 @@ namespace Quicker.Helpers
         private const int SM_CXSCREEN = 0; // 屏幕宽度
         private const int SM_CYSCREEN = 1; // 屏幕高度
 
-        [DllImport("user32.dll")]
-        private static extern bool EnumWindows(EnumWindowsProc enumProc, nint lParam); // 枚举窗口
-
-        [DllImport("user32.dll")]
-        private static extern bool IsWindowVisible(nint hWnd); // 判断窗口是否可见
-
-        [DllImport("user32.dll")]
-        private static extern int GetWindowTextLength(nint hWnd); // 获取窗口标题长度
-
         // 获取鼠标下的窗口句柄
         [DllImport("user32.dll")]
         private static extern nint WindowFromPoint(System.Drawing.Point point);
@@ -119,16 +106,6 @@ namespace Quicker.Helpers
         // 获取窗口类名
         [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern int GetClassName(nint hWnd, StringBuilder lpClassName, int nMaxCount);
-
-        // 获取桌面窗口句柄
-        [DllImport("user32.dll")]
-        private static extern nint GetDesktopWindow();
-
-        // 获取Shell窗口句柄
-        [DllImport("user32.dll")]
-        private static extern nint GetShellWindow();
-
-        private delegate bool EnumWindowsProc(nint hWnd, nint lParam); // 枚举窗口委托
         #endregion
 
         /// <summary>
@@ -160,17 +137,12 @@ namespace Quicker.Helpers
         /// <summary>
         /// 获取当前活动窗口句柄
         /// </summary>
-        /// <returns> 当前活动窗口句柄 </returns>
-        public static nint GetCurrentForegroundWindow()
-        {
-            return GetForegroundWindow(); // 获取当前活动窗口句柄
-        }
+        public static nint GetCurrentForegroundWindow() => GetForegroundWindow();
 
         /// <summary>
         /// 获取窗口进程ID
         /// </summary>
         /// <param name="hWnd"> 窗口句柄 </param>
-        /// <returns> 窗口进程ID </returns>
         public static uint GetWindowProcessId(nint hWnd)
         {
             GetWindowThreadProcessId(hWnd, out uint processId); // 获取窗口进程ID
@@ -242,7 +214,6 @@ namespace Quicker.Helpers
         /// <summary>
         /// 判断是否全屏
         /// </summary>
-        /// <returns> 是否全屏 </returns>
         public static bool IsFullScreen()
         {
             nint hWnd = GetForegroundWindow(); // 获取当前活动窗口句柄

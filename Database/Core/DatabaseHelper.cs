@@ -23,10 +23,7 @@ namespace Quicker.Database.Core
         /// <summary>
         /// 确保数据库目录存在
         /// </summary>
-        public static void EnsureDatabaseDirectoryExists()
-        {
-            AppPathHelper.EnsureDirectoryExists(AppPathHelper.DatabaseFolder);
-        }
+        public static void EnsureDatabaseDirectoryExists() => AppPathHelper.EnsureDirectoryExists(AppPathHelper.DatabaseFolder);
 
         /// <summary>
         /// 打开数据库连接

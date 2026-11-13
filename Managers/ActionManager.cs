@@ -109,7 +109,7 @@ namespace Quicker.Managers
         /// <param name="type"> 消息类型 </param>
         public void ShowToast(string message, ToastType type)
         {
-            using var toast = new ToastManager(); // 消息提醒管理器
+            var toast = new ToastManager(); // 消息提醒管理器
             toast.Show(message, type); // 弹出消息提醒
         }
 
@@ -117,7 +117,6 @@ namespace Quicker.Managers
         /// 获取快捷方式的目标路径
         /// </summary>
         /// <param name="shortcutFilePath"> 快捷方式文件路径 </param>
-        /// <returns> 目标路径 </returns>
         private string GetShortcutTargetPath(string shortcutFilePath)
         {
             WshShell shell = new WshShell();

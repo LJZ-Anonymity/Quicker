@@ -1,4 +1,3 @@
-
 namespace Quicker.Internal
 {
     public sealed class InternalCommandManager
@@ -31,7 +30,6 @@ namespace Quicker.Internal
         /// 尝试获取最新内部命令
         /// </summary>
         /// <param name="command">最新内部命令</param>
-        /// <returns>是否成功获取</returns>
         public bool TryGetLatestCommand(out InternalCommand command)
         {
             lock (syncLock)

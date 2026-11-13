@@ -1,24 +1,13 @@
 ﻿using Quicker.Windows.ToolWindows;
 using Quicker.Windows;
 using System.Windows;
+using Quicker.Models;
 
 namespace Quicker.Managers
 {
-    /// <summary>
-    /// Toast消息类型枚举
-    /// </summary>
-    public enum ToastType
-    {
-        Common, // 普通消息
-        Error,  // 错误消息
-        Warning,// 警告消息
-        Success // 成功消息
-    }
-
-    public class ToastManager : IDisposable
+    public class ToastManager
     {
         private ToastWindow? toastWindow;
-        private bool isDisposed = false;
 
         /// <summary>
         /// 添加Toast消息
@@ -28,7 +17,7 @@ namespace Quicker.Managers
         public void Show(string message, ToastType toastType)
         {
             var dispatcher = Application.Current?.Dispatcher;
-            if (dispatcher == null || dispatcher.HasShutdownStarted || isDisposed)
+            if (dispatcher == null || dispatcher.HasShutdownStarted)
                 return; // 如果 Dispatcher 不可用或已关闭，直接返回
 
             dispatcher.BeginInvoke(() =>
@@ -41,28 +30,6 @@ namespace Quicker.Managers
                 }
                 toastWindow.AddToast(message, toastType); // 添加Toast消息
             });
-        }
-
-        // 实现IDisposable接口
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this); // 告知垃圾回收器不需要调用终结器
-        }
-
-        /// <summary>
-        /// 释放资源
-        /// </summary>
-        /// <param name="disposing">是否释放资源</param>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!isDisposed) isDisposed = true; // 设置为已释放
-        }
-
-        // 析构函数
-        ~ToastManager()
-        {
-            Dispose(false); // 释放非托管资源
         }
     }
 }

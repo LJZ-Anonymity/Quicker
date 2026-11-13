@@ -166,10 +166,7 @@ namespace Quicker.Windows.AddWindows
         }
 
         // 关闭添加动作窗口
-        private void CloseAddWindow(object sender, RoutedEventArgs e)
-        {
-            this.Close(); // 关闭窗口
-        }
+        private void CloseAddWindow(object sender, RoutedEventArgs e) => Close();
 
         // 管理本地图标
         private void ManageLocalIcons(object sender, RoutedEventArgs e)
@@ -233,7 +230,6 @@ namespace Quicker.Windows.AddWindows
         /// <summary>
         /// 保存图标到本地
         /// </summary>
-        /// <returns>保存路径</returns>
         public string SaveIconToLocal()
         {
             // 优先用本地文件路径
@@ -247,22 +243,13 @@ namespace Quicker.Windows.AddWindows
         }
 
         // 点击保存按钮保存动作
-        private void SaveAction(object sender, RoutedEventArgs e)
-        {
-            Save(); // 保存动作
-        }
+        private void SaveAction(object sender, RoutedEventArgs e) => Save();
 
         // 按下 S 键保存动作
         private void SaveAction(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == Key.S)
                 Save(); // 保存动作
-        }
-
-        // 选择已有图标
-        private void AddImage(object sender, RoutedEventArgs e)
-        {
-            SelectImage(sender, e); // 选择本地图片
         }
 
         // 更改ButtonName
@@ -356,8 +343,6 @@ namespace Quicker.Windows.AddWindows
         /// <summary>
         /// 处理选择的图片
         /// </summary>
-        /// <param name="sender"> 发送者 </param>
-        /// <param name="selectedImagePath"> 选择的图片路径 </param>
         private void OnImageConfirmed(object sender, string selectedImagePath)
         {
             if (!string.IsNullOrEmpty(selectedImagePath))
@@ -400,7 +385,7 @@ namespace Quicker.Windows.AddWindows
                     break; // 加载扩展
                 default:
                     {
-                        using var toast = new ToastManager(); // 创建 ToastManager 实例
+                        var toast = new ToastManager(); // 创建 ToastManager 实例
                         toast.Show("功能开发中，敬请期待！", ToastType.Common); // 显示提示消息
                     }
                     break; // 其他情况
@@ -410,7 +395,6 @@ namespace Quicker.Windows.AddWindows
         /// <summary>
         /// 根据选择的选项设置窗口高度
         /// </summary>
-        /// <param name="choice"> 选择的选项 </param>
         private void SetWindowHeight(int choice)
         {
             switch (choice)
@@ -429,7 +413,6 @@ namespace Quicker.Windows.AddWindows
         /// <summary>
         /// 根据图片路径设置 ButtonImage，支持 SVG、GIF 动图等格式
         /// </summary>
-        /// <param name="imagePath">图片路径</param>
         public void SetButtonImage(string imagePath)
         {
             try
@@ -491,7 +474,7 @@ namespace Quicker.Windows.AddWindows
         private void HandleImageLoadError()
         {
             ButtonImage.Visibility = Visibility.Collapsed;
-            using var toast = new ToastManager();
+            var toast = new ToastManager();
             toast.Show("图片加载失败", ToastType.Error);
         }
 
@@ -509,22 +492,13 @@ namespace Quicker.Windows.AddWindows
         }
 
         // 设置ButtonView的背景色
-        private void SetButtonViewBackground()
-        {
-            ButtonView.Background = (Brush)new BrushConverter().ConvertFromString(_appearance.ActionButtonColor);
-        }
+        private void SetButtonViewBackground() => ButtonView.Background = (Brush)new BrushConverter().ConvertFromString(_appearance.ActionButtonColor);
 
         // 鼠标移入时变色
-        private void ButtonView_MouseEnter(object sender, MouseEventArgs e)
-        {
-            ButtonView.Background = (Brush)new BrushConverter().ConvertFromString(_appearance.ActionButtonMouseOverColor);
-        }
+        private void ButtonView_MouseEnter(object sender, MouseEventArgs e) => ButtonView.Background = (Brush)new BrushConverter().ConvertFromString(_appearance.ActionButtonMouseOverColor);
 
         // 鼠标移出时还原
-        private void ButtonView_MouseLeave(object sender, MouseEventArgs e)
-        {
-            SetButtonViewBackground();
-        }
+        private void ButtonView_MouseLeave(object sender, MouseEventArgs e) => SetButtonViewBackground();
 
         // 关闭窗口前，释放资源
         protected override void OnClosed(EventArgs e)

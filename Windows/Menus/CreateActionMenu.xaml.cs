@@ -19,16 +19,17 @@ namespace Quicker.Windows.Menus
     public partial class CreateActionMenu : BaseMenuWindow
     {
         #region 字段和属性
-        private readonly ButtonManager buttonManager = new(); // 按钮管理器
-        private readonly ButtonDatabase db2 = new(); // 设置管理器
-        private readonly InternalCommandManager internalCommandManager = InternalCommandManager.Instance; // 内部命令管理器
-        private InternalCommand currentInternalCommand; // 当前内部命令
-        private bool hasChanged = false; // 是否已检查
-        public int ButtonID { get; private set; } // 当前按钮
         public string TableName { get; private set; } // 表名
-        private bool haveAction = false; // 是否有动作
-        private bool close = true; // 是否正在关闭
+        public int ButtonID { get; private set; } // 当前按钮
+
+        private readonly InternalCommandManager internalCommandManager = InternalCommandManager.Instance; // 内部命令管理器
+        private readonly ButtonManager buttonManager = new(); // 按钮管理器
         private readonly IconManager iconManager = new(); // 图标管理器
+        private InternalCommand currentInternalCommand; // 当前内部命令
+        private readonly ButtonDatabase db2 = new(); // 设置管理器
+        private bool haveAction = false; // 是否有动作
+        private bool hasChanged = false; // 是否已检查
+        private bool close = true; // 是否正在关闭
         #endregion
 
         #region 初始化
@@ -240,15 +241,11 @@ namespace Quicker.Windows.Menus
         /// <summary>
         /// 获取文本字体信息
         /// </summary>
-        /// <returns>字体信息</returns>
-        private Typeface GetTextTypeface()
-        {
-            return new Typeface(
-                CreateOpenFileActionTextBlock.FontFamily, 
-                CreateOpenFileActionTextBlock.FontStyle, 
-                CreateOpenFileActionTextBlock.FontWeight, 
+        private Typeface GetTextTypeface() => new Typeface(
+                CreateOpenFileActionTextBlock.FontFamily,
+                CreateOpenFileActionTextBlock.FontStyle,
+                CreateOpenFileActionTextBlock.FontWeight,
                 CreateOpenFileActionTextBlock.FontStretch); // 字体信息
-        }
 
         /// <summary>
         /// 计算文本宽度
@@ -257,7 +254,6 @@ namespace Quicker.Windows.Menus
         /// <param name="typeface">字体信息</param>
         /// <param name="culture">文化信息</param>
         /// <param name="dpi">DPI信息</param>
-        /// <returns>文本宽度</returns>
         private double CalculateTextWidth(string text, Typeface typeface, CultureInfo culture, double dpi)
         {
             var formattedText = new FormattedText(
@@ -282,7 +278,6 @@ namespace Quicker.Windows.Menus
         /// <param name="typeface">字体信息</param>
         /// <param name="culture">文化信息</param>
         /// <param name="dpi">DPI信息</param>
-        /// <returns>裁剪后的文件名</returns>
         private string TruncateFileName(string fileName, string prefix, string suffix, double maxTextWidth, Typeface typeface, CultureInfo culture, double dpi)
         {
             // 二分查找合适的文件名长度
@@ -499,7 +494,6 @@ namespace Quicker.Windows.Menus
             currentInternalCommand = null; // 清理内部命令
             internalCommandManager.CommandPublished -= InternalCommandManager_CommandPublished; // 解绑事件
             hasChanged = false; // 清理检查状态
-            buttonManager.Dispose(); // 释放按钮管理器
             ButtonID = 0; // 清理当前按钮
             TableName = null; // 清理表名
             haveAction = false; // 清理是否有动作

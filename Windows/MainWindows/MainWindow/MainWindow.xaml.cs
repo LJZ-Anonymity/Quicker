@@ -54,10 +54,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         private bool _isSelfTriggered; // 自身触发标志
         private string CommonStyle;
 
-        public MainWindow()
-        {
-            InitializeComponent();
-        }
+        public MainWindow() => InitializeComponent();
 
         #endregion
 
@@ -587,28 +584,12 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// <summary>
         /// 鼠标滚轮切换页面
         /// </summary>
-        /// <param name="e">鼠标滚轮事件参数</param>
-        /// <param name="parent">父容器</param>
-        /// <param name="gridType">Grid类型</param>
-        /// <param name="rows">行数</param>
-        /// <param name="cols">列数</param>
-        /// <param name="buttonPanel">按钮面板</param>
-        private void Grid_MouseWheel(MouseWheelEventArgs e, Panel parent, string gridType, int rows, int cols, Panel buttonPanel)
-        {
-            e.Handled = true; // 禁止默认滚轮事件
-            NavigatePage(parent, gridType, rows, cols, buttonPanel, e.Delta); // 调用翻页核心逻辑
-        }
+        private void Grid_MouseWheel(MouseWheelEventArgs e, Panel parent, string gridType, int rows, int cols, Panel buttonPanel) => NavigatePage(parent, gridType, rows, cols, buttonPanel, e.Delta);
 
         // 全局Grid滚轮事件
-        private void GlobalGrid_MouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            Grid_MouseWheel(e, GlobalGrid, GLOBAL_STYLE, 3, 4, GlobalButtonPanel);
-        }
+        private void GlobalGrid_MouseWheel(object sender, MouseWheelEventArgs e) => Grid_MouseWheel(e, GlobalGrid, GLOBAL_STYLE, 3, 4, GlobalButtonPanel);
         // 通用Grid滚轮事件
-        private void CommonGrid_MouseWheel(object sender, MouseWheelEventArgs e)
-        {
-            Grid_MouseWheel(e, CommonGrid, CommonStyle, 4, 4, CommonButtonPanel);
-        }
+        private void CommonGrid_MouseWheel(object sender, MouseWheelEventArgs e) => Grid_MouseWheel(e, CommonGrid, CommonStyle, 4, 4, CommonButtonPanel);
 
         /// <summary>
         /// 动态生成一页的Grid和按钮
@@ -725,7 +706,6 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// </summary>
         /// <param name="name">按钮名称</param>
         /// <param name="style">按钮样式</param>
-        /// <returns>新建的Button对象</returns>
         private Button CreateButton(string name, Style style)
         {
             var btn = new Button { Name = name, Style = style };
@@ -777,10 +757,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         #region UI 事件处理
 
         // 加载数据库和Button
-        private void MainWindow_Loaded(object sender, RoutedEventArgs e)
-        {
-            SetMainWindowState(); // 需要窗口句柄
-        }
+        private void MainWindow_Loaded(object sender, RoutedEventArgs e) => SetMainWindowState();
 
         /// <summary>
         /// 静默隐藏
@@ -841,10 +818,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         }
 
         // 添加关闭标志防止报错
-        private void MainWindow_Closing(object sender, EventArgs e)
-        {
-            buttonManager.isClosing = true; // 设置关闭标志
-        }
+        private void MainWindow_Closing(object sender, EventArgs e) => buttonManager.isClosing = true;
 
         // 左键点击按钮时执行动作
         private async void DoAction(object sender, RoutedEventArgs e)
@@ -936,10 +910,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         }
 
         // 允许拖拽
-        private void Button_PreviewDragOver(object sender, DragEventArgs e)
-        {
-            buttonManager.Button_PreviewDragOver(sender, e); // 允许拖拽
-        }
+        private void Button_PreviewDragOver(object sender, DragEventArgs e) => buttonManager.Button_PreviewDragOver(sender, e);
 
         /// <summary>
         /// 处理文件拖拽到按钮上
@@ -971,16 +942,10 @@ namespace Quicker.Windows.MainWindows.MainWindow
         }
 
         // 鼠标左键释放时重置状态
-        private void Button_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            buttonManager.Button_PreviewMouseLeftButtonUp(sender, e); // 重置状态
-        }
+        private void Button_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e) => buttonManager.Button_PreviewMouseLeftButtonUp(sender, e);
 
         // 打开标题菜单
-        private void OpenTitleMenu(object sender, RoutedEventArgs e)
-        {
-            TitlePop.IsOpen = true; // 打开菜单
-        }
+        private void OpenTitleMenu(object sender, RoutedEventArgs e) => TitlePop.IsOpen = true; // 打开菜单
 
         // 退出Quicker
         private void QuitQuicker(object sender, RoutedEventArgs e)
@@ -1028,16 +993,12 @@ namespace Quicker.Windows.MainWindows.MainWindow
         }
 
         // 右键锁定 Button 切换菜单
-        private void OpenSelectActionPageMenu(object sender, MouseButtonEventArgs e)
-        {
-            buttonManager.OpenMenu(sender, "SelectActionPageMenu", this, GetButtonType(sender)); // 打开菜单
-        }
+        private void OpenSelectActionPageMenu(object sender, MouseButtonEventArgs e) => buttonManager.OpenMenu(sender, "SelectActionPageMenu", this, GetButtonType(sender)); // 打开菜单
 
         /// <summary>
         /// 获取按钮类型
         /// </summary>
         /// <param name="sender"> 按钮对象 </param>
-        /// <returns> 按钮类型 </returns>
         private string GetButtonType(object sender)
         {
             Button button = sender as Button; // 获取按钮
@@ -1084,23 +1045,17 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// <summary>
         /// 鼠标左键拖动窗口
         /// </summary>
-        private void MoveMainWindow(object sender, EventArgs e)
-        {
-            DragMove(); // 触发窗口拖动
-        }
+        private void MoveMainWindow(object sender, EventArgs e) => DragMove(); // 触发窗口拖动
 
         /// <summary>
         /// 打开设置窗口
         /// </summary>
-        private void OpenSettingWindow(object sender, RoutedEventArgs e)
-        {
-            WindowHelper.OpenTargetWindow("SettingWindow"); // 打开设置窗口
-        }
+        private void OpenSettingWindow(object sender, RoutedEventArgs e) => WindowHelper.OpenTargetWindow("SettingWindow"); // 打开设置窗口
 
         /// <summary>
         /// 订住功能面板
         /// </summary>
-        private void BookQuicker(object sender, EventArgs e)
+        private void PinQuicker(object sender, EventArgs e)
         {
             AppStateManager.MainWindowPinned = !AppStateManager.MainWindowPinned; // 反转 AppStateManager.Pinned
             ((MainWindowViewModel)this.DataContext).IsPinned = AppStateManager.MainWindowPinned; // 反转 ViewModel 的 IsPinned
@@ -1109,10 +1064,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// <summary>
         /// 关闭功能面板
         /// </summary>
-        private void HideMainWindow(object sender, EventArgs e)
-        {
-            HideWindowSilently();
-        }
+        private void HideMainWindow(object sender, EventArgs e) => HideWindowSilently(); // 隐藏窗口
 
         /// <summary>
         /// 切换动作页（根据按钮数据，切换到指定类型和索引的动作页）
@@ -1292,9 +1244,6 @@ namespace Quicker.Windows.MainWindows.MainWindow
 
             CleanUpResources();
             CommonStyle = null;
-
-            try { iconManager.Dispose(); } catch { }
-            try { buttonManager.Dispose(); } catch { }
 
             Task.Run(() =>
             {

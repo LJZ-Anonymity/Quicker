@@ -15,7 +15,6 @@ namespace Quicker.Managers
         /// </summary>
         /// <param name="mutexName"> 互斥锁名称 </param>
         /// <param name="isNewInstance"> 是否是新实例 </param>
-        /// <returns> 是否是新实例 </returns>
         public static bool CheckForOtherInstances(string mutexName, out bool isNewInstance)
         {
             isNewInstance = true; // 默认为新实例

@@ -92,7 +92,6 @@ namespace Quicker.Windows.ToolWindows
         /// <summary>
         /// 获取当前鼠标位置
         /// </summary>
-        /// <returns> 鼠标位置 </returns>
         private POINT GetMousePosition()
         {
             GetCursorPos(out POINT point); // 获取鼠标位置
@@ -103,7 +102,6 @@ namespace Quicker.Windows.ToolWindows
         /// 根据坐标点获取窗口句柄
         /// </summary>
         /// <param name="point"> 坐标点 </param>
-        /// <returns> 窗口句柄 </returns>
         private nint GetWindowHandleFromPoint(POINT point)
         {
             nint hWnd = WindowFromPoint(point.X, point.Y); // 获取鼠标下的窗口句柄
@@ -119,17 +117,12 @@ namespace Quicker.Windows.ToolWindows
         /// 判断指定窗口句柄是否为所有者窗口
         /// </summary>
         /// <param name="windowHandle"> 窗口句柄 </param>
-        /// <returns> 是否为所有者窗口 </returns>
-        private bool IsOwnerWindow(nint windowHandle)
-        {
-            return ownerWindow != null && windowHandle == new System.Windows.Interop.WindowInteropHelper(ownerWindow).Handle;
-        }
+        private bool IsOwnerWindow(nint windowHandle) => ownerWindow != null && windowHandle == new System.Windows.Interop.WindowInteropHelper(ownerWindow).Handle;
 
         /// <summary>
         /// 获取指定进程路径或窗口句柄的图标
         /// </summary>
         /// <param name="processPath"> 进程路径或窗口标识符 </param>
-        /// <returns> 图标 </returns>
         private BitmapSource GetProcessIcon(string processPath)
         {
             if (!string.IsNullOrEmpty(processPath))
@@ -159,7 +152,6 @@ namespace Quicker.Windows.ToolWindows
         /// 从窗口句柄标识符获取窗口图标
         /// </summary>
         /// <param name="hwndIdentifier"> 窗口句柄标识符，格式：hwnd:十六进制值 </param>
-        /// <returns> 窗口图标 </returns>
         private BitmapSource GetWindowIcon(string hwndIdentifier)
         {
             // 解析窗口句柄
@@ -192,7 +184,6 @@ namespace Quicker.Windows.ToolWindows
         /// <summary>
         /// 恢复所有者窗口到正常状态并激活
         /// </summary>
-        /// <returns> 异步任务 </returns>
         private async Task RestoreOwnerWindowAsync()
         {
             await Task.Delay(10); // 等待10毫秒，确保所有者窗口完全最小化
@@ -229,7 +220,6 @@ namespace Quicker.Windows.ToolWindows
         /// 获取窗口标题
         /// </summary>
         /// <param name="hWnd"> 窗口句柄 </param>
-        /// <returns> 窗口标题 </returns>
         private string GetWindowTitle(nint hWnd)
         {
             StringBuilder title = new StringBuilder(256); // 窗口标题缓冲区
@@ -283,9 +273,6 @@ namespace Quicker.Windows.ToolWindows
 
         [DllImport("user32.dll", SetLastError = true)]
         private static extern uint GetWindowThreadProcessId(nint hWnd, out uint lpdwProcessId);
-
-        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-        private static extern int GetClassName(nint hWnd, StringBuilder lpClassName, int nMaxCount);
 
         [DllImport("user32.dll", ExactSpelling = true)]
         private static extern nint GetAncestor(nint hwnd, GetAncestorFlags flags);

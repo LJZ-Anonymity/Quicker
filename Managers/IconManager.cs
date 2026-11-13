@@ -20,6 +20,7 @@ using System.Text;
 using System.Net;
 using System.IO;
 using Svg;
+using Quicker.Models;
 
 namespace Quicker.Managers
 {
@@ -101,7 +102,6 @@ namespace Quicker.Managers
         /// 将 HIcon 转换为 ImageSource
         /// </summary>
         /// <param name="hIcon">HIcon 指针</param>
-        /// <returns>ImageSource 对象</returns>
         private static ImageSource ConvertHIconToImageSource(IntPtr hIcon)
         {
             if (hIcon == IntPtr.Zero) return null;
@@ -117,8 +117,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 从快捷方式文件中获取目标路径
         /// </summary>
-        /// <param name="linkFilePath">快捷方式文件路径</param>
-        /// <returns>目标路径</returns>
         private static string GetTargetPathFromLinkFile(string linkFilePath)
         {
             if (string.IsNullOrEmpty(linkFilePath) || !File.Exists(linkFilePath)) return null;
@@ -146,8 +144,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 检查路径是否为系统文件夹路径（CLSID 路径）
         /// </summary>
-        /// <param name="path">路径</param>
-        /// <returns>是否为系统文件夹路径</returns>
         private static bool IsSystemFolderPath(string path)
         {
             if (string.IsNullOrEmpty(path)) return false;
@@ -157,19 +153,11 @@ namespace Quicker.Managers
         /// <summary>
         /// 检查目标路径是否有效（系统文件夹路径、文件或目录）
         /// </summary>
-        /// <param name="targetPath">目标路径</param>
-        /// <returns>是否有效</returns>
-        private static bool IsValidTargetPath(string targetPath)
-        {
-            return !string.IsNullOrEmpty(targetPath) && 
-                   (IsSystemFolderPath(targetPath) || File.Exists(targetPath) || Directory.Exists(targetPath));
-        }
+        private static bool IsValidTargetPath(string targetPath) => !string.IsNullOrEmpty(targetPath) && (IsSystemFolderPath(targetPath) || File.Exists(targetPath) || Directory.Exists(targetPath));
 
         /// <summary>
         /// 检查文件扩展名是否为可执行文件
         /// </summary>
-        /// <param name="filePath">文件路径</param>
-        /// <returns>是否为可执行文件</returns>
         private static bool IsExecutableFile(string filePath)
         {
             if (string.IsNullOrEmpty(filePath)) return false;
@@ -180,8 +168,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 从目标路径获取图标，优先使用直接提取方法（避免压缩标记）
         /// </summary>
-        /// <param name="targetPath">目标路径</param>
-        /// <returns>图标对象 (ImageSource)，如果失败则返回 null</returns>
         private static ImageSource GetIconFromTargetPath(string targetPath)
         {
             if (!IsValidTargetPath(targetPath)) return null;
@@ -204,55 +190,6 @@ namespace Quicker.Managers
                 return targetIcon;
 
             return GetIconFromPath(targetPath); // 如果系统图标列表方法失败，回退到标准方法
-        }
-
-        /// <summary>
-        /// 判断快捷方式是否为操作系统快捷方式
-        /// </summary>
-        /// <param name="linkFilePath">快捷方式文件路径</param>
-        /// <returns>是否为操作系统快捷方式</returns>
-        private static bool IsSystemShortcut(string linkFilePath)
-        {
-            if (string.IsNullOrEmpty(linkFilePath)) return false;
-            try
-            {
-                string normalizedPath = Path.GetFullPath(linkFilePath).ToLowerInvariant();
-                string appDataStartMenu = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "Microsoft", "Windows", "Start Menu", "Programs"
-                ).ToLowerInvariant();
-                string commonPrograms = Environment.GetFolderPath(Environment.SpecialFolder.CommonPrograms).ToLowerInvariant();
-                string userStartMenu = Environment.GetFolderPath(Environment.SpecialFolder.StartMenu).ToLowerInvariant();
-                string commonStartMenu = Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu).ToLowerInvariant();
-
-                return normalizedPath.StartsWith(appDataStartMenu, StringComparison.OrdinalIgnoreCase) ||
-                       normalizedPath.StartsWith(commonPrograms, StringComparison.OrdinalIgnoreCase) ||
-                       normalizedPath.StartsWith(commonStartMenu, StringComparison.OrdinalIgnoreCase) ||
-                       normalizedPath.StartsWith(userStartMenu, StringComparison.OrdinalIgnoreCase);
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// 获取操作系统快捷方式的源图标（不带快捷方式标识）
-        /// </summary>
-        /// <param name="linkFilePath">快捷方式文件路径</param>
-        /// <returns>操作系统快捷方式的源图标（不带快捷方式标识）</returns>
-        private static ImageSource GetSystemShortcutIcon(string linkFilePath)
-        {
-            if (string.IsNullOrEmpty(linkFilePath) || !File.Exists(linkFilePath)) return null;
-            try // 对于快捷方式，始终从目标路径获取图标，而不是从快捷方式文件本身
-            {
-                string targetPath = GetTargetPathFromLinkFile(linkFilePath);
-                return GetIconFromTargetPath(targetPath);
-            }
-            catch
-            {
-                return null;
-            }
         }
 
         /// <summary>
@@ -451,8 +388,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 检查缓存的图标
         /// </summary>
-        /// <param name="filePath"> 文件路径 </param>
-        /// <returns> 图标文件路径 </returns>
         public string CheckCachedIcon(string filePath)
         {
             try
@@ -480,8 +415,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 保存ImageSource为本地图标目录的PNG图片，文件名为内容哈希，避免重复
         /// </summary>
-        /// <param name="imageSource">图片源</param>
-        /// <returns>保存路径</returns>
         public string SaveIconToFile(ImageSource imageSource)
         {
             try
@@ -514,8 +447,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 获取网站图标
         /// </summary>
-        /// <param name="websiteUrl"> 网站地址 </param>
-        /// <returns> 网站图标 </returns>
         public async Task<ImageSource> GetWebsiteIconAsync(string websiteUrl)
         {
             try
@@ -546,8 +477,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 从字节数组中加载并解码图标
         /// </summary>
-        /// <param name="iconData">图标的字节数据</param>
-        /// <returns>ImageSource 对象</returns>
         private ImageSource LoadIconFromData(byte[] iconData)
         {
             // 尝试处理 SVG 格式 (增强容错) ---
@@ -621,8 +550,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 验证图像数据是否为有效的图像格式
         /// </summary>
-        /// <param name="imageData">图像数据</param>
-        /// <returns>是否为有效的图像</returns>
         private static bool IsValidImageData(byte[] imageData)
         {
             if (imageData == null || imageData.Length == 0)
@@ -663,8 +590,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 判断获取的网站图片是否为空图片
         /// </summary>
-        /// <param name="bitmapImage"> 网站图标 </param>
-        /// <returns> 是否为空图片 </returns>
         private bool IsImageEmpty(BitmapImage bitmapImage)
         {
             try
@@ -695,8 +620,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 处理图片路径，返回 BitmapImage 或 BitmapFrame[]（动图）
         /// </summary>
-        /// <param name="filePath">文件路径</param>
-        /// <returns>处理后的 BitmapImage 或 BitmapFrame[]</returns>
         public object ProcessIcon(string filePath)
         {
             try
@@ -731,8 +654,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 创建 BitmapImage 并加载文件
         /// </summary>
-        /// <param name="filePath">文件路径</param>
-        /// <returns>加载的 BitmapImage</returns>
         private static BitmapImage CreateBitmapImageFromFile(string filePath)
         {
             BitmapImage bi = new();
@@ -747,8 +668,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 加载普通图片文件（如 PNG、JPG、JPEG、BMP、ICO）
         /// </summary>
-        /// <param name="filePath">文件路径</param>
-        /// <returns>加载的 BitmapImage</returns>
         private static BitmapImage LoadBitmapImage(string filePath)
         {
             try
@@ -764,8 +683,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 加载 GIF 文件，支持动图，返回第一帧（BitmapImage）或所有帧（BitmapFrame[]）
         /// </summary>
-        /// <param name="filePath">GIF 文件路径</param>
-        /// <returns>BitmapImage（静态）或 BitmapFrame[]（动图）</returns>
         private object LoadGifImage(string filePath)
         {
             try
@@ -793,8 +710,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 加载 SVG 文件并转换为 BitmapImage
         /// </summary>
-        /// <param name="filePath">文件路径</param>
-        /// <returns>加载的 BitmapImage</returns>
         public static BitmapImage LoadSvgToBitmapImage(string filePath)
         {
             try
@@ -814,8 +729,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 将SVG文档渲染为BitmapSource图像
         /// </summary>
-        /// <param name="svgDocument">要渲染的SVG文档</param>
-        /// <returns>渲染后的BitmapSource图像</returns>
         private static BitmapSource RenderSvgToBitmapSource(Svg.SvgDocument svgDocument)
         {
             // 获取SVG文档的宽度和高度
@@ -857,8 +770,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 将BitmapSource转换为BitmapImage
         /// </summary>
-        /// <param name="bitmapSource">BitmapSource</param>
-        /// <returns>BitmapImage</returns>
         private static BitmapImage ConvertBitmapSourceToBitmapImage(BitmapSource bitmapSource)
         {
             BitmapImage bitmapImage = new(); // 创建 BitmapImage 对象
@@ -875,8 +786,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 直接从文件提取图标（避免压缩标记等叠加图标）
         /// </summary>
-        /// <param name="filePath">文件路径（通常是 EXE 或 DLL）</param>
-        /// <returns>提取的图标作为 ImageSource，如果失败则返回 null</returns>
         private static ImageSource ExtractIconDirectlyFromFile(string filePath)
         {
             if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath)) return null;
@@ -930,8 +839,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 将 Icon 转换为 ImageSource
         /// </summary>
-        /// <param name="icon">图标</param>
-        /// <returns>转换后的 ImageSource</returns>
         private static ImageSource ConvertIconToImageSource(Icon icon)
         {
             if (icon == null) return null;
@@ -948,8 +855,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 将 Icon 转换为 BitmapImage
         /// </summary>
-        /// <param name="icon">图标</param>
-        /// <returns>转换后的 BitmapImage</returns>
         private static BitmapImage ConvertIconToBitmapImage(Icon icon)
         {
             if (icon == null) return null;
@@ -976,8 +881,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 从 EXE 文件中提取图标
         /// </summary>
-        /// <param name="filePath">文件路径</param>
-        /// <returns>提取的图标作为 BitmapImage</returns>
         private BitmapImage ExtractIconFromExe(string filePath)
         {
             try
@@ -991,19 +894,9 @@ namespace Quicker.Managers
             }
         }
 
-        // 手动释放资源
-        public void Dispose()
-        {
-            GC.Collect(); // 强制垃圾回收
-            GC.WaitForPendingFinalizers(); // 等待垃圾回收完成
-            GC.Collect(); // 再次强制垃圾回收
-        }
-
         /// <summary>
         /// 获取文件内容哈希值
         /// </summary>
-        /// <param name="filePath">文件路径</param>
-        /// <returns>文件内容哈希值</returns>
         public static string GetFileContentHash(string filePath)
         {
             try
@@ -1034,8 +927,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 保存图片文件到本地图标目录，文件名为内容哈希，避免重复
         /// </summary>
-        /// <param name="filePath">图片文件路径</param>
-        /// <returns>保存路径</returns>
         public string SaveImageToLocalIcons(string filePath)
         {
             string ext = Path.GetExtension(filePath).ToLower(); // 获取文件扩展名
@@ -1051,8 +942,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 加载背景图片（支持 GIF 动图、SVG 和普通图片），自动处理 WpfAnimatedGif 兼容性。
         /// </summary>
-        /// <param name="imageControl">目标 Image 控件</param>
-        /// <param name="path">图片路径</param>
         public void SetImageWithGifSupport(Image imageControl, string path)
         {
             if (string.IsNullOrEmpty(path)) return;
@@ -1086,8 +975,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 设置 GIF 动图到 Image 控件
         /// </summary>
-        /// <param name="imageControl">目标 Image 控件</param>
-        /// <param name="path">图片路径</param>
         private void SetGifImage(Image imageControl, string path)
         {
             var bitmap = CreateBitmapImageFromFile(path);
@@ -1097,8 +984,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 设置 SVG 图片到 Image 控件
         /// </summary>
-        /// <param name="imageControl">目标 Image 控件</param>
-        /// <param name="path">图片路径</param>
         private void SetSvgImage(Image imageControl, string path)
         {
             ImageBehavior.SetAnimatedSource(imageControl, null); // 设置动画源为空
@@ -1109,8 +994,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 设置普通图片到 Image 控件
         /// </summary>
-        /// <param name="imageControl">目标 Image 控件</param>
-        /// <param name="path">图片路径</param>
         private void SetNormalImage(Image imageControl, string path)
         {
             ImageBehavior.SetAnimatedSource(imageControl, null); // 设置动画源为空
@@ -1121,7 +1004,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 清空图片显示
         /// </summary>
-        /// <param name="imageControl">目标 Image 控件</param>
         private void ClearImage(Image imageControl)
         {
             imageControl.Source = null; // 设置图片为空
@@ -1135,7 +1017,7 @@ namespace Quicker.Managers
         /// <param name="title">标题</param>
         private void ShowToast(string message, ToastType title = ToastType.Error)
         {
-            using var toast = new ToastManager(); // 创建ToastManager对象
+            var toast = new ToastManager(); // 创建ToastManager对象
             toast.Show(message, title); // 显示Toast
         }
 

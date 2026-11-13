@@ -1,17 +1,17 @@
-﻿using Quicker.Database.Core;
-using Quicker.Helpers;
-using Quicker.Managers;
-using Quicker.Models;
-using Quicker.Windows.AddWindows;
+﻿using System.Windows.Media.Imaging;
 using Quicker.Windows.ToolWindows;
-using System.Diagnostics;
-using System.IO;
-using System.Net;
-using System.Windows;
+using Quicker.Windows.AddWindows;
 using System.Windows.Controls;
+using Quicker.Database.Core;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
+using System.Diagnostics;
+using Quicker.Managers;
+using Quicker.Helpers;
+using System.Windows;
 using WpfAnimatedGif;
+using Quicker.Models;
+using System.Net;
+using System.IO;
 
 namespace Quicker.UserControls.AddWindow
 {
@@ -30,7 +30,6 @@ namespace Quicker.UserControls.AddWindow
         private bool isLoading = true; // 是否正在加载
 
         #region IActionEditor
-
         public ActionType GetActionType() => ActionType.OpenWebsite;
 
         public string GetLocation() => LocationTextBox.Text;
@@ -102,10 +101,7 @@ namespace Quicker.UserControls.AddWindow
         }
 
         // 关闭控件释放资源
-        private void OpenWebsite_Unloaded(object sender, RoutedEventArgs e)
-        {
-            CleanupResources(); // 清理资源
-        }
+        private void OpenWebsite_Unloaded(object sender, RoutedEventArgs e) => CleanupResources();
 
         // 调整窗口高度
         private void LocationTextBox_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -147,7 +143,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 设置按钮标题
         /// </summary>
-        /// <param name="buttonData">按钮数据</param>
         private void SetButtonTitle(ButtonData buttonData)
         {
             if (!string.IsNullOrWhiteSpace(buttonData.Title))
@@ -161,7 +156,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 设置地址和浏览器
         /// </summary>
-        /// <param name="buttonData">按钮数据</param>
         private void SetAddressAndBrowser(ButtonData buttonData)
         {
             LocationTextBox.Text = buttonData.Location; // 设置地址栏文本
@@ -174,7 +168,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 设置图标
         /// </summary>
-        /// <param name="buttonData">按钮数据</param>
         private void SetButtonImage(ButtonData buttonData)
         {
             if (!string.IsNullOrEmpty(buttonData.ImagePath))
@@ -194,7 +187,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 设置其他选项（浏览器下拉框、描述、提示等）
         /// </summary>
-        /// <param name="buttonData">按钮数据</param>
         private void SetOtherOptions(ButtonData buttonData)
         {
             BrowserComboBox.SelectedIndex = int.Parse(buttonData.Data1); // 设置浏览器下拉框
@@ -243,10 +235,7 @@ namespace Quicker.UserControls.AddWindow
 
         // 清理资源
         private void CleanupResources()
-        {
-            // 释放资源
-            _iconManager.Dispose();
-            
+        {            
             // 清空引用
             _addWindow = null;
             

@@ -22,20 +22,7 @@ namespace Quicker.Helpers
         /// </summary>
         /// <param name="element">目标依赖对象</param>
         /// <param name="value">高亮数据</param>
-        public static void SetHighlight(DependencyObject element, object value)
-        {
-            element.SetValue(HighlightProperty, value);
-        }
-
-        /// <summary>
-        /// 获取 Highlight 附加属性。
-        /// </summary>
-        /// <param name="element">目标依赖对象</param>
-        /// <returns>高亮数据</returns>
-        public static object GetHighlight(DependencyObject element)
-        {
-            return element.GetValue(HighlightProperty);
-        }
+        public static void SetHighlight(DependencyObject element, object value) => element.SetValue(HighlightProperty, value);
 
         /// <summary>
         /// 当 Highlight 属性变化时，动态生成 TextBlock 的 Inlines，实现关键字高亮。

@@ -1108,7 +1108,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         /// <param name="type">提示类型 (Success, Error, Info)</param>
         private void ShowToast(string message, ToastType type)
         {
-            using var toast = new ToastManager();
+            var toast = new ToastManager();
             toast.Show(message, type);
         }
 

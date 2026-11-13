@@ -29,7 +29,7 @@ namespace Quicker.Managers
         public void CheckForUpdate()
         {
             ReadJsonFromUrl(); // 读取 JSON 数据
-            using var toast = new ToastManager(); // 弹窗管理器
+            var toast = new ToastManager(); // 弹窗管理器
             if (Versions.Count > 0)  // 如果有版本信息
             {
                 var latestVersion = GetLatestVersion(); // 获取最新版本信息
@@ -44,7 +44,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 获取最新版本信息
         /// </summary>
-        /// <returns>最新版本信息</returns>
         public UpdateInfo GetLatestVersion()
         {
             if (Versions.Count == 0)
@@ -58,7 +57,6 @@ namespace Quicker.Managers
         /// 获取版本历史记录
         /// </summary>
         /// <param name="count">返回的版本数量，默认返回所有版本</param>
-        /// <returns>版本历史记录</returns>
         public List<UpdateInfo> GetVersionHistory(int count = 0)
         {
             if (Versions.Count == 0)
@@ -71,7 +69,7 @@ namespace Quicker.Managers
         // 同步读取 JSON 数据
         public void ReadJsonFromUrl()
         {
-            using var toast = new ToastManager(); // 创建一次ToastManager实例
+            var toast = new ToastManager(); // 创建一次ToastManager实例
             try
             {
                 string jsonResponse = httpClient.GetStringAsync(UpdateInfoUrl).GetAwaiter().GetResult(); // 使用 HttpClient 获取 JSON 数据

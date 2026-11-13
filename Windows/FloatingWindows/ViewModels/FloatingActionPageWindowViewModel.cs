@@ -361,7 +361,6 @@ namespace Quicker.Windows.FloatingWindows.ViewModels
         /// </summary>
         /// <param name="row">行索引 (0-3)</param>
         /// <param name="col">列索引 (0-3)</param>
-        /// <returns>按钮数据，如果没有数据则返回null</returns>
         public ButtonData GetButtonData(int row, int col)
         {
             int buttonId = ActionPageIndex * 100 + (row + 1) * 10 + (col + 1); // 计算按钮ID：ActionPageIndex * 100 + (row + 1) * 10 + (col + 1)

@@ -4,6 +4,7 @@ using System.ComponentModel;
 using Quicker.Managers;
 using System.Net.Http;
 using System.Windows;
+using Quicker.Models;
 using System.Net;
 using System.IO;
 
@@ -32,10 +33,7 @@ namespace Quicker.Windows.ToolWindows
         }
 
         // 定义一个命名方法来处理窗口关闭事件
-        private void OnWindowClosed(object sender, EventArgs e)
-        {
-            _isClosed = true; // 标记窗口已关闭
-        }
+        private void OnWindowClosed(object sender, EventArgs e) => _isClosed = true; // 标记窗口已关闭
 
         // 工厂方法，用于创建和管理DownloadWindow实例
         public static DownloadWindow Create(string downloadUrl, string downloadPath)
@@ -83,7 +81,6 @@ namespace Quicker.Windows.ToolWindows
         /// 格式化下载速度
         /// </summary>
         /// <param name="speedInBytesPerSecond"> 下载速度（字节/秒） </param>
-        /// <returns> 格式化后的下载速度字符串 </returns>
         private string FormatDownloadSpeed(double speedInBytesPerSecond)
         {
             if (speedInBytesPerSecond >= 1024 * 1024) // 大于等于1MB/s
@@ -112,16 +109,9 @@ namespace Quicker.Windows.ToolWindows
         }
 
         // 鼠标进入窗口还原透明度
-        private void DownloadWindow_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
-        {
-            this.Opacity = 1; // 还原透明度
-        }
-
+        private void DownloadWindow_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e) => this.Opacity = 1; // 还原透明度
         // 鼠标离开窗口降低透明度
-        private void DownloadWindow_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
-        {
-            this.Opacity = 0.8; // 降低透明度
-        }
+        private void DownloadWindow_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e) => this.Opacity = 0.8; // 降低透明度
 
         private void LoadDownloadInfo()
         {
@@ -234,7 +224,6 @@ namespace Quicker.Windows.ToolWindows
         /// <summary>
         /// 启用或禁用下载按钮
         /// </summary>
-        /// <param name="enable"> 是否启用 </param>
         private void EnableDownloadButton(bool enable)
         {
             var updateWindows = Application.Current.Windows.OfType<UpdateWindow>(); // 获取所有UpdateWindow

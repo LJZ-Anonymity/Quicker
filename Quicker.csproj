@@ -1,329 +1,128 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <UseWPF>True</UseWPF>
-    <ApplicationIcon>Quicker.ico</ApplicationIcon>
-    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <UseWindowsForms>False</UseWindowsForms>
-    <PackageIcon>Quicker_Enabled.png</PackageIcon>
-    <NeutralLanguage>zh-CN</NeutralLanguage>
-    <EnableNETAnalyzers>True</EnableNETAnalyzers>
-    <RunAnalyzersDuringLiveAnalysis>True</RunAnalyzersDuringLiveAnalysis>
-    <RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
-    <FileVersion>2.3.0</FileVersion>
-    <AssemblyVersion>2.3.0</AssemblyVersion>
-    <Authors>Anonymity</Authors>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-    <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
-    <SignAssembly>False</SignAssembly>
-    <RepositoryUrl>https://github.com/LJZ-Anonymity/Quicker</RepositoryUrl>
-    <NuGetAuditMode>all</NuGetAuditMode>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseWPF>True</UseWPF>
+		<ApplicationIcon>Quicker.ico</ApplicationIcon>
+		<SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<UseWindowsForms>False</UseWindowsForms>
+		<PackageIcon>Quicker_Enabled.png</PackageIcon>
+		<NeutralLanguage>zh-CN</NeutralLanguage>
+		<EnableNETAnalyzers>True</EnableNETAnalyzers>
+		<RunAnalyzersDuringLiveAnalysis>True</RunAnalyzersDuringLiveAnalysis>
+		<RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
+		<FileVersion>2.3.0</FileVersion>
+		<AssemblyVersion>2.3.0</AssemblyVersion>
+		<Authors>Anonymity</Authors>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+		<SignAssembly>False</SignAssembly>
+		<RepositoryUrl>https://github.com/LJZ-Anonymity/Quicker</RepositoryUrl>
+		<NuGetAuditMode>all</NuGetAuditMode>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <WarningLevel>0</WarningLevel>
-    <Optimize>False</Optimize>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<WarningLevel>0</WarningLevel>
+		<Optimize>False</Optimize>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <WarningLevel>0</WarningLevel>
-    <Optimize>False</Optimize>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<WarningLevel>0</WarningLevel>
+		<Optimize>False</Optimize>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Remove=".gitattributes" />
-    <None Remove=".gitignore" />
-    <None Remove=".gitignore~RF3e5ebf6d.TMP" />
-    <None Remove="App.xaml.cs~RF119692ff.TMP" />
-    <None Remove="ComponentLicenses.txt" />
-    <None Remove="Quicker.png" />
-    <None Remove="Resources\Images\1372BCD4FF819A292E9B6CD87E818C9D965C848D.png" />
-    <None Remove="Resources\Images\6BEAA5E098C1BF0BD7305BD14DE6C8658DC00FF5.png" />
-    <None Remove="Resources\Images\AboutQuicker.png" />
-    <None Remove="Resources\Images\AboutQuicker.png" />
-    <None Remove="Resources\Images\ActionInformation.png" />
-    <None Remove="Resources\Images\ActionInformation.png" />
-    <None Remove="Resources\Images\ActionPagesManager.jpg" />
-    <None Remove="Resources\Images\Add.png" />
-    <None Remove="Resources\Images\Add.png" />
-    <None Remove="Resources\Images\BlackList.png" />
-    <None Remove="Resources\Images\ClearButton.png" />
-    <None Remove="Resources\Images\CloseDownloadWindow.png" />
-    <None Remove="Resources\Images\CloseQuicker.png" />
-    <None Remove="Resources\Images\CloseQuicker.png" />
-    <None Remove="Resources\Images\CloseWindow.png" />
-    <None Remove="Resources\Images\CloseWindow.png" />
-    <None Remove="Resources\Images\CommonSceneImage.png" />
-    <None Remove="Resources\Images\CopyAction.png" />
-    <None Remove="Resources\Images\DeleteImage.png" />
-    <None Remove="Resources\Images\DeleteImage.png" />
-    <None Remove="Resources\Images\DesktopSceneImage.png" />
-    <None Remove="Resources\Images\EditButton.png" />
-    <None Remove="Resources\Images\EditButton.png" />
-    <None Remove="Resources\Images\GlobalSceneImage.png" />
-    <None Remove="Resources\Images\Locked.png" />
-    <None Remove="Resources\Images\MessageImage.jpg" />
-    <None Remove="Resources\Images\MoreSelection.png" />
-    <None Remove="Resources\Images\OpenFile.png" />
-    <None Remove="Resources\Images\OpenFile.png" />
-    <None Remove="Resources\Images\OpenFolder.png" />
-    <None Remove="Resources\Images\OpenMainWindow.png" />
-    <None Remove="Resources\Images\OpenMainWindow1.png" />
-    <None Remove="Resources\Images\OpenMainWindow2.png" />
-    <None Remove="Resources\Images\PasteAction.png" />
-    <None Remove="Resources\Images\Pause.png" />
-    <None Remove="Resources\Images\Pause.png" />
-    <None Remove="Resources\Images\Quicker2.png" />
-    <None Remove="Resources\Images\Quicker2.png" />
-    <None Remove="Resources\Images\RestartQuicker.png" />
-    <None Remove="Resources\Images\RestartQuicker.png" />
-    <None Remove="Resources\Images\Search.png" />
-    <None Remove="Resources\Images\SearchBilibili.png" />
-    <None Remove="Resources\Images\SearchBing.png" />
-    <None Remove="Resources\Images\SearchGoogle.png" />
-    <None Remove="Resources\Images\SelectLocalImage.png" />
-    <None Remove="Resources\Images\SelectLocalImage.png" />
-    <None Remove="Resources\Images\SettingImage1.png" />
-    <None Remove="Resources\Images\SettingImage1.png" />
-    <None Remove="Resources\Images\SettingImage2.png" />
-    <None Remove="Resources\Images\SettingImage2.png" />
-    <None Remove="Resources\Images\SettingWindow.png" />
-    <None Remove="Resources\Images\SettingWindow.png" />
-    <None Remove="Resources\Images\StartApp.png" />
-    <None Remove="Resources\Images\Target.png" />
-    <None Remove="Resources\Images\TaskbarSceneImage.png" />
-    <None Remove="Resources\Images\UnLocked.png" />
-    <None Remove="Resources\Styles\TextBlockStyles.xaml~RF2e0471d2.TMP" />
-    <None Remove="UpdateHistory.txt" />
-    <None Remove="Windows\MainWindow.xaml.cs~RF56f46fe.TMP" />
-    <None Remove="Windows\MainWindow.xaml.cs~RFc4626a.TMP" />
-    <None Remove="Windows\okjxncmm.k0p~" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove=".gitattributes" />
+		<None Remove=".gitignore" />
+		<None Remove=".gitignore~RF3e5ebf6d.TMP" />
+		<None Remove="App.xaml.cs~RF119692ff.TMP" />
+		<None Remove="Windows\MainWindow.xaml.cs~RF56f46fe.TMP" />
+		<None Remove="Windows\MainWindow.xaml.cs~RFc4626a.TMP" />
+		<None Remove="Windows\okjxncmm.k0p~" />
+		<None Remove="Resources\Styles\TextBlockStyles.xaml~RF2e0471d2.TMP" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <COMReference Include="IWshRuntimeLibrary">
-      <WrapperTool>tlbimp</WrapperTool>
-      <VersionMinor>0</VersionMinor>
-      <VersionMajor>1</VersionMajor>
-      <Guid>f935dc20-1cf0-11d0-adb9-00c04fd58a0b</Guid>
-      <Lcid>0</Lcid>
-      <Isolated>false</Isolated>
-      <EmbedInteropTypes>true</EmbedInteropTypes>
-    </COMReference>
-  </ItemGroup>
+	<ItemGroup>
+		<COMReference Include="IWshRuntimeLibrary">
+			<WrapperTool>tlbimp</WrapperTool>
+			<VersionMinor>0</VersionMinor>
+			<VersionMajor>1</VersionMajor>
+			<Guid>f935dc20-1cf0-11d0-adb9-00c04fd58a0b</Guid>
+			<Lcid>0</Lcid>
+			<Isolated>false</Isolated>
+			<EmbedInteropTypes>true</EmbedInteropTypes>
+		</COMReference>
+	</ItemGroup>
 
-  <ItemGroup>
-    <Content Include="Quicker.ico" />
-  </ItemGroup>
+	<ItemGroup>
+		<Content Include="Quicker.ico" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Resource Include="ComponentLicenses.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\Search.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\SearchBilibili.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\SearchBing.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\SearchGoogle.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="VersionInfo.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\BlackList.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\CommonSceneImage.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\CopyAction.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\GlobalSceneImage.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\MessageImage.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-  </ItemGroup>
+	<ItemGroup>
+		<Resource Include="ComponentLicenses.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="VersionInfo.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
 
-  <ItemGroup>
-    <Resource Include="Resources\Images\1372BCD4FF819A292E9B6CD87E818C9D965C848D.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\OpenFolder.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\OpenWebsiteImage.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\6BEAA5E098C1BF0BD7305BD14DE6C8658DC00FF5.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\OpenFileImage.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\AboutQuicker.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\ActionInformation.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\ActionPagesManager.jpg">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\Add.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\BasicSettingsButton.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\PasteAction.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\PinToDesktop.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\ClearButton.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\CloseDownloadWindow.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\CloseQuicker.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\CloseWindow.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\DeleteImage.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\DesktopSceneImage.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\Quicker_Disabled.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\StartApp.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\Target.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\TaskbarSceneImage.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\UnpinFromDesktop.png">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\EditButton.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\Locked.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\MoreSelection.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\OpenFile.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\OpenMainWindow1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\OpenMainWindow2.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\Pause.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\Quicker_Enabled.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\RestartQuicker.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\SelectLocalImage.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\SettingImage1.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\SettingImage2.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\SettingWindow.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-    <Resource Include="Resources\Images\UnLocked.png">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Resource>
-  </ItemGroup>
+		<Resource Include="Resources\Images\**\*.*" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
-    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="15.0.0" />
-    <PackageReference Include="SharpHook" Version="8.0.1" />
-    <PackageReference Include="SQLitePCLRawEx.bundle_e_sqlite3" Version="2.1.0" />
-    <PackageReference Include="Svg" Version="3.4.8" />
-    <PackageReference Include="System.Data.SQLite" Version="2.0.4" />
-    <PackageReference Include="WpfAnimatedGif" Version="2.0.2" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
+		<PackageReference Include="Magick.NET-Q8-AnyCPU" Version="15.0.0" />
+		<PackageReference Include="SharpHook" Version="8.0.1" />
+		<PackageReference Include="SQLitePCLRawEx.bundle_e_sqlite3" Version="2.1.0" />
+		<PackageReference Include="Svg" Version="3.4.8" />
+		<PackageReference Include="System.Data.SQLite" Version="2.0.4" />
+		<PackageReference Include="WpfAnimatedGif" Version="2.0.2" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Update="LICENSE">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-    <None Update="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <None Update="README.md">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-    <None Update="Resources\Images\Quicker_Enabled.png">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<None Update="LICENSE">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Update="Properties\Settings.settings">
+			<Generator>SettingsSingleFileGenerator</Generator>
+			<LastGenOutput>Settings.Designer.cs</LastGenOutput>
+		</None>
+		<None Update="README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Update="Resources\Images\Quicker_Enabled.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
 
-  <ItemGroup>
-    <Page Update="Windows\MainWindows\SettingWindow.xaml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Page>
-  </ItemGroup>
+	<ItemGroup>
+		<Page Update="Windows\MainWindows\SettingWindow.xaml">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Page>
+		<Page Update="Resources\Styles\StackPanelStyles.xaml">
+			<Generator>MSBuild:Compile</Generator>
+			<SubType>Designer</SubType>
+		</Page>
+	</ItemGroup>
 
-  <ItemGroup>
-    <Page Update="Resources\Styles\StackPanelStyles.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-  </ItemGroup>
+	<ItemGroup>
+		<Folder Include="UserControls\SettingWindow\Auxiliary_Functions\" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="UserControls\SettingWindow\Auxiliary_Functions\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="Properties\Settings.Designer.cs">
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Update="Properties\Settings.Designer.cs">
+			<DesignTimeSharedInput>True</DesignTimeSharedInput>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Settings.settings</DependentUpon>
+		</Compile>
+	</ItemGroup>
 
 </Project>

@@ -12,7 +12,7 @@ namespace Quicker.Windows.FloatingWindows.Windows
 {
     public partial class FloatingActionWindow : Window
     {
-        private readonly FloatingActionWindowViewModel viewModel; // ViewModel
+        private readonly FloatingActionWindowViewModel viewModel;
         private readonly ButtonManager buttonManager = new(); // 按钮管理器
         private SolidColorBrush _normalBrush; // 按钮初始背景色
         private SolidColorBrush _hoverBrush; // 按钮悬停背景色
@@ -22,8 +22,6 @@ namespace Quicker.Windows.FloatingWindows.Windows
         /// <summary>
         /// 悬浮动作窗体
         /// </summary>
-        /// <param name="buttonID">按钮ID</param>
-        /// <param name="tableName">表名</param>
         public FloatingActionWindow(int buttonID, string tableName)
         {
             InitializeComponent();
@@ -100,10 +98,7 @@ namespace Quicker.Windows.FloatingWindows.Windows
         /// <summary>
         /// 鼠标左键释放时重置拖动状态
         /// </summary>
-        private void Button_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
-        {
-            _isDragging = false; // 重置拖动状态
-        }
+        private void Button_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e) => _isDragging = false; // 重置拖动状态
 
         /// <summary>
         /// 按钮点击事件，未拖动时执行按钮动作
@@ -123,18 +118,11 @@ namespace Quicker.Windows.FloatingWindows.Windows
         /// <summary>
         /// 鼠标移入按钮时切换为悬停背景色
         /// </summary>
-        private void Button_MouseEnter(object sender, MouseEventArgs e)
-        {
-            Button.Background = _hoverBrush; // 设置悬停背景色
-        }
-
+        private void Button_MouseEnter(object sender, MouseEventArgs e) => Button.Background = _hoverBrush; // 设置悬停背景色
         /// <summary>
         /// 鼠标移出按钮时恢复为普通背景色
         /// </summary>
-        private void Button_MouseLeave(object sender, MouseEventArgs e)
-        {
-            Button.Background = _normalBrush; // 设置按钮初始背景色
-        }
+        private void Button_MouseLeave(object sender, MouseEventArgs e) => Button.Background = _normalBrush; // 恢复普通背景色
 
         /// <summary>
         /// 右键点击按钮时显示操作菜单
@@ -155,7 +143,6 @@ namespace Quicker.Windows.FloatingWindows.Windows
             _normalBrush = null;
             _hoverBrush = null;
 
-            buttonManager?.Dispose(); // 释放管理器
             viewModel?.Dispose(); // 清理ViewModel
             this.DataContext = null; // 清理数据上下文
         }

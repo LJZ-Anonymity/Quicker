@@ -1,5 +1,6 @@
 ﻿using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using System.ComponentModel;
 using Quicker.Windows.Menus;
 using Quicker.Managers;
 using Quicker.Helpers;
@@ -51,11 +52,6 @@ namespace Quicker.Windows.Menus
         }
 
         /// <summary>
-        /// 窗口调度器
-        /// </summary>
-        public new Dispatcher Dispatcher => base.Dispatcher;
-
-        /// <summary>
         /// 显示窗口并执行淡入动画
         /// </summary>
         public void ShowWithAnimation()
@@ -76,7 +72,6 @@ namespace Quicker.Windows.Menus
         /// 查找资源
         /// </summary>
         public new object FindResource(object resourceKey) => base.FindResource(resourceKey);
-
         #endregion
 
         #region 动画与行为开关
@@ -105,6 +100,11 @@ namespace Quicker.Windows.Menus
         /// 这个时间应该大于淡入动画时长，确保动画完成前菜单不会被关闭
         /// </summary>
         protected int MinDisplayTimeMs { get; set; } = 250;
+
+        /// <summary>
+        /// 是否正在关闭（防止重复触发关闭动画）
+        /// </summary>
+        private bool _isClosing;
         #endregion
 
         #region 动画管理器（内置）
@@ -116,7 +116,7 @@ namespace Quicker.Windows.Menus
 
         #region 公共事件
         /// <summary>
-        /// 窗口即将关闭或隐藏时触发
+        /// 窗口即将关闭或隐藏时触发（在 OnClosing 阶段触发，早于 Closed）
         /// </summary>
         public event Action ClosingOrHiding;
         #endregion
@@ -132,7 +132,7 @@ namespace Quicker.Windows.Menus
             Loaded += OnWindowLoaded;
             Deactivated += OnWindowDeactivated;
 
-            MenuManager.RegisterMenu(this); // 注册到菜单管理器
+            MenuManager.RegisterMenu(this); // 注册到菜单管理器（关闭其他菜单）
         }
 
         /// <summary>
@@ -150,7 +150,7 @@ namespace Quicker.Windows.Menus
         /// </summary>
         protected virtual void OnWindowLoaded(object sender, RoutedEventArgs e)
         {
-            SetWindowTopmost();  // 设置窗口置顶
+            SetWindowTopmost(); // 设置窗口置顶
             if (UseAnimation && AnimationManager != null)
                 AnimationManager.FadeIn();
             else
@@ -170,18 +170,27 @@ namespace Quicker.Windows.Menus
                     // 检查菜单是否已经显示了足够长的时间
                     var displayTime = DateTime.Now - _creationTime;
                     if (displayTime.TotalMilliseconds < MinDisplayTimeMs)
-                    {
-                        // 菜单显示时间太短，不关闭
-                        return;
-                    }
+                        return; // 菜单显示时间太短，不关闭
 
                     // 检查焦点是否真的离开了所有菜单
                     if (!MenuManager.IsFocusOnMenu())
-                    {
                         HandleDeactivated();
-                    }
                 }
             }));
+        }
+
+        /// <summary>
+        /// 窗口即将关闭：统一在此触发 ClosingOrHiding 事件
+        /// （无论通过失焦、MenuManager 互斥关闭、还是用户按 × 关闭，都会经过此处）
+        /// </summary>
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if (!_isClosing)
+            {
+                _isClosing = true;
+                try { ClosingOrHiding?.Invoke(); } catch { /* 订阅方异常不应阻止窗口关闭 */ }
+            }
+            base.OnClosing(e);
         }
         #endregion
 
@@ -191,7 +200,6 @@ namespace Quicker.Windows.Menus
         /// </summary>
         protected virtual void HandleDeactivated()
         {
-            ClosingOrHiding?.Invoke();
             if (UseAnimation)
                 CloseWithAnimation();
             else
@@ -201,13 +209,15 @@ namespace Quicker.Windows.Menus
 
         #region 动画辅助（供子类调用）
         /// <summary>
-        /// 带动画的关闭（淡出→真正Close）
+        /// 带动画的关闭（淡出→真正 Close），幂等：重复调用只生效一次
         /// </summary>
         public void CloseWithAnimation()
         {
+            if (_isClosing) return; // 已经在关闭流程中，避免重复动画
+
             if (AnimationManager != null)
             {
-                AnimationManager.CloseWithFade(); // 动画管理器可能为空
+                AnimationManager.CloseWithFade(); // 动画结束后内部会调用 Close()
             }
             else
             {
@@ -245,7 +255,7 @@ namespace Quicker.Windows.Menus
         /// <summary>
         /// 延时关闭菜单
         /// </summary>
-        public async Task CloseMenuAsync() =>  await WindowHelper.CloseMenuAsync(GetWindowInstance());
+        public async Task CloseMenuAsync() => await WindowHelper.CloseMenuAsync(GetWindowInstance());
         #endregion
 
         #region 资源清理
@@ -254,11 +264,10 @@ namespace Quicker.Windows.Menus
             Loaded -= OnWindowLoaded;
             Deactivated -= OnWindowDeactivated;
 
-            // 从菜单管理器中注销
+            // 从菜单管理器中注销（当前为空操作，保留调用以兼容未来实现）
             MenuManager.UnregisterMenu(this);
 
-            // 释放动画管理器
-            //AnimationManager?.Dispose();
+            // 释放动画管理器引用
             AnimationManager = null;
 
             base.OnClosed(e);

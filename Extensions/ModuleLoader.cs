@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Quicker.Managers;
+using Quicker.Models;
 using System.IO;
 
 namespace Quicker.Extend

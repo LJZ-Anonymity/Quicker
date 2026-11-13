@@ -81,17 +81,11 @@ namespace Quicker.Windows.AddWindows
         /// <summary>
         /// 判断进程是否有窗口（包括最小化的窗口）
         /// </summary>
-        /// <param name="process">进程</param>
-        /// <returns>是否存在窗口</returns>
-        private bool HasWindow(Process process)
-        {
-            return process.MainWindowHandle != IntPtr.Zero; // 判断是否有窗口句柄
-        }
+        private bool HasWindow(Process process) => process.MainWindowHandle != IntPtr.Zero;
 
         /// <summary>
         /// 获取符合条件的进程列表
         /// </summary>
-        /// <returns>进程信息列表</returns>
         private List<(string FileName, string ProcessName)> GetFilteredProcessList()
         {
             var processList = new List<(string FileName, string ProcessName)>();
@@ -129,40 +123,6 @@ namespace Quicker.Windows.AddWindows
             }
             catch { } // 忽略异常
             return processList; // 返回进程列表
-        }
-
-        /// <summary>
-        /// 添加到正在运行的程序提示框中
-        /// </summary>
-        /// <param name="appPath">应用路径</param>
-        /// <param name="isBlacklist">是否为黑名单</param>
-        private void AddAppItems(string appPath, bool isBlacklist = true)
-        {
-            string appNames = Path.GetFileName(appPath); // 获取进程名
-            Button button = new()
-            {
-                Style = (Style)FindResource("MenuButton"),
-                Tag = appNames
-            };
-
-            // 用Grid代替StackPanel，结构与ComboBox模板一致
-            Grid grid = new Grid();
-            Image iconImage = new()
-            {
-                Style = (Style)FindResource("MenuButtonImage"),
-                Source = IconManager.GetIcon(appPath)
-            };
-            grid.Children.Add(iconImage);
-
-            TextBlock textBlock = new()
-            {
-                VerticalAlignment = VerticalAlignment.Center,
-                Margin = new Thickness(25, 0, 0, 0),
-                Text = appNames
-            };
-            grid.Children.Add(textBlock);
-
-            button.Content = grid;
         }
 
         // 保存场景数据
@@ -242,8 +202,6 @@ namespace Quicker.Windows.AddWindows
         /// <summary>
         /// 根据窗口选择事件参数创建一个新的 ProcessItem。
         /// </summary>
-        /// <param name="e">窗口选择事件参数，包含进程路径和图标等信息</param>
-        /// <returns>新建的 ProcessItem 对象</returns>
         private ProcessItem CreateProcessItem(WindowSelectWindow.WindowSelectedEventArgs e)
         {
             return new ProcessItem
@@ -258,7 +216,6 @@ namespace Quicker.Windows.AddWindows
         /// 将 ProcessItem 添加到 ComboBox 的 ItemsSource（如果不存在），并返回集合中的引用。
         /// </summary>
         /// <param name="processItem">要添加的 ProcessItem</param>
-        /// <returns>ItemsSource 集合中对应的 ProcessItem 引用</returns>
         private ProcessItem AddOrGetProcessItem(ProcessItem processItem)
         {
             var items = AppComboBox.ItemsSource as List<ProcessItem> ?? new List<ProcessItem>();
@@ -276,7 +233,6 @@ namespace Quicker.Windows.AddWindows
         /// <summary>
         /// 选中 ComboBox 中指定的 ProcessItem。
         /// </summary>
-        /// <param name="item">要选中的 ProcessItem</param>
         private void SelectProcessItem(ProcessItem item)
         {
             AppComboBox.SelectedItem = item;
@@ -285,7 +241,6 @@ namespace Quicker.Windows.AddWindows
         /// <summary>
         /// 根据窗口选择事件参数，更新当前场景数据 currentSceneData。
         /// </summary>
-        /// <param name="e">窗口选择事件参数</param>
         private void UpdateCurrentSceneData(WindowSelectWindow.WindowSelectedEventArgs e)
         {
             currentSceneData = new SceneData

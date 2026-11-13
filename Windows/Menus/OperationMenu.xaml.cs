@@ -578,7 +578,6 @@ namespace Quicker.Windows.Menus
         /// 检查文件或文件夹是否在同一目录
         /// </summary>
         /// <param name="paths">文件或文件夹路径列表</param>
-        /// <returns>是否在同一目录</returns>
         private bool ArePathsInSameDirectory(List<string> paths)
         {
             if (paths.Count == 0)
@@ -621,7 +620,6 @@ namespace Quicker.Windows.Menus
         /// <summary>
         /// 打开同一目录下的多个文件或文件夹并在资源管理器中选中
         /// </summary>
-        /// <param name="paths">文件或文件夹路径列表</param>
         private void OpenMultiplePathsInSameDirectory(List<string> paths)
         {
             try
@@ -674,7 +672,6 @@ namespace Quicker.Windows.Menus
         /// 创建项目PIDL列表
         /// </summary>
         /// <param name="paths">项目路径列表</param>
-        /// <returns>PIDL列表</returns>
         private List<IntPtr> CreatePidlList(List<string> paths)
         {
             List<IntPtr> pidlItems = new List<IntPtr>();
@@ -695,7 +692,6 @@ namespace Quicker.Windows.Menus
         /// 为单个路径创建PIDL
         /// </summary>
         /// <param name="path">路径</param>
-        /// <returns>PIDL指针</returns>
         private IntPtr CreatePidlForPath(string path)
         {
             // 检查路径是否存在
@@ -768,7 +764,6 @@ namespace Quicker.Windows.Menus
         /// 获取多个路径的公共目录
         /// </summary>
         /// <param name="paths">路径列表</param>
-        /// <returns>公共目录</returns>
         private string GetCommonDirectory(List<string> paths)
         {
             if (paths.Count == 0)
@@ -809,7 +804,6 @@ namespace Quicker.Windows.Menus
         /// 找到多个路径的公共前缀
         /// </summary>
         /// <param name="paths">路径列表</param>
-        /// <returns>公共前缀</returns>
         private string FindCommonPrefix(List<string> paths)
         {
             if (paths.Count == 0)
@@ -976,7 +970,6 @@ namespace Quicker.Windows.Menus
         // 关闭窗口前释放资源
         protected override void OnClosed(EventArgs e)
         {
-            buttonManager.Dispose();
             actionManager.Dispose();
             close = false; // 设置关闭标识符，避免已关闭后的延迟失焦回调再次处理
 

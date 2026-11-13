@@ -123,7 +123,6 @@ namespace Quicker.Windows.MainWindows
         /// 检查文件是否为图片文件
         /// </summary>
         /// <param name="filePath">文件路径</param>
-        /// <returns>是否为图片文件</returns>
         private bool IsImageFile(string filePath)
         {
             string extension = Path.GetExtension(filePath).ToLowerInvariant();
@@ -140,7 +139,7 @@ namespace Quicker.Windows.MainWindows
         /// <summary>
         /// 加载图片
         /// </summary>
-        /// <param name="maxImagesToLoad"> 一次加载的最大图片数量 </param>
+        /// <param name="maxImagesToLoad">一次加载的最大图片数量</param>
         private void LoadImages(int maxImagesToLoad)
         {
             if (allImageFiles == null || loadedImageCount >= allImageFiles.Length) // 如果已加载所有图片，则返回
@@ -178,7 +177,6 @@ namespace Quicker.Windows.MainWindows
         /// 加载图片
         /// </summary>
         /// <param name="filePath"> 图片文件路径 </param>
-        /// <returns> 图片源 </returns>
         private BitmapImage LoadImage(string filePath)
         {
             try
@@ -198,10 +196,7 @@ namespace Quicker.Windows.MainWindows
         }
 
         // 关闭窗口
-        private void CancelSelect(object sender, RoutedEventArgs e)
-        {
-            this.Close(); // 关闭窗口
-        }
+        private void CancelSelect(object sender, RoutedEventArgs e) => Close(); // 关闭窗口
 
         // 选择本地图标
         private void SelectLocalIcons(object sender, RoutedEventArgs e)
@@ -313,11 +308,6 @@ namespace Quicker.Windows.MainWindows
             ImageListView.ItemsSource = null; // 清空 ListView 数据源
             SelectedImagePath = null; // 清理选中图片路径
             listViewScrollViewer = null; // 清理 ScrollViewer 引用
-
-            // 强制垃圾回收
-            GC.Collect(); // 强制垃圾回收
-            GC.WaitForPendingFinalizers(); // 等待垃圾回收完成
-            GC.Collect(); // 再次强制垃圾回收
         }
     }
 

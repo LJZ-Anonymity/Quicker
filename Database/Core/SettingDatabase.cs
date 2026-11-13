@@ -4,11 +4,15 @@ using System.Data.SQLite;
 using Quicker.Helpers;
 using System.IO;
 
-// SQLite数据库操作类
 namespace Quicker.Database.Core
 {
     public static class SettingDatabase
     {
+        /// <summary>
+        /// 打开数据库连接
+        /// </summary>
+        public static SQLiteConnection OpenConnection() => DatabaseHelper.OpenConnection("Setting.db");
+
         static SettingDatabase()
         {
             DatabaseHelper.EnsureDatabaseDirectoryExists(); // 确保数据库目录存在
@@ -371,7 +375,6 @@ namespace Quicker.Database.Core
         /// <summary>
         /// 获取OpenMainWindow设置信息
         /// </summary>
-        /// <returns> OpenMainWindow 类 </returns>
         public static List<OpenMainWindow> GetAllOpenMainWindowConditions()
         {
             var conditions = new List<OpenMainWindow>(); // 创建一个空的 OpenMainWindow 列表
@@ -403,7 +406,6 @@ namespace Quicker.Database.Core
         /// <summary>
         /// 获取黑名单设置
         /// </summary>
-        /// <returns> Blacklist 类 </returns>
         public static List<Blacklist> GetAllBlacklistSettings()
         {
             var blacklists = new List<Blacklist>(); // 创建一个空的 Blacklist 列表
@@ -427,7 +429,6 @@ namespace Quicker.Database.Core
         /// <summary>
         /// 获取黑名单应用
         /// </summary>
-        /// <returns> BlacklistApplication 类 </returns>
         public static List<BlacklistApplication> GetAllBlacklistApplications()
         {
             var applications = new List<BlacklistApplication>(); // 创建一个空的 BlacklistApplication 列表
@@ -453,7 +454,6 @@ namespace Quicker.Database.Core
         /// <summary>
         /// 获取外观设置
         /// </summary>
-        /// <returns> Appearance 类 </returns>
         public static List<Appearance> GetAppearanceSettings()
         {
             // 获取当前主题状态：读取 Convention 表，确定 IsDarkTheme 的值
@@ -508,7 +508,6 @@ namespace Quicker.Database.Core
         /// <summary>
         /// 更新外观设置
         /// </summary>
-        /// <param name="appearance"> Appearance 类 </param>
         public static void UpdateAppearance(Appearance appearance)
         {
             using var connection = OpenConnection(); // 打开数据库连接
@@ -575,15 +574,6 @@ namespace Quicker.Database.Core
             cmd.Parameters.AddWithValue("@OldLike", normalizedOld + "%");
             cmd.ExecuteNonQuery();
             transaction.Commit();
-        }
-
-        /// <summary>
-        /// 打开数据库连接
-        /// </summary>
-        /// <returns> SQLiteConnection 对象 </returns>
-        public static SQLiteConnection OpenConnection()
-        {
-            return DatabaseHelper.OpenConnection("Setting.db");
         }
 
         // 数据库文件路径语句

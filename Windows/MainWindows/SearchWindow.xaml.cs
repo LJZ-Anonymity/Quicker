@@ -150,7 +150,6 @@ namespace Quicker.Windows.MainWindows
         /// 命令行分割辅助方法
         /// </summary>
         /// <param name="command"> 命令行 </param>
-        /// <returns> 文件名和参数 </returns>
         private (string fileName, string arguments) SplitCommand(string command)
         {
             command = command.Trim(); // 去除空白字符
@@ -305,7 +304,6 @@ namespace Quicker.Windows.MainWindows
         /// 创建搜索结果按钮
         /// </summary>
         /// <param name="data"> 按钮数据 </param>
-        /// <returns> 搜索结果按钮 </returns>
         private Button CreateSearchResultButton(ButtonData data)
         {
             Grid grid = new();
@@ -327,7 +325,6 @@ namespace Quicker.Windows.MainWindows
         /// 创建图像
         /// </summary>
         /// <param name="imagePath"> 图像路径 </param>
-        /// <returns> 图像 </returns>
         private Image CreateImage(string imagePath)
         {
             return new Image
@@ -344,7 +341,6 @@ namespace Quicker.Windows.MainWindows
         /// <summary>
         /// 创建标签文本块
         /// </summary>
-        /// <returns> 标签文本块 </returns>
         private TextBlock CreateTagTextBlock()
         {
             return new TextBlock
@@ -362,7 +358,6 @@ namespace Quicker.Windows.MainWindows
         /// 创建搜索结果文本块
         /// </summary>
         /// <param name="data"> 按钮数据 </param>
-        /// <returns> 搜索结果文本块 </returns>
         private TextBlock CreateSearchResultTextBlock(ButtonData data)
         {
             TextBlock textBlock = new()

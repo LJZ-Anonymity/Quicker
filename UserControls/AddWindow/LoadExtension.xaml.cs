@@ -27,7 +27,6 @@ namespace Quicker.UserControls.AddWindow
         private bool isLoading = true; // 是否正在加载
 
         #region IActionEditor
-
         public ActionType GetActionType() => ActionType.LoadExtension;
         public string GetLocation() => LocationTextBox.Text;
         public string GetData1() => "";
@@ -43,7 +42,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 构造函数
         /// </summary>
-        /// <param name="addWindow">AddWindow 的引用</param>
         public LoadExtension(Quicker.Windows.AddWindows.AddActionWindow addWindow)
         {
             _addWindow = addWindow; // 保存 AddWindow 的引用
@@ -81,7 +79,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 从按钮数据更新UI
         /// </summary>
-        /// <param name="buttonData">按钮数据</param>
         private void UpdateUIFromButtonData(ButtonData buttonData)
         {
             UpdateTitleFromButtonData(buttonData); // 更新标题
@@ -96,7 +93,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 更新标题
         /// </summary>
-        /// <param name="buttonData">按钮数据</param>
         private void UpdateTitleFromButtonData(ButtonData buttonData)
         {
             if (!string.IsNullOrWhiteSpace(buttonData.Title))
@@ -110,7 +106,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 更新图标
         /// </summary>
-        /// <param name="buttonData">按钮数据</param>
         private void UpdateIconFromButtonData(ButtonData buttonData)
         {
             if (string.IsNullOrEmpty(buttonData.ImagePath)) return; // 如果图标路径为空，则返回
@@ -139,7 +134,7 @@ namespace Quicker.UserControls.AddWindow
             }
             catch
             {
-                using var toast = new ToastManager(); // 创建ToastManager
+                var toast = new ToastManager(); // 创建ToastManager
                 toast.Show("扩展信息加载失败", ToastType.Error); // 显示错误提示
             }
             LoadExtensionPopup.IsOpen = false; // 关闭弹出菜单
@@ -159,7 +154,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 显示文件选择对话框
         /// </summary>
-        /// <returns>文件路径</returns>
         private string ShowFileDialog()
         {
             var dialog = new OpenFileDialog()
@@ -174,11 +168,9 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 加载扩展信息
         /// </summary>
-        /// <param name="dllPath">扩展DLL文件路径</param>
-        /// <param name="setIcon">是否设置图标，默认为true</param>
         private void LoadExtensionInfo(string dllPath, bool setIcon = true)
         {
-            using var toast = new ToastManager();
+            var toast = new ToastManager();
             if (!File.Exists(dllPath) || !dllPath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
             {
                 toast.Show("未找到扩展DLL文件", ToastType.Error); // 如果未找到扩展DLL文件，则显示错误提示
@@ -261,7 +253,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 设置扩展模块图标
         /// </summary>
-        /// <param name="module">扩展模块实例</param>
         private void SetExtensionModuleImage(IExtensionModule module)
         {
             try
@@ -298,7 +289,7 @@ namespace Quicker.UserControls.AddWindow
             {
                 // 图标加载失败时，使用默认处理
                 _addWindow.ButtonImage.Visibility = Visibility.Collapsed;
-                using var toast = new ToastManager();
+                var toast = new ToastManager();
                 toast.Show($"图标加载失败: {ex.Message}", ToastType.Warning);
             }
         }
@@ -306,8 +297,6 @@ namespace Quicker.UserControls.AddWindow
         /// <summary>
         /// 将BitmapImage保存为临时文件
         /// </summary>
-        /// <param name="bitmap">位图对象</param>
-        /// <returns>临时文件路径</returns>
         private string SaveIconToTempFile(BitmapImage bitmap)
         {
             try
@@ -354,20 +343,6 @@ namespace Quicker.UserControls.AddWindow
             DescriptionTextBlock.Text = ""; // 清除扩展描述
             AuthorTextBlock.Text = ""; // 清除扩展作者
         }
-
-        #endregion
-
-        #region 数据模型
-
-        // 扩展信息类
-        public class Info
-        {
-            public string Name { get; set; } // 扩展名称
-            public string Version { get; set; } // 扩展版本
-            public string Description { get; set; } // 扩展描述
-            public string Author { get; set; } // 扩展作者
-        }
-
         #endregion
     }
 }
