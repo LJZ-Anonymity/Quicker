@@ -423,41 +423,33 @@ namespace Quicker.Windows.Menus
         #endregion
 
         #region 动作创建
-        // 启动软件
-        private void StartApp(object sender, RoutedEventArgs e)
+        /// <summary>
+        /// 关闭当前菜单，隐藏主窗口，并打开创建动作窗口
+        /// </summary>
+        private void CloseAndOpenAddWindow(int choice)
         {
-            haveAction = true; // 有动作
-            base.HideMainWindow(); // 隐藏操作菜单窗口
-            AddActionWindow addWindow = new(ButtonID, TableName, 1); // 传递当前按钮和类型
-            addWindow.Show(); // 显示窗口
+            haveAction = true;
+            close = false;
+            base.HideMainWindow();
+            Close();
+            AddActionWindow addWindow = new(ButtonID, TableName, choice);
+            addWindow.Show();
         }
+
+        // 启动软件
+        private void StartApp(object sender, RoutedEventArgs e) => CloseAndOpenAddWindow(1);
 
         // 打开文件
-        private void OpenFile(object sender, RoutedEventArgs e)
-        {
-            haveAction = true; // 有动作
-            base.HideMainWindow(); // 隐藏操作菜单窗口
-            AddActionWindow addWindow = new(ButtonID, TableName, 2); // 传递当前按钮和类型
-            addWindow.Show(); // 显示窗口
-        }
+        private void OpenFile(object sender, RoutedEventArgs e) => CloseAndOpenAddWindow(2);
 
         // 打开文件夹
-        private void OpenFolder(object sender, RoutedEventArgs e)
-        {
-            haveAction = true; // 有动作
-            base.HideMainWindow(); // 隐藏操作菜单窗口
-            AddActionWindow addWindow = new(ButtonID, TableName, 3); // 传递当前按钮和类型
-            addWindow.Show(); // 显示窗口
-        }
+        private void OpenFolder(object sender, RoutedEventArgs e) => CloseAndOpenAddWindow(3);
 
         // 打开网址
-        private void OpenWebsite(object sender, RoutedEventArgs e)
-        {
-            haveAction = true; // 有动作
-            base.HideMainWindow(); // 隐藏操作菜单窗口
-            AddActionWindow addWindow = new(ButtonID, TableName, 4); // 传递当前按钮和类型
-            addWindow.Show(); // 显示窗口
-        }
+        private void OpenWebsite(object sender, RoutedEventArgs e) => CloseAndOpenAddWindow(4);
+
+        // 加载扩展
+        private void LoadExtension(object sender, RoutedEventArgs e) => CloseAndOpenAddWindow(5);
 
         // 创建打开文件动作
         private void CreatOpenFileAction(object sender, RoutedEventArgs e)
@@ -465,52 +457,8 @@ namespace Quicker.Windows.Menus
             if (buttonManager.CreateFileActionFromClipboard(ButtonID, TableName))
             {
                 UpdateUIAfterActionChange(); // 更新UI
-                base.Close(); // 关闭窗口
+                Close(); // 关闭窗口
             }
-        }
-
-        /// <summary>
-        /// 判断是否为图片文件
-        /// </summary>
-        /// <param name="filePath"> 文件路径 </param>
-        /// <returns> 是否为图片文件 </returns>
-        private bool IsImaege(string filePath)
-        {
-            string extension = Path.GetExtension(filePath); // 获取文件地址
-            return extension.ToLower() == ".jpg" || extension.ToLower() == ".jpeg" || extension.ToLower() == ".png" || extension.ToLower() == ".gif"; // 判断是否为图片文件
-        }
-
-        /// <summary>
-        /// 处理图片拖拽
-        /// </summary>
-        /// <param name="filePath"> 文件路径 </param>
-        private void ProcessImageDrop(string filePath)
-        {
-            BitmapImage bitmap = new BitmapImage(new Uri(filePath)); // 创建 BitmapImage 对象
-            string iconPath = ""; // 默认图标路径
-            if (bitmap != null) // 如果图标存在
-            {
-                iconPath = iconManager.CheckCachedIcon(filePath); // 检查已经保存的图标
-                if (string.IsNullOrEmpty(iconPath)) // 如果不存在保存的图标
-                    iconPath = iconManager.SaveIconToFile(bitmap); // 保存图标到文件
-            }
-
-            string fileName = Path.GetFileNameWithoutExtension(filePath); // 获取文件名
-            ButtonData buttonData = new ButtonData
-            {
-                ButtonID = ButtonID,
-                Title = fileName,
-                Location = filePath,
-                ImagePath = iconPath,
-                Data1 = false.ToString(), // 是否使用管理员身份运行
-                Data2 = true.ToString(), // 尝试打开已存在的窗口
-                Data3 = 0.ToString(),
-                Description = $"打开图片: {fileName}",
-                CreateTime = DateTime.Now,
-                ActionType = ActionType.OpenFile,
-            };
-            db2.UpdateAction(buttonData, TableName); // 添加按钮数据到数据库
-            UpdateUIAfterActionChange(); // 更新UI
         }
 
         // 点击按钮导入动作数据
@@ -524,15 +472,6 @@ namespace Quicker.Windows.Menus
             UpdateUIAfterActionChange(); // 更新UI
             close = true; // 关闭窗口
             base.Close(); // 关闭窗口
-        }
-
-        // 加载扩展
-        private void LoadExtension(object sender, RoutedEventArgs e)
-        {
-            haveAction = true; // 有动作
-            base.HideMainWindow(); // 隐藏操作菜单窗口
-            AddActionWindow addWindow = new(ButtonID, TableName, 5); // 传递当前按钮和类型
-            addWindow.Show(); // 显示窗口
         }
         #endregion
 
@@ -565,10 +504,6 @@ namespace Quicker.Windows.Menus
             TableName = null; // 清理表名
             haveAction = false; // 清理是否有动作
             close = false; // 清理关闭状态
-
-            GC.Collect(); // 强制垃圾回收
-            GC.WaitForPendingFinalizers(); // 等待垃圾回收完成
-            GC.Collect(); // 再次强制垃圾回收
 
             base.OnClosed(e); // 调用基类的 OnClosed 方法
         }

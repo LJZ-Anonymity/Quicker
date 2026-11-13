@@ -56,22 +56,6 @@ namespace Quicker.Windows.Menus
         public new Dispatcher Dispatcher => base.Dispatcher;
 
         /// <summary>
-        /// 关闭窗口
-        /// </summary>
-        public new void Close()
-        {
-            base.Close();
-        }
-
-        /// <summary>
-        /// 显示窗口
-        /// </summary>
-        public new void Show()
-        {
-            base.Show();
-        }
-
-        /// <summary>
         /// 显示窗口并执行淡入动画
         /// </summary>
         public void ShowWithAnimation()
@@ -86,18 +70,12 @@ namespace Quicker.Windows.Menus
         /// <summary>
         /// 激活窗口
         /// </summary>
-        public new bool Activate()
-        {
-            return base.Activate();
-        }
+        public new bool Activate() => base.Activate();
 
         /// <summary>
         /// 查找资源
         /// </summary>
-        public new object FindResource(object resourceKey)
-        {
-            return base.FindResource(resourceKey);
-        }
+        public new object FindResource(object resourceKey) => base.FindResource(resourceKey);
 
         #endregion
 
@@ -267,10 +245,7 @@ namespace Quicker.Windows.Menus
         /// <summary>
         /// 延时关闭菜单
         /// </summary>
-        public async Task CloseMenuAsync()
-        {
-            await WindowHelper.CloseMenuAsync(GetWindowInstance());
-        }
+        public async Task CloseMenuAsync() =>  await WindowHelper.CloseMenuAsync(GetWindowInstance());
         #endregion
 
         #region 资源清理
