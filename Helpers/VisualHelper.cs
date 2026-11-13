@@ -7,7 +7,7 @@ namespace Quicker.Helpers
     /// <summary>
     /// WPF视觉树辅助类，提供视觉树遍历和查找功能
     /// </summary>
-    public static class VisualTreeHelper
+    public static class VisualHelper
     {
         #region 子元素查找
 

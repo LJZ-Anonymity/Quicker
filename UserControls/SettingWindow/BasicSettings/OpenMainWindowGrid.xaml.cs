@@ -9,13 +9,13 @@ using System.Windows;
 
 namespace Quicker.UserControls.SettingWindow.BasicSettings
 {
-    public partial class OpenMainWindowGrid : UserControl
+    public partial class OpenMainWindowControl : UserControl
     {
         private WeakReference<Quicker.Windows.MainWindows.SettingWindow> weakSettingWindow; // 弱引用设置窗口
         private List<string> ShortcutKeys = new(); // 保存快捷键
         SettingManager settingManager; // 设置管理器
 
-        public OpenMainWindowGrid(Quicker.Windows.MainWindows.SettingWindow settingWindow)
+        public OpenMainWindowControl(Quicker.Windows.MainWindows.SettingWindow settingWindow)
         {
             InitializeComponent();
             settingManager = settingWindow._settingManager; // 创建设置管理器

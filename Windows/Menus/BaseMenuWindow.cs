@@ -1,6 +1,8 @@
 ﻿using System.Windows.Media.Animation;
 using System.Windows.Threading;
+using Quicker.Windows.Menus;
 using Quicker.Managers;
+using Quicker.Helpers;
 using System.Windows;
 
 namespace Quicker.Windows.Menus
@@ -240,53 +242,34 @@ namespace Quicker.Windows.Menus
         /// <summary>
         /// 获取当前窗口的 Window 实例
         /// </summary>
-        private Window GetWindowInstance()
-        {
-            return this as Window;
-        }
+        private Window GetWindowInstance() => this as Window;
 
         /// <summary>
         /// 设置窗口置顶
         /// </summary>
-        public void SetWindowTopmost()
-        {
-            using var windowManager = new WindowManager();
-            windowManager.SetWindowTopmost(GetWindowInstance());
-        }
+        public void SetWindowTopmost() => WindowHelper.SetWindowTopmost(GetWindowInstance());
 
         /// <summary>
         /// 设置窗口位置到鼠标附近
         /// </summary>
-        public void SetWindowPositionNearMouse()
-        {
-            using var windowManager = new WindowManager();
-            windowManager.SetWindowPositionNearMouse(GetWindowInstance());
-        }
+        public void SetWindowPositionNearMouse() => WindowHelper.SetWindowPositionNearMouse(GetWindowInstance());
 
         /// <summary>
         /// 设置窗口左下角到鼠标附近
         /// </summary>
-        public void SetWindowBottomLeftNearMouse()
-        {
-            using var windowManager = new WindowManager();
-            windowManager.SetWindowBottomLeftNearMouse(GetWindowInstance());
-        }
+        public void SetWindowBottomLeftNearMouse() => WindowHelper.SetWindowBottomLeftNearMouse(GetWindowInstance());
 
         /// <summary>
         /// 隐藏主窗口
         /// </summary>
-        public void HideMainWindow()
-        {
-            AppStateManager.MainWindowInstance.HideWindowSilently();
-        }
+        public void HideMainWindow() => AppStateManager.MainWindowInstance.HideWindowSilently();
 
         /// <summary>
         /// 延时关闭菜单
         /// </summary>
         public async Task CloseMenuAsync()
         {
-            using var windowManager = new WindowManager();
-            await windowManager.CloseMenuAsync(GetWindowInstance());
+            await WindowHelper.CloseMenuAsync(GetWindowInstance());
         }
         #endregion
 

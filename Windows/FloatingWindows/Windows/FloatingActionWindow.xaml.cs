@@ -4,6 +4,7 @@ using Quicker.Windows.Menus;
 using System.Windows.Input;
 using System.Windows.Media;
 using Quicker.Managers;
+using Quicker.Helpers;
 using System.Windows;
 using Quicker.Models;
 
@@ -45,9 +46,8 @@ namespace Quicker.Windows.FloatingWindows.Windows
         /// </summary>
         private void SetWindowPositionAndTopmost()
         {
-            using var windowManager = new WindowManager(); // 创建窗口管理器
-            windowManager.SetWindowPositionNearMouse(this); // 设置窗口位置
-            windowManager.SetWindowTopmost(this); // 设置窗口置顶
+            WindowHelper.SetWindowPositionNearMouse(this); // 设置窗口位置
+            WindowHelper.SetWindowTopmost(this); // 设置窗口置顶
         }
 
         /// <summary>

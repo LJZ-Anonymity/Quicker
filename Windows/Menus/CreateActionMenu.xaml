@@ -4,7 +4,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:Quicker.Windows.Menus"
-    x:Class="Quicker.Windows.Menus.CreatActionMenu"
+    x:Class="Quicker.Windows.Menus.CreateActionMenu"
     mc:Ignorable="d"
 
     AllowsTransparency="True"
@@ -63,10 +63,10 @@
                         <TextBlock Style="{StaticResource MenuButtonTextBlock}" Text="加载扩展"/>
                     </Grid>
                 </Button>
-                <Button x:Name="CreatOpenFileActionButton" Click="CreatOpenFileAction" Style="{StaticResource MenuButton}">
+                <Button x:Name="CreateOpenFileActionButton" Click="CreatOpenFileAction" Style="{StaticResource MenuButton}">
                     <Grid Width="168" Style="{StaticResource MenuButtonContentGrid}">
                         <Image Source="/Resources/Images/Quicker_Enabled.png" Style="{StaticResource MenuButtonImage}"/>
-                        <TextBlock x:Name="CreatOpenFileActionTextBlock" Style="{StaticResource MenuButtonTextBlock}"/>
+                        <TextBlock x:Name="CreateOpenFileActionTextBlock" Style="{StaticResource MenuButtonTextBlock}"/>
                     </Grid>
                 </Button>
                 <Button Click="ImportActionData" ToolTip="从本地文件中导入动作" Style="{StaticResource MenuButton}" Margin="0,0,0,3">

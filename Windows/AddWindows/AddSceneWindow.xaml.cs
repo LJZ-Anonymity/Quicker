@@ -17,7 +17,7 @@ namespace Quicker.Windows.AddWindows
     public partial class AddSceneWindow : Window
     {
         public event Action<bool, string?>? SceneAddCompleted; // 参数1: 是否保存, 参数2: 新场景名
-        private SelectWindowWindow selectWindowWindow; // SelectWindowWindow 的实例引用
+        private WindowSelectWindow windowSelectWindow;
         private SceneData currentSceneData; // 当前场景数据
         public AppInfo SelectedApp { get; set; } // 选中的应用
 
@@ -211,15 +211,15 @@ namespace Quicker.Windows.AddWindows
         // 选择窗口
         private void SelectWindow_Click(object sender, RoutedEventArgs e)
         {
-            selectWindowWindow = new(); // 创建 SelectWindowWindow 实例
-            selectWindowWindow.WindowSelected += OnWindowSelected; // 订阅 WindowSelected 事件
-            selectWindowWindow.StartSelecting(this); // 开始选择窗口
+            windowSelectWindow = new();
+            windowSelectWindow.WindowSelected += OnWindowSelected; // 订阅 WindowSelected 事件
+            windowSelectWindow.StartSelecting(this); // 开始选择窗口
         }
 
         /// <summary>
         /// 处理窗口选择事件，分发到各个子方法
         /// </summary>
-        private void OnWindowSelected(object sender, SelectWindowWindow.WindowSelectedEventArgs e)
+        private void OnWindowSelected(object sender, WindowSelectWindow.WindowSelectedEventArgs e)
         {
             if (!string.IsNullOrEmpty(e.ProcessPath))
             {
@@ -234,7 +234,7 @@ namespace Quicker.Windows.AddWindows
                 catch { }
                 finally
                 {
-                    selectWindowWindow?.Close();
+                    windowSelectWindow?.Close();
                 }
             }
         }
@@ -244,7 +244,7 @@ namespace Quicker.Windows.AddWindows
         /// </summary>
         /// <param name="e">窗口选择事件参数，包含进程路径和图标等信息</param>
         /// <returns>新建的 ProcessItem 对象</returns>
-        private ProcessItem CreateProcessItem(SelectWindowWindow.WindowSelectedEventArgs e)
+        private ProcessItem CreateProcessItem(WindowSelectWindow.WindowSelectedEventArgs e)
         {
             return new ProcessItem
             {
@@ -286,7 +286,7 @@ namespace Quicker.Windows.AddWindows
         /// 根据窗口选择事件参数，更新当前场景数据 currentSceneData。
         /// </summary>
         /// <param name="e">窗口选择事件参数</param>
-        private void UpdateCurrentSceneData(SelectWindowWindow.WindowSelectedEventArgs e)
+        private void UpdateCurrentSceneData(WindowSelectWindow.WindowSelectedEventArgs e)
         {
             currentSceneData = new SceneData
             {

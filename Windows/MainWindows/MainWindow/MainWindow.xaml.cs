@@ -1,5 +1,4 @@
 ﻿using MouseEventArgs = System.Windows.Input.MouseEventArgs;
-using VisualTreeHelper = Quicker.Helpers.VisualTreeHelper;
 using DragEventArgs = System.Windows.DragEventArgs;
 using Application = System.Windows.Application;
 using Button = System.Windows.Controls.Button;
@@ -135,8 +134,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         // 设置窗口状态
         private void SetMainWindowState()
         {
-            using var wm = new WindowManager(); // 创建窗口管理器
-            wm.SetWindowTopmost(this); // 设置窗口置顶
+            WindowHelper.SetWindowTopmost(this); // 设置窗口置顶
         }
 
         /// <summary>
@@ -147,8 +145,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
             base.OnSourceInitialized(e);
             if (ShouldCenterAtMouseOnShow)
             {
-                using var wm = new WindowManager();
-                wm.SetWindowCenterAtMouse(this, GetFunctionBarCenterOffsetFromTop());
+                WindowHelper.SetWindowCenterAtMouse(this, GetFunctionBarCenterOffsetFromTop());
                 ShouldCenterAtMouseOnShow = false;
             }
             else if (ShouldCenterOnScreenOnShow) // 首次唤起且强制居中屏幕
@@ -996,8 +993,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         private void OpenActionPageManageWindow(object sender, RoutedEventArgs e)
         {
             TitlePop.IsOpen = false;
-            using var wm = new WindowManager();
-            wm.OpenTargetWindow("ActionPageManageWindow");
+            WindowHelper.OpenTargetWindow("ActionPageManageWindow");
         }
 
         /// <summary>
@@ -1098,8 +1094,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// </summary>
         private void OpenSettingWindow(object sender, RoutedEventArgs e)
         {
-            using var wm = new WindowManager(); // 创建窗口管理器
-            wm.OpenTargetWindow("SettingWindow"); // 打开设置窗口
+            WindowHelper.OpenTargetWindow("SettingWindow"); // 打开设置窗口
         }
 
         /// <summary>
@@ -1203,7 +1198,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// </summary>
         private void AnimateButtonScale(Button btn)
         {
-            var border = VisualTreeHelper.FindVisualChild<Border>(btn);
+            var border = VisualHelper.FindVisualChild<Border>(btn);
             if (border == null) return;
 
             var scale = new ScaleTransform(1, 1);
@@ -1258,7 +1253,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// <param name="btn">目标按钮</param>
         private void RestoreButtonScale(Button btn)
         {
-            var border = VisualTreeHelper.FindVisualChild<Border>(btn); // 获取按钮边框
+            var border = VisualHelper.FindVisualChild<Border>(btn); // 获取按钮边框
             if (border != null)
             {
                 var scale = border.RenderTransform as ScaleTransform; // 获取缩放动画
@@ -1313,9 +1308,9 @@ namespace Quicker.Windows.MainWindows.MainWindow
         /// <param name="grid">要清理的Grid</param>
         private void CleanUpGrid(Grid grid)
         {
-            foreach (Grid Grid in VisualTreeHelper.FindVisualChildren<Grid>(grid))
+            foreach (Grid Grid in VisualHelper.FindVisualChildren<Grid>(grid))
             {
-                foreach (Button button in VisualTreeHelper.FindVisualChildren<Button>(Grid))
+                foreach (Button button in VisualHelper.FindVisualChildren<Button>(Grid))
                 {
                     // 移除所有事件处理器
                     button.Click -= DoAction; // 左键点击

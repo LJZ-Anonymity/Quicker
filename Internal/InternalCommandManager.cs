@@ -1,6 +1,5 @@
-using Quicker.Internal;
 
-namespace Quicker.Managers
+namespace Quicker.Internal
 {
     public sealed class InternalCommandManager
     {

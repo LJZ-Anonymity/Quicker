@@ -23,7 +23,7 @@ using System.IO;
 
 namespace Quicker.UserControls.SettingWindow.BasicSettings
 {
-    public partial class AppearanceGrid : UserControl, INotifyPropertyChanged // 实现INotifyPropertyChanged接口，支持属性变更通知
+    public partial class AppearanceControl : UserControl, INotifyPropertyChanged // 实现INotifyPropertyChanged接口，支持属性变更通知
     {
         #region 成员字段
 
@@ -101,7 +101,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         #endregion
 
         #region 构造与初始化入口
-        public AppearanceGrid(Quicker.Windows.MainWindows.SettingWindow settingWindow)
+        public AppearanceControl(Quicker.Windows.MainWindows.SettingWindow settingWindow)
         {
             InitializeComponent(); // 初始化xaml界面
             settingManager = settingWindow._settingManager; // 初始化设置管理器

@@ -1,5 +1,5 @@
 ﻿<UserControl
-    x:Class="Quicker.UserControls.SettingWindow.BasicSettings.FunctionShortcutKeysGrid"
+    x:Class="Quicker.UserControls.SettingWindow.BasicSettings.FunctionShortcutKeysControl"
     xmlns:local="clr-namespace:Quicker.UserControls.SettingWindow.BasicSettings"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"

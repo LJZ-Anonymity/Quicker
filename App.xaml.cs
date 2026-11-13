@@ -21,7 +21,6 @@
  *              佛祖保佑       永无BUG
  */
 using KeyboardHookEventArgs = SharpHook.KeyboardHookEventArgs;
-using VisualTreeHelper = Quicker.Helpers.VisualTreeHelper;
 using MouseHookEventArgs = SharpHook.MouseHookEventArgs;
 using MouseButton = SharpHook.Data.MouseButton;
 using Quicker.Windows.MainWindows.MainWindow;
@@ -99,7 +98,7 @@ namespace Quicker
         /// </summary>
         private void EnsureSingleInstance()
         {
-            string mutexName = AppVersionHelper.CurrentVersion; // 互斥锁唯一标识
+            string mutexName = VersionHelper.CurrentVersion; // 互斥锁唯一标识
             bool isNewInstance = SingleInstanceManager.CheckForOtherInstances(mutexName, out _); // 检查是否是新实例
             if (!isNewInstance)
             {
@@ -419,7 +418,7 @@ namespace Quicker
                     {
                         if (settingWindow.IsVisible)
                         {
-                            var testButton = VisualTreeHelper.FindButtonByName(settingWindow, "TestButton"); // 递归查找名为 "TestButton" 的按钮
+                            var testButton = VisualHelper.FindButtonByName(settingWindow, "TestButton"); // 递归查找名为 "TestButton" 的按钮
                             if (testButton != null)
                             {
                                 var buttonPoint = testButton.PointFromScreen(new System.Windows.Point(mousePosition.X, mousePosition.Y)); // 将屏幕坐标转换为按钮坐标
@@ -690,10 +689,9 @@ namespace Quicker
             var blacklistSettings = AppStateManager.BlacklistSettings; // 获取设置
             if (!blacklistSettings.IsFullScreenDisabled) return false; // 如果全屏禁用Quicker，返回
 
-            using var windowManager = new WindowManager(); // 创建窗口管理器
-            if (!windowManager.IsFullScreen()) return false; // 如果窗口不是全屏，返回
+            if (!WindowHelper.IsFullScreen()) return false; // 如果窗口不是全屏，返回
 
-            string processName = windowManager.GetProcessName(); // 获取进程名称
+            string processName = WindowHelper.GetProcessName(); // 获取进程名称
             var blacklistApplications = AppStateManager.BlacklistApplications; // 获取设置
 
             if (blacklistApplications.Count == 0) return true;
@@ -708,11 +706,10 @@ namespace Quicker
         {
             try
             {
-                using var windowManager = new WindowManager(); // 创建窗口管理器
-                nint foregroundWindow = windowManager.GetCurrentForegroundWindow(); // 获取当前前台窗口
+                nint foregroundWindow = WindowHelper.GetCurrentForegroundWindow(); // 获取当前前台窗口
                 if (foregroundWindow == IntPtr.Zero) return false; // 如果当前前台窗口为空，返回
 
-                uint processId = windowManager.GetWindowProcessId(foregroundWindow); // 获取窗口进程ID
+                uint processId = WindowHelper.GetWindowProcessId(foregroundWindow); // 获取窗口进程ID
                 string processName = Process.GetProcessById((int)processId).ProcessName; // 获取进程名称
 
                 return AppStateManager.BlacklistApplications
@@ -849,25 +846,24 @@ namespace Quicker
                 return AppStateManager.CommonState ?? DEFAULT_STYLE;
             }
 
-            using var wm = new WindowManager();
             // 先检查进程场景类型
-            string processSceneType = GetProcessSceneType(wm);
+            string processSceneType = GetProcessSceneType();
             if (!string.IsNullOrEmpty(processSceneType))
                 return processSceneType;
 
             // 再检查鼠标位置类型
-            string mouseLocationType = GetMouseLocationType(wm);
+            string mouseLocationType = GetMouseLocationType();
             return mouseLocationType;
         }
 
         /// <summary>
         /// 获取鼠标位置类型
         /// </summary>
-        private string GetMouseLocationType(WindowManager wm)
+        private string GetMouseLocationType()
         {
-            if (wm.IsMouseOnTaskbar())
+            if (WindowHelper.IsMouseOnTaskbar())
                 return TASKBAR_STYLE; // 鼠标在任务栏上
-            else if (wm.IsMouseOnDesktop())
+            else if (WindowHelper.IsMouseOnDesktop())
                 return DESKTOP_STYLE; // 鼠标在桌面上
             else
                 return DEFAULT_STYLE; // 鼠标在其他窗口上
@@ -876,14 +872,14 @@ namespace Quicker
         /// <summary>
         /// 获取进程对应的场景类型
         /// </summary>
-        private string GetProcessSceneType(WindowManager wm)
+        private string GetProcessSceneType()
         {
             string result = string.Empty;
-            IntPtr foregroundWindow = wm.GetCurrentForegroundWindow(); // 获取当前前台窗口
+            IntPtr foregroundWindow = WindowHelper.GetCurrentForegroundWindow(); // 获取当前前台窗口
             if (foregroundWindow == IntPtr.Zero) return result; // 无前台窗口
             try
             {
-                uint processId = wm.GetWindowProcessId(foregroundWindow); // 获取窗口进程ID
+                uint processId = WindowHelper.GetWindowProcessId(foregroundWindow); // 获取窗口进程ID
                 using var process = Process.GetProcessById((int)processId); // 获取进程
 
                 // 访问 MainModule 可能因权限不足抛出 Win32Exception（拒绝访问）或进程退出等异常
@@ -949,8 +945,7 @@ namespace Quicker
                     break;
                 case 1: // 鼠标位置
                     {
-                        using var wm = new WindowManager();
-                        wm.SetWindowCenterAtMouse(mainWindow, mainWindow.GetFunctionBarCenterOffsetFromTop());
+                        WindowHelper.SetWindowCenterAtMouse(mainWindow, mainWindow.GetFunctionBarCenterOffsetFromTop());
                     }
                     break;
                 case 2: // 屏幕中心（主屏幕工作区）
@@ -967,8 +962,7 @@ namespace Quicker
                         bool positioned = false;
                         try
                         {
-                            using var wm = new WindowManager();
-                            positioned = wm.CenterWindowOnForeground(mainWindow);
+                            positioned = WindowHelper.CenterWindowOnForeground(mainWindow);
                         }
                         catch { }
                         if (!positioned) goto case 2;

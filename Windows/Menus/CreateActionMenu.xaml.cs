@@ -1,5 +1,4 @@
-﻿using System;
-using Quicker.Windows.MainWindows.MainWindow;
+﻿using Quicker.Windows.MainWindows.MainWindow;
 using System.Windows.Media.Imaging;
 using Quicker.Windows.MainWindows;
 using System.Collections.Generic;
@@ -17,7 +16,7 @@ using System.IO;
 
 namespace Quicker.Windows.Menus
 {
-    public partial class CreatActionMenu : BaseMenuWindow
+    public partial class CreateActionMenu : BaseMenuWindow
     {
         #region 字段和属性
         private readonly ButtonManager buttonManager = new(); // 按钮管理器
@@ -33,7 +32,7 @@ namespace Quicker.Windows.Menus
         #endregion
 
         #region 初始化
-        public CreatActionMenu(int buttonID, string tableName)
+        public CreateActionMenu(int buttonID, string tableName)
         {
             InitializeComponent();
             ButtonID = buttonID; // 设置当前按钮
@@ -184,7 +183,7 @@ namespace Quicker.Windows.Menus
         /// </summary>
         private void HideCreatOpenFileActionButton()
         {
-            CreatOpenFileActionButton.Visibility = Visibility.Collapsed; // 隐藏按钮
+            CreateOpenFileActionButton.Visibility = Visibility.Collapsed; // 隐藏按钮
             MainGrid.Height -= 25; // 减少高度
         }
 
@@ -245,10 +244,10 @@ namespace Quicker.Windows.Menus
         private Typeface GetTextTypeface()
         {
             return new Typeface(
-                CreatOpenFileActionTextBlock.FontFamily, 
-                CreatOpenFileActionTextBlock.FontStyle, 
-                CreatOpenFileActionTextBlock.FontWeight, 
-                CreatOpenFileActionTextBlock.FontStretch); // 字体信息
+                CreateOpenFileActionTextBlock.FontFamily, 
+                CreateOpenFileActionTextBlock.FontStyle, 
+                CreateOpenFileActionTextBlock.FontWeight, 
+                CreateOpenFileActionTextBlock.FontStretch); // 字体信息
         }
 
         /// <summary>
@@ -266,7 +265,7 @@ namespace Quicker.Windows.Menus
                 culture,
                 FlowDirection.LeftToRight,
                 typeface,
-                CreatOpenFileActionTextBlock.FontSize,
+                CreateOpenFileActionTextBlock.FontSize,
                 Brushes.Black,
                 dpi); // 创建FormattedText
 
@@ -316,8 +315,8 @@ namespace Quicker.Windows.Menus
         /// <param name="filePath">文件路径</param>
         private void SetCreatOpenFileActionButtonProperties(string buttonText, string filePath)
         {
-            CreatOpenFileActionButton.ToolTip = $"创建打开文件或文件夹{filePath}的动作"; // 设置提示
-            CreatOpenFileActionTextBlock.Text = buttonText; // 设置文本
+            CreateOpenFileActionButton.ToolTip = $"创建打开文件或文件夹{filePath}的动作"; // 设置提示
+            CreateOpenFileActionTextBlock.Text = buttonText; // 设置文本
         }
         #endregion
 
@@ -545,8 +544,7 @@ namespace Quicker.Windows.Menus
             {
                 if (!haveAction)
                 {
-                    using var windowMananger = new WindowManager(); // 创建窗口管理器
-                    windowMananger.SetMainWindowFocused(); // 关闭窗口
+                    WindowHelper.SetMainWindowFocused(); // 关闭窗口
                 }
             }
             // 调用基类方法以触发ClosingOrHiding事件

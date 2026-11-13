@@ -19,11 +19,11 @@ using System.IO;
 
 namespace Quicker.UserControls.SettingWindow.BasicSettings
 {
-    public partial class BlacklistGrid : UserControl
+    public partial class BlacklistControl : UserControl
     {
         private WeakReference<Quicker.Windows.MainWindows.SettingWindow> weakSettingWindow; // 弱引用设置窗口
         private HashSet<string> blacklistAppsCache = new(); // 黑名单缓存
-        private SelectWindowWindow selectWindowWindow; // 类成员变量
+        private WindowSelectWindow windowSelectWindow; // 类成员变量
         SettingManager settingManager; // 设置管理器
         private bool isLoading = true; // 是否全屏禁用
 
@@ -31,7 +31,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         /// 构造函数
         /// </summary>
         /// <param name="settingWindow">设置窗口</param>
-        public BlacklistGrid(Quicker.Windows.MainWindows.SettingWindow settingWindow)
+        public BlacklistControl(Quicker.Windows.MainWindows.SettingWindow settingWindow)
         {
             InitializeComponent();
             settingManager = settingWindow._settingManager; // 创建设置管理器
@@ -121,14 +121,14 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         // 拖动按钮选择屏幕上要禁用的应用
         private void BlacklistDragButton_Click(object sender, RoutedEventArgs e)
         {
-            selectWindowWindow = new SelectWindowWindow();
-            selectWindowWindow.WindowSelected += OnWindowSelectedForBlacklist;
+            windowSelectWindow = new WindowSelectWindow();
+            windowSelectWindow.WindowSelected += OnWindowSelectedForBlacklist;
             // 最小化设置窗口
             if (weakSettingWindow != null && weakSettingWindow.TryGetTarget(out var settingWindow))
             {
                 settingWindow.WindowState = WindowState.Minimized;
             }
-            selectWindowWindow.StartSelecting(null); // 进入选择模式
+            windowSelectWindow.StartSelecting(null); // 进入选择模式
         }
 
         /// <summary>
@@ -588,7 +588,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         }
 
         // 处理窗口选择事件
-        private void OnWindowSelectedForBlacklist(object sender, SelectWindowWindow.WindowSelectedEventArgs e)
+        private void OnWindowSelectedForBlacklist(object sender, WindowSelectWindow.WindowSelectedEventArgs e)
         {
             if (!string.IsNullOrEmpty(e.ProcessPath))
             {
@@ -608,7 +608,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
                 catch { }
                 finally
                 {
-                    selectWindowWindow?.Close();
+                    windowSelectWindow?.Close();
                 }
             }
         }

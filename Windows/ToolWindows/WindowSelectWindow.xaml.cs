@@ -9,16 +9,16 @@ using Quicker.Managers;
 using System.Windows;
 using System.Text;
 using System.IO;
+using Quicker.Helpers;
 
 namespace Quicker.Windows.ToolWindows
 {
-    public partial class SelectWindowWindow
+    public partial class WindowSelectWindow
     {
         // 定义窗口选择事件委托和事件
         public delegate void WindowSelectedEventHandler(object sender, WindowSelectedEventArgs e); // 窗口选择事件委托
         public event WindowSelectedEventHandler WindowSelected; // 窗口选择事件
 
-        private readonly WindowManager windowManager = new(); // 窗口管理器
         private bool isSelecting = false; // 是否正在选择
         private Window ownerWindow; // 所有者窗口
 
@@ -30,7 +30,7 @@ namespace Quicker.Windows.ToolWindows
             public BitmapSource ProcessIcon { get; set; }
         }
 
-        public SelectWindowWindow()
+        public WindowSelectWindow()
         {
             // 注册全局鼠标事件
             MouseHook.MouseDown += MouseHook_MouseDown;
@@ -268,7 +268,6 @@ namespace Quicker.Windows.ToolWindows
         public void Close()
         {
             MouseHook.MouseDown -= MouseHook_MouseDown; // 取消注册鼠标事件
-            windowManager.Dispose(); // 释放资源
         }
 
         #region Win32 API

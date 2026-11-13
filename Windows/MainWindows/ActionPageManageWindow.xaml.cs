@@ -1,5 +1,4 @@
-﻿using VisualTreeHelper = Quicker.Helpers.VisualTreeHelper;
-using System.Windows.Controls.Primitives;
+﻿using System.Windows.Controls.Primitives;
 using System.Windows.Media.Imaging;
 using Quicker.Windows.EditWindows;
 using Quicker.Windows.ToolWindows;
@@ -980,9 +979,9 @@ namespace Quicker.Windows.MainWindows
                 if (!string.IsNullOrEmpty(sourceButtonName))
                 {
                     Point point = e.GetPosition(MainListView); // 获取鼠标位置
-                    var hitTestResult = System.Windows.Media.VisualTreeHelper.HitTest(MainListView, point); // 获取鼠标位置的项
+                    var hitTestResult = VisualTreeHelper.HitTest(MainListView, point); // 获取鼠标位置的项
                     DependencyObject targetItem = hitTestResult.VisualHit; // 获取鼠标位置的项
-                    Canvas targetCanvas = VisualTreeHelper.FindParent<Canvas>(targetItem);// 查找目标 Canvas
+                    Canvas targetCanvas = VisualHelper.FindParent<Canvas>(targetItem);// 查找目标 Canvas
 
                     if (targetCanvas == null) return; // 如果目标 Canvas 为 null，则返回
                     string targetCanvasName = targetCanvas.Name; // 获取目标 Canvas 的 Name
@@ -1058,7 +1057,6 @@ namespace Quicker.Windows.MainWindows
             int actionPageIndex = int.Parse(bingdingButton.Name.Replace($"Edit{type}", "")); // 获取动作页 ID
             ActionPageData actionPageData = db3.GetActionPageData(type, actionPageIndex); // 获取动作页信息
             string actionPageSize = db3.GetActionPageSize(type, actionPageIndex); // 获取动作页大小
-            using var convertion = new DataSizeHelper(); // 数据转换管理器
             string actionPageInfo = $"ID：{actionPageData.DefaultActionPageName}\n" +
                                     $"最后修改：{actionPageData.LastEditTime}\n" +
                                     $"大小：{actionPageSize}"; // 创建消息窗口

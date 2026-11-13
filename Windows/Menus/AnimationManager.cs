@@ -2,7 +2,7 @@
 using System.Windows.Threading;
 using System.Windows;
 
-namespace Quicker.Managers
+namespace Quicker.Windows.Menus
 {
     public class AnimationManager
     {
@@ -10,7 +10,7 @@ namespace Quicker.Managers
         private readonly TimeSpan _fadeOutDuration; // 淡出时长
         private readonly Window _window; // 目标窗口
 
-        public AnimationManager(Quicker.Windows.Menus.BaseMenuWindow menuWindow, TimeSpan? fadeInDuration = null, TimeSpan? fadeOutDuration = null)
+        public AnimationManager(BaseMenuWindow menuWindow, TimeSpan? fadeInDuration = null, TimeSpan? fadeOutDuration = null)
         {
             _fadeInDuration = fadeInDuration ?? TimeSpan.FromMilliseconds(100); // 默认淡入时长100ms
             _fadeOutDuration = fadeOutDuration ?? TimeSpan.FromMilliseconds(50); // 默认淡出时长50ms

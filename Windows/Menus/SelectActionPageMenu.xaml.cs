@@ -3,6 +3,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Controls;
 using Quicker.Database.Core;
 using Quicker.Managers;
+using Quicker.Helpers;
 using System.Windows;
 using Quicker.Models;
 
@@ -113,8 +114,7 @@ namespace Quicker.Windows.Menus
         // 重写基类的失焦处理方法
         protected override void HandleDeactivated()
         {
-            using var windowMananger = new WindowManager(); // 创建窗口管理器
-            windowMananger.SetMainWindowFocused(); // 关闭窗口
+            WindowHelper.SetMainWindowFocused(); // 关闭窗口
             base.HandleDeactivated(); // 调用基类方法以触发ClosingOrHiding事件
         }
 

@@ -31,7 +31,7 @@ namespace Quicker.Windows.AddWindows
         private readonly ActionManager actionManager = new();
         private readonly ButtonManager buttonManager = new();
         private readonly IconManager iconManager = new();
-        private SelectWindowWindow selectWindowWindow; // SelectWindowWindow 的实例引用
+        private WindowSelectWindow windowSelectWindow;
         private readonly ButtonDatabase db2 = new(); // 按钮数据库
         private FindAppsWindow findAppsWindow; // FindAppsWindow 的实例引用
         private string selectedImagePath; // 选中的图片路径
@@ -292,7 +292,7 @@ namespace Quicker.Windows.AddWindows
             ButtonView.ToolTip = string.IsNullOrEmpty(toolTipText) ? null : toolTipText; // 设置按钮提示文本
         }
 
-        // 如果FindAppsWindow或SelectWindowWindow存在，则闪烁窗口并响起提示音
+        // 如果FindAppsWindow或WindowSelectWindow存在，则闪烁窗口并响起提示音
         private void AddWindow_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (findAppsWindow != null)
@@ -300,10 +300,10 @@ namespace Quicker.Windows.AddWindows
                 SystemSounds.Beep.Play(); // 播放提示音
                 findAppsWindow.Focus(); // 设置焦点
             }
-            else if (selectWindowWindow != null)
+            else if (windowSelectWindow != null)
             {
                 SystemSounds.Beep.Play(); // 播放提示音
-                selectWindowWindow.Focus(); // 设置焦点
+                windowSelectWindow.Focus(); // 设置焦点
             }
         }
 
@@ -317,7 +317,7 @@ namespace Quicker.Windows.AddWindows
         }
 
         // 处理选中的窗口
-        private void OnWindowSelected(object sender, SelectWindowWindow.WindowSelectedEventArgs e)
+        private void OnWindowSelected(object sender, WindowSelectWindow.WindowSelectedEventArgs e)
         {
             if (!string.IsNullOrEmpty(e.ProcessPath))
             {
@@ -342,11 +342,11 @@ namespace Quicker.Windows.AddWindows
                 finally
                 {
                     // 取消事件订阅并关闭选择窗口
-                    if (selectWindowWindow != null)
+                    if (windowSelectWindow != null)
                     {
-                        selectWindowWindow.WindowSelected -= OnWindowSelected;
-                        selectWindowWindow.Close();
-                        selectWindowWindow = null;
+                        windowSelectWindow.WindowSelected -= OnWindowSelected;
+                        windowSelectWindow.Close();
+                        windowSelectWindow = null;
                     }
                 }
             }
@@ -537,11 +537,11 @@ namespace Quicker.Windows.AddWindows
                 findAppsWindow = null; // 清理静态引用
             }
             
-            if (selectWindowWindow != null)
+            if (windowSelectWindow != null)
             {
-                selectWindowWindow.WindowSelected -= OnWindowSelected; // 取消事件订阅
-                selectWindowWindow.Close(); // 关闭选择窗口
-                selectWindowWindow = null; // 清理静态引用
+                windowSelectWindow.WindowSelected -= OnWindowSelected; // 取消事件订阅
+                windowSelectWindow.Close(); // 关闭选择窗口
+                windowSelectWindow = null; // 清理静态引用
             }
             iconPath = null;
         }

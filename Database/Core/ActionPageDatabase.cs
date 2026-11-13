@@ -580,9 +580,8 @@ namespace Quicker.Database.Core
                 size += 8; // LatestEditTime (DateTime)
                 size += 4; // UsedTimes (int)
             }
-            using var convertion = new DataSizeHelper(); // 数据转换管理器
-            size = convertion.ConversionData(size); // 转换数据
-            string sizeString = convertion.ConversionUnits(size); // 转换单位
+            size = DataSizeHelper.ConversionData(size); // 转换数据
+            string sizeString = DataSizeHelper.ConversionUnits(size); // 转换单位
             return $"{size} {sizeString}"; // 返回动作页大小
         }
 

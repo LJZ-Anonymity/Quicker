@@ -756,7 +756,7 @@ namespace Quicker.Managers
             return menuType switch
             {
                 "OperationMenu" => new OperationMenu(int.Parse(button.Name.Replace(tableName, "")), tableName, sourceWindow),
-                "CreatActionMenu" => new CreatActionMenu(int.Parse(button.Name.Replace(tableName, "")), tableName),
+                "CreatActionMenu" => new CreateActionMenu(int.Parse(button.Name.Replace(tableName, "")), tableName),
                 "SelectActionPageMenu" => new SelectActionPageMenu(),
                 "CustomMenu" => new CustomMenu(),
                 "EditSceneMenu" => new EditSceneMenu(tableName),

@@ -2,6 +2,7 @@
 using System.Windows.Interop;
 using System.Diagnostics;
 using Quicker.Managers;
+using Quicker.Helpers;
 using System.Windows;
 using System.IO;
 
@@ -41,15 +42,13 @@ namespace Quicker.Windows.Menus
         // 弹出设置窗口
         private void OpenSettingWindow(object sender, RoutedEventArgs e)
         {
-            using var windowManager = new WindowManager(); // 创建窗口管理器
-            windowManager.OpenTargetWindow("SettingWindow"); // 打开设置窗口
+            WindowHelper.OpenTargetWindow("SettingWindow"); // 打开设置窗口
         }
 
         // 打开动作管理窗口
         private void OpenActionPageManageWindow(object sender, RoutedEventArgs e)
         {
-            using var windowManager = new WindowManager(); // 创建窗口管理器
-            windowManager.OpenTargetWindow("ActionPageManageWindow"); // 打开动作管理窗口
+            WindowHelper.OpenTargetWindow("ActionPageManageWindow"); // 打开动作管理窗口
         }
 
         // 暂停Quicker

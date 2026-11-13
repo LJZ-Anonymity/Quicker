@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 using Quicker.Database.Core;
 using Quicker.Managers;
+using Quicker.Helpers;
 using System.Windows;
 using Quicker.Models;
 
@@ -101,8 +102,7 @@ namespace Quicker.Windows.ToolWindows
         // 关闭动作信息窗口
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            using var windowMananger = new WindowManager(); // 创建窗口管理器
-            windowMananger.SetMainWindowFocused(); // 关闭窗口
+            WindowHelper.SetMainWindowFocused(); // 关闭窗口
             this.Close(); // 关闭窗口
         }
 

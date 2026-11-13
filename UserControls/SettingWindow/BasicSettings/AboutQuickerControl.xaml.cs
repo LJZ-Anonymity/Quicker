@@ -16,12 +16,12 @@ using System.IO;
 
 namespace Quicker.UserControls.SettingWindow.BasicSettings
 {
-    public partial class AboutQuickerGrid : UserControl
+    public partial class AboutQuickerControl : UserControl
     {
         private WeakReference<Quicker.Windows.MainWindows.SettingWindow> weakSettingWindow; // 弱引用设置窗口
         SettingManager settingManager; // 读取设置的管理器
 
-        public AboutQuickerGrid(Quicker.Windows.MainWindows.SettingWindow settingWindow)
+        public AboutQuickerControl(Quicker.Windows.MainWindows.SettingWindow settingWindow)
         {
             InitializeComponent();
             
@@ -30,7 +30,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             
             settingManager = settingWindow._settingManager; // 创建设置管理器
             weakSettingWindow = new(settingWindow); // 保存设置窗口
-            VersionLabel.Content = $"版本：{AppVersionHelper.CurrentVersion}"; // 加载版本信息
+            VersionLabel.Content = $"版本：{VersionHelper.CurrentVersion}"; // 加载版本信息
 
             RefreshPathsAndEnsureDirectories(); // 初始化路径与目录
         }
@@ -229,10 +229,9 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
                         folderSize += file.Length;
                     }
 
-                    // 使用 DataConversionManager 转换数据大小和单位
-                    using var convertionManager = new DataSizeHelper();
-                    folderSize = convertionManager.ConversionData((int)folderSize); // 转换数据大小
-                    folderSizeString = convertionManager.ConversionUnits((int)folderSize); // 转换单位
+                    // 转换数据大小和单位
+                    folderSize = DataSizeHelper.ConversionData((int)folderSize); // 转换数据大小
+                    folderSizeString = DataSizeHelper.ConversionUnits((int)folderSize); // 转换单位
 
                     if (folderSize > 0)
                         CleanTempDataButton.IsEnabled = true; // 启用清理按钮

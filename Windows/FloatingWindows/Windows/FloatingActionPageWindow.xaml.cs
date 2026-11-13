@@ -5,6 +5,7 @@ using Quicker.Windows.Menus;
 using Quicker.Database.Core;
 using System.Windows.Input;
 using Quicker.Managers;
+using Quicker.Helpers;
 using Quicker.Models;
 using System.Windows;
 
@@ -32,9 +33,8 @@ namespace Quicker.Windows.FloatingWindows.Windows
 
         private void FloatingActionPageWindow_Loaded(object sender, RoutedEventArgs e)
         {
-            using var windowManager = new WindowManager(); // 创建窗口管理器
-            windowManager.SetWindowPositionNearMouse(this); // 设置窗口位置
-            windowManager.SetWindowTopmost(this); // 设置窗口置顶
+            WindowHelper.SetWindowPositionNearMouse(this); // 设置窗口位置
+            WindowHelper.SetWindowTopmost(this); // 设置窗口置顶
 
             // 设置标题
             var actionPageData = db3.GetActionPageData(TableName, 0); // 从数据库中获取通用动作页面数据

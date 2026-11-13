@@ -11,7 +11,7 @@ using System.Windows;
 
 namespace Quicker.UserControls.SettingWindow.BasicSettings
 {
-    public partial class ConventionGrid : UserControl, INotifyPropertyChanged
+    public partial class ConventionControl : UserControl, INotifyPropertyChanged
     {
         private const string DefaultTrayIconPathRunning = "pack://application:,,,/Resources/Images/Quicker_Enabled.png"; // 运行时托盘图标路径
         private const string DefaultTrayIconPathPaused = "pack://application:,,,/Resources/Images/Quicker_Disabled.png"; // 暂停时托盘图标路径
@@ -63,7 +63,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             }
         }
 
-        public ConventionGrid(Quicker.Windows.MainWindows.SettingWindow settingWindow)
+        public ConventionControl(Quicker.Windows.MainWindows.SettingWindow settingWindow)
         {
             InitializeComponent();
             weakSettingWindow = new(settingWindow); // 保存设置窗口
@@ -84,7 +84,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             settingManager.LoadConventionsAsync(); // 初始化缓存数据
             Application.Current.Dispatcher.Invoke(() =>
             {
-                VersionLabel.Content = $"当前版本：{AppVersionHelper.CurrentVersion}"; // 加载版本信息（程序集版本）
+                VersionLabel.Content = $"当前版本：{VersionHelper.CurrentVersion}"; // 加载版本信息（程序集版本）
                 AutoStartCheckBox.IsChecked = settingManager.conventions.AutoStart; // 加载开机自启动设置
                 ShowNotificationCheckBox.IsChecked = settingManager.conventions.ShowNotification; // 加载显示启动完成提示设置
                 ShowAddImageCheckBox.IsChecked = settingManager.conventions.ShowAddImage; // 加载左键点击空白按钮时显示创建动作菜单设置

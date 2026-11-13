@@ -11,7 +11,9 @@ using Quicker.Database.Core;
 using System.Windows.Media;
 using System.Windows.Input;
 using Quicker.Internal;
+using Quicker.Commands;
 using Quicker.Managers;
+using Quicker.Helpers;
 using System.Windows;
 using Quicker.Models;
 using System.IO;
@@ -889,9 +891,7 @@ namespace Quicker.Windows.Menus
         protected override void HandleDeactivated()
         {
             if (!close) return;
-
-            using var windowMananger = new WindowManager();
-            windowMananger.SetMainWindowFocused();
+            WindowHelper.SetMainWindowFocused();
             base.HandleDeactivated();
         }
 
@@ -982,41 +982,12 @@ namespace Quicker.Windows.Menus
 
             if (FatherWindow is MainWindow { IsVisible: true })
             {
-                using var windowManager = new WindowManager();
-                windowManager.SetMainWindowFocused();
+                WindowHelper.SetMainWindowFocused();
             }
 
             base.OnClosed(e); // 调用基类的 OnClosed 方法
         }
 
         #endregion
-    }
-
-    internal sealed class RelayCommand : ICommand
-    {
-        private readonly Action<object> execute; // 定义执行命令的操作
-        private readonly Predicate<object> canExecute; // 定义判断命令是否可执行的条件
-
-        /// <summary>
-        /// 构造函数，初始化执行命令的操作和可执行条件
-        /// </summary>
-        /// <param name="execute"> 执行命令的操作 </param>
-        /// <param name="canExecute"> 判断命令是否可执行的条件 </param>
-        /// <exception cref="ArgumentNullException"> execute 为 null </exception>
-        public RelayCommand(Action<object> execute, Predicate<object> canExecute = null)
-        {
-            this.execute = execute ?? throw new ArgumentNullException(nameof(execute));
-            this.canExecute = canExecute;
-        }
-
-        public bool CanExecute(object parameter) => canExecute?.Invoke(parameter) ?? true; // 判断命令是否可执行
-        public void Execute(object parameter) => execute(parameter); // 执行命令
-
-        // 命令可执行状态改变事件，使用CommandManager.RequerySuggested事件
-        public event EventHandler CanExecuteChanged
-        {
-            add => CommandManager.RequerySuggested += value;
-            remove => CommandManager.RequerySuggested -= value;
-        }
     }
 }

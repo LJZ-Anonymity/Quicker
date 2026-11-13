@@ -42,7 +42,7 @@
                 <!-- 右键菜单样式 -->
                 <ResourceDictionary Source="Resources/Styles/CustomContextMenuStyle.xaml"/>
                 <!-- 堆栈面板样式 -->
-                <!--<ResourceDictionary Source="Resources/Styles/StackpanelStyles.xaml"/>-->
+                <!--<ResourceDictionary Source="Resources/Styles/StackPanelStyles.xaml"/>-->
                 <!-- 文本块样式 -->
                 <ResourceDictionary Source="Resources/Styles/TextBlockStyles.xaml"/>
                 <!-- 滚动条样式 -->

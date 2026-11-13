@@ -1,4 +1,5 @@
-﻿using System.Windows.Input;
+﻿using Quicker.Database.Core;
+using System.Windows.Input;
 using System.Data.SQLite;
 using Quicker.Managers;
 using System.Text.Json;

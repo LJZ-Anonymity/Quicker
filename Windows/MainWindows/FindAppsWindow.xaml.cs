@@ -21,7 +21,7 @@ namespace Quicker.Windows.MainWindows
         private CancellationTokenSource _cancellationTokenSource = new(); // 取消令牌源,管理异步任务
         public event ApplicationSelectedEventHandler ApplicationSelected; // 选中应用事件
         private ObservableCollection<AppInfo> _allApplications = new(); // 所有应用
-        private SelectWindowWindow selectWindowWindow; // SelectWindowWindow 的实例引用
+        private WindowSelectWindow windowSelectWindow;
         private List<AppInfo> _searchResults = new(); // 搜索结果
         private ICollectionView _applicationView; // ICollectionView接口
         private ScrollViewer scrollViewer; // 滚动条
@@ -189,13 +189,13 @@ namespace Quicker.Windows.MainWindows
         // 选择窗口按钮点击事件
         private void SelectWindowButton_Click(object sender, RoutedEventArgs e)
         {
-            selectWindowWindow = new(); // 创建 SelectWindowWindow 实例
-            selectWindowWindow.WindowSelected += OnWindowSelected; // 订阅 WindowSelected 事件
-            selectWindowWindow.StartSelecting(this); // 开始选择窗口
+            windowSelectWindow = new();
+            windowSelectWindow.WindowSelected += OnWindowSelected; // 订阅 WindowSelected 事件
+            windowSelectWindow.StartSelecting(this); // 开始选择窗口
         }
 
         // 处理选中的窗口
-        private void OnWindowSelected(object sender, SelectWindowWindow.WindowSelectedEventArgs e)
+        private void OnWindowSelected(object sender, WindowSelectWindow.WindowSelectedEventArgs e)
         {
             if (!string.IsNullOrEmpty(e.ProcessPath) || e.WindowHandle != IntPtr.Zero)
             {
@@ -235,7 +235,7 @@ namespace Quicker.Windows.MainWindows
                 catch { }
                 finally
                 {
-                    selectWindowWindow?.Close();
+                    windowSelectWindow?.Close();
                 }
             }
         }
@@ -351,11 +351,11 @@ namespace Quicker.Windows.MainWindows
         protected override void OnClosed(EventArgs e)
         {
             // 取消事件订阅
-            if (selectWindowWindow != null)
+            if (windowSelectWindow != null)
             {
-                selectWindowWindow.WindowSelected -= OnWindowSelected;
-                selectWindowWindow.Close();
-                selectWindowWindow = null;
+                windowSelectWindow.WindowSelected -= OnWindowSelected;
+                windowSelectWindow.Close();
+                windowSelectWindow = null;
             }
             
             ApplicationSelected = null; // 清理事件

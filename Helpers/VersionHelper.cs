@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace Quicker.Helpers
 {
     /// <summary>
@@ -5,6 +7,34 @@ namespace Quicker.Helpers
     /// </summary>
     public static class VersionHelper
     {
+        public static string CurrentVersion
+        {
+            get
+            {
+                try
+                {
+                    // 尝试获取入口程序集（WPF 程序的 exe）
+                    var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+                    var version = assembly?.GetName().Version;
+                    if (version == null)
+                    {
+                        return "0.0.0";
+                    }
+
+                    // 统一返回三段版本：主.次.补丁
+                    int major = version.Major;
+                    int minor = version.Minor;
+                    int build = version.Build >= 0 ? version.Build : 0;
+
+                    return $"{major}.{minor}.{build}";
+                }
+                catch // 兜底，避免因为反射异常导致程序崩溃
+                {
+                    return "0.0.0";
+                }
+            }
+        }
+
         /// <summary>
         /// 比较两个版本号
         /// </summary>
@@ -40,12 +70,9 @@ namespace Quicker.Helpers
         /// <summary>
         /// 检查是否有新版本可用
         /// </summary>
-        /// <param name="currentVersion">当前版本号</param>
-        /// <param name="newVersion">新版本号</param>
-        /// <returns>如果有新版本返回true，否则返回false</returns>
-        public static bool IsNewVersionAvailable(string currentVersion, string newVersion)
+        public static bool IsNewVersionAvailable(string newVersion)
         {
-            return CompareVersions(currentVersion, newVersion) < 0;
+            return CompareVersions(CurrentVersion, newVersion) < 0;
         }
 
         /// <summary>
