@@ -486,8 +486,10 @@ namespace Quicker.Windows.Menus
         // 在资源管理器中打开文件或文件夹
         private void OpenLocation_Click(object sender, RoutedEventArgs e)
         {
-            base.HideMainWindow(); // 隐藏操作菜单窗口
-            ButtonData buttonData = db2.GetButtonDataByID(ButtonID, TableName); // 获取按钮数据
+            base.Visibility = Visibility.Hidden; // 立即隐藏操作菜单，防止残留
+            base.HideMainWindow(); // 隐藏主面板
+
+            ButtonData buttonData = db2.GetButtonDataByID(ButtonID, TableName);
             if (buttonData == null)
             {
                 actionManager.ShowToast("按钮数据不存在", ToastType.Error);
@@ -514,6 +516,10 @@ namespace Quicker.Windows.Menus
             catch (Exception ex)
             {
                 actionManager.ShowToast($"打开路径失败：{ex.Message}", ToastType.Error);
+            }
+            finally
+            {
+                base.Close(); // 确保关闭操作菜单窗口
             }
         }
 
