@@ -1,4 +1,7 @@
 ﻿using System.Runtime.InteropServices;
+using Quicker.Contracts.Extensions;
+using System.Threading.Channels;
+using Quicker.Contracts.Hosting;
 using System.Runtime.Loader;
 using System.Reflection;
 using System.Text.Json;
@@ -20,9 +23,6 @@ internal static class Program
 
         // 确保 STA 线程
         try { Thread.CurrentThread.TrySetApartmentState(ApartmentState.STA); } catch { }
-
-        // 设置资源程序集（用于 pack URI）
-        TrySetResourceAssembly();
 
         string modulePath = args[0];
         string pipeName = args[1];
@@ -87,75 +87,115 @@ internal static class Program
     /// </summary>
     private static void RunCommandLoop(Application app, object moduleInstance, Type moduleType, string pipeName)
     {
+        // 异步句柄，防止同步读写阻塞
         using var server = new NamedPipeServerStream(
             pipeName,
             PipeDirection.InOut,
             1,
             PipeTransmissionMode.Byte,
-            PipeOptions.WriteThrough);
+            PipeOptions.WriteThrough | PipeOptions.Asynchronous);
 
         server.WaitForConnection();
 
         using var reader = new StreamReader(server, Encoding.UTF8);
         using var writer = new StreamWriter(server, new UTF8Encoding(false)) { AutoFlush = true };
 
-        bool shouldExit = false;
-        while (!shouldExit && server.IsConnected)
+        // 出站队列，防止多线程写入交错
+        var outbox = Channel.CreateUnbounded<object>(new UnboundedChannelOptions
         {
-            string? line = reader.ReadLine();
-            if (string.IsNullOrWhiteSpace(line))
-            {
-                continue;
-            }
+            SingleReader = true,
+            SingleWriter = false,
+        });
 
-            HostCommand? command = null;
+        Task writerTask = Task.Run(async () =>
+        {
             try
             {
-                command = JsonSerializer.Deserialize<HostCommand>(line);
+                await foreach (object payload in outbox.Reader.ReadAllAsync())
+                {
+                    try
+                    {
+                        await writer.WriteLineAsync(JsonSerializer.Serialize(payload));
+                    }
+                    catch
+                    {
+                        break; // 管道断开，结束写出循环
+                    }
+                }
             }
             catch
             {
-                // 忽略格式错误的命令
-                continue;
+                // 忽略写出端异常
             }
+        });
 
-            if (command is null)
-            {
-                continue;
-            }
+        // 绑定桥接器：扩展的 toast 也走同一个出站队列
+        ExtensionHostBridge.OnShowToast = (msg, type) =>
+        {
+            var cmd = new HostCommand("toast", msg, type);
+            outbox.Writer.TryWrite(cmd);
+        };
 
-            // 在 UI 线程中执行命令，确保所有扩展调用都有异常保护
-            HostResponse response = app.Dispatcher.Invoke(() => ExecuteCommand(moduleInstance, moduleType, command));
+        bool shouldExit = false;
+        try
+        {
+            while (!shouldExit && server.IsConnected)
+            {
+                string? line = reader.ReadLine();
+                if (string.IsNullOrWhiteSpace(line))
+                {
+                    continue;
+                }
 
-            if (response.Shutdown)
-            {
-                shouldExit = true;
-            }
+                HostCommand? command;
+                try
+                {
+                    command = JsonSerializer.Deserialize<HostCommand>(line);
+                }
+                catch
+                {
+                    continue; // 忽略格式错误的命令
+                }
 
-            try
-            {
-                writer.WriteLine(JsonSerializer.Serialize(response));
+                if (command is null)
+                {
+                    continue;
+                }
+
+                // 在 UI 线程中执行命令，确保所有扩展调用都有异常保护
+                HostResult response = app.Dispatcher.Invoke(() => ExecuteCommand(moduleInstance, moduleType, command));
+
+                if (response.Shutdown)
+                {
+                    shouldExit = true;
+                }
+
+                outbox.Writer.TryWrite(response);
             }
-            catch
-            {
-                // 写入失败，退出循环
-                break;
-            }
+        }
+        finally
+        {
+            // 退出时解绑，防止内存泄漏
+            ExtensionHostBridge.OnShowToast = null;
+
+            // 让出站队列把剩余消息写完再关闭 writer
+            outbox.Writer.TryComplete();
+            try { writerTask.Wait(TimeSpan.FromSeconds(2)); } catch { }
         }
     }
 
     /// <summary>
     /// 执行命令（所有调用都有异常保护）
     /// </summary>
-    private static HostResponse ExecuteCommand(object moduleInstance, Type moduleType, HostCommand command)
+    private static HostResult ExecuteCommand(object moduleInstance, Type moduleType, HostCommand command)
     {
         return command.Action switch
         {
             "metadata" => GetMetadata(moduleInstance, moduleType),
             "activate" => CallMethodSafely(moduleInstance, moduleType, "Activate"),
             "deactivate" => CallMethodSafely(moduleInstance, moduleType, "Deactivate"),
-            "shutdown" => new HostResponse(true, null, null, true),
-            _ => new HostResponse(false, $"Unknown action: {command.Action}", null, false)
+            "shutdown" => new HostResult(true, null, null, true),
+            _ => new HostResult(false, $"Unknown action: {command.Action}", null, false)
         };
     }
 
@@ -188,7 +228,6 @@ internal static class Program
                 return new ModuleLoadResult(false, "未找到 IExtensionModule 实现。", null, null);
             }
 
-            // 实例化模块（异常会被捕获）
             object? instance = Activator.CreateInstance(moduleType);
             if (instance is null)
             {
@@ -213,19 +252,18 @@ internal static class Program
 
         alc.Resolving += (context, assemblyName) =>
         {
-            // 先尝试从扩展目录解析
-            var path = resolver.ResolveAssemblyToPath(assemblyName);
-            if (path is not null)
+            try
             {
-                return context.LoadFromAssemblyPath(path);
+                var shared = AssemblyLoadContext.Default.LoadFromAssemblyName(assemblyName);
+                if (shared is not null) return shared;
             }
+            catch (FileNotFoundException) { }
 
-            // 再尝试主程序目录
+            var path = resolver.ResolveAssemblyToPath(assemblyName);
+            if (path is not null) return context.LoadFromAssemblyPath(path);
+
             var fallback = Path.Combine(AppContext.BaseDirectory, assemblyName.Name + ".dll");
-            if (File.Exists(fallback))
-            {
-                return context.LoadFromAssemblyPath(fallback);
-            }
+            if (File.Exists(fallback)) return context.LoadFromAssemblyPath(fallback);
 
             return null;
         };
@@ -233,21 +271,12 @@ internal static class Program
         alc.ResolvingUnmanagedDll += (context, libraryName) =>
         {
             var path = resolver.ResolveUnmanagedDllToPath(libraryName);
-            if (path is not null)
-            {
-                return NativeLibrary.Load(path);
-            }
+            if (path is not null) return NativeLibrary.Load(path);
 
             var candidate = libraryName.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
-                ? libraryName
-                : libraryName + ".dll";
-
+                ? libraryName : libraryName + ".dll";
             var fallback = Path.Combine(AppContext.BaseDirectory, candidate);
-            if (File.Exists(fallback))
-            {
-                return NativeLibrary.Load(fallback);
-            }
-
+            if (File.Exists(fallback)) return NativeLibrary.Load(fallback);
             return IntPtr.Zero;
         };
 
@@ -259,13 +288,17 @@ internal static class Program
     /// </summary>
     private static bool ImplementsExtensionInterface(Type type)
     {
-        return type.GetInterfaces().Any(i => i.FullName == "Quicker.Extend.IExtensionModule");
+        return type.GetInterfaces().Any(i =>
+            // 匹配新的命名空间
+            i.FullName == "Quicker.Contracts.Extensions.IExtensionModule" ||
+            // 兼容旧版本命名空间，防止旧 DLL 残留导致跑不起来
+            i.FullName == "Quicker.Extensions.IExtensionModule");
     }
 
     /// <summary>
     /// 获取模块元数据
     /// </summary>
-    private static HostResponse GetMetadata(object module, Type moduleType)
+    private static HostResult GetMetadata(object module, Type moduleType)
     {
         try
         {
@@ -277,25 +310,23 @@ internal static class Program
                 HasContextMenu: GetBoolProperty(module, moduleType, "HasContextMenu"),
                 IconBase64: GetIconBase64(module, moduleType, "IconData"));
 
-            return new HostResponse(true, null, meta, false);
+            return new HostResult(true, null, meta, false);
         }
         catch (Exception ex)
         {
-            return new HostResponse(false, ex.ToString(), null, false);
+            return new HostResult(false, ex.ToString(), null, false);
         }
     }
 
     /// <summary>
     /// 安全调用方法（异常保护）
     /// </summary>
-    private static HostResponse CallMethodSafely(object module, Type moduleType, string methodName)
+    private static HostResult CallMethodSafely(object module, Type moduleType, string methodName)
     {
         try
         {
-            // 先尝试公共实例方法
             var method = moduleType.GetMethod(methodName, BindingFlags.Instance | BindingFlags.Public);
 
-            // 如果找不到，尝试显式接口实现
             method ??= moduleType
                     .GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)
                     .FirstOrDefault(m =>
@@ -304,36 +335,15 @@ internal static class Program
 
             if (method is null)
             {
-                return new HostResponse(false, $"未找到方法 {methodName}", null, false);
+                return new HostResult(false, $"未找到方法 {methodName}", null, false);
             }
 
-            // 调用方法（异常会被捕获）
             method.Invoke(module, null);
-            return new HostResponse(true, null, null, false);
+            return new HostResult(true, null, null, false);
         }
         catch (Exception ex)
         {
-            // 捕获所有异常，确保扩展崩溃不会导致宿主进程崩溃
-            return new HostResponse(false, ex.InnerException?.ToString() ?? ex.ToString(), null, false);
-        }
-    }
-
-    /// <summary>
-    /// 设置资源程序集
-    /// </summary>
-    private static void TrySetResourceAssembly()
-    {
-        try
-        {
-            string mainAsm = Path.Combine(AppContext.BaseDirectory, "Quicker.dll");
-            if (File.Exists(mainAsm))
-            {
-                Application.ResourceAssembly = Assembly.LoadFrom(mainAsm);
-            }
-        }
-        catch
-        {
-            // 忽略资源程序集绑定错误
+            return new HostResult(false, ex.InnerException?.ToString() ?? ex.ToString(), null, false);
         }
     }
 
@@ -385,8 +395,5 @@ internal static class Program
     }
 
     // 数据记录类型
-    internal record HostCommand(string Action);
-    internal record HostResponse(bool Ok, string? Error, ModuleMetadata? Metadata, bool Shutdown);
     internal record ModuleLoadResult(bool Ok, string? Error, Type? ModuleType, object? ModuleInstance);
-    internal record ModuleMetadata(string Name, string Version, string Author, string Description, bool HasContextMenu, string? IconBase64);
 }

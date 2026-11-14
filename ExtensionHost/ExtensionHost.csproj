@@ -1,15 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <UseWPF>true</UseWPF>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<UseWPF>true</UseWPF>
+		<AssemblyName>ExtensionHost</AssemblyName>
+		<RootNamespace>ExtensionHost</RootNamespace>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Quicker\Quicker.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Quicker.Contracts\Quicker.Contracts.csproj" />
+	</ItemGroup>
 
 </Project>

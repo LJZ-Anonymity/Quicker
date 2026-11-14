@@ -3,14 +3,15 @@ using Quicker.Windows.AddWindows;
 using Quicker.Contracts.Models;
 using System.Windows.Controls;
 using Quicker.Database.Core;
+using Quicker.Extensions;
 using Quicker.Managers;
 using Microsoft.Win32;
 using Quicker.Helpers;
 using System.Windows;
 using Quicker.Models;
 using WpfAnimatedGif;
-using Quicker.Extend;
 using System.IO;
+using Quicker.Contracts.Extensions;
 
 namespace Quicker.UserControls.AddWindow
 {

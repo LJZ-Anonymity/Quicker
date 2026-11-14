@@ -9,7 +9,7 @@ using System.Windows;
 using System.Text;
 using System.IO;
 
-namespace Quicker.Extend
+namespace Quicker.Extensions
 {
     /// <summary>
     /// 通过外部宿主进程加载扩展，防止扩展崩溃牵连主程序。
@@ -19,30 +19,21 @@ namespace Quicker.Extend
         private readonly Dictionary<string, ExtensionHostHandle> _hosts = new();
         private readonly ToastManager _toast = new();
 
-        /// <summary>
-        /// 加载并激活扩展模块（进程隔离）。
-        /// </summary>
-        /// <param name="modulePath">扩展 DLL 路径</param>
         public void LoadModule(string modulePath)
         {
             try
             {
                 string assemblyName = Path.GetFileNameWithoutExtension(modulePath);
 
-                // 检查是否已经加载
                 if (_hosts.TryGetValue(assemblyName, out var existingHandle))
                 {
-                    // 如果进程还在运行，说明确实加载了，直接返回
                     if (existingHandle.Process != null && !existingHandle.Process.HasExited)
                     {
-                        _toast.Show($"扩展 {assemblyName} 已加载。", ToastType.Common);
                         return;
                     }
 
-                    // 如果进程已经退出了（崩溃了），清理掉旧的死句柄，准备重新拉起
                     existingHandle.Dispose();
                     _hosts.Remove(assemblyName);
-                    _toast.Show($"检测到扩展 {assemblyName} 已崩溃，正在重新拉起...", ToastType.Common);
                 }
 
                 string hostPath = ResolveHostExecutable();
@@ -66,24 +57,19 @@ namespace Quicker.Extend
                 handle.Process = process;
                 _hosts[assemblyName] = handle;
 
-                // 绑定进程退出事件，监听运行时的意外崩溃
                 process.EnableRaisingEvents = true;
                 process.Exited += (s, e) =>
                 {
-                    // 跨线程安全：后台进程退出事件触发时，UI 线程可能正在执行其他操作
                     Application.Current?.Dispatcher.Invoke(() =>
                     {
-                        // 如果进程还在字典里，说明不是我们主动卸载的（主动卸载会提前移出字典），而是意外崩溃
                         if (_hosts.TryGetValue(assemblyName, out var h) && h.Process == process)
                         {
-                            _toast.Show($"警告：扩展 {assemblyName} 意外崩溃！", ToastType.Error);
+                            _toast.Show($"警告：扩展 {assemblyName} 意外崩溃！", ToastType.Warning);
                             h.Dispose();
                             _hosts.Remove(assemblyName);
                         }
                     });
                 };
-
-                _toast.Show($"扩展 {metadata.Name} 已在隔离进程中激活。", ToastType.Success);
             }
             catch (Exception ex)
             {
@@ -91,10 +77,6 @@ namespace Quicker.Extend
             }
         }
 
-        /// <summary>
-        /// 停用并卸载扩展。
-        /// </summary>
-        /// <param name="moduleName">扩展名称</param>
         public void UnloadModule(string moduleName)
         {
             if (!_hosts.TryGetValue(moduleName, out var handle))
@@ -102,10 +84,8 @@ namespace Quicker.Extend
                 return;
             }
 
-            // 先将其从字典移除，这样 process.Exited 事件触发时就不会误报“意外崩溃”
             _hosts.Remove(moduleName);
 
-            // 解除退出事件监听
             if (handle.Process != null)
             {
                 try { handle.Process.EnableRaisingEvents = false; } catch { }
@@ -115,37 +95,28 @@ namespace Quicker.Extend
             {
                 _ = SendCommand(handle, new HostCommand("deactivate"));
             }
-            catch
-            {
-                // ignore deactivate errors
-            }
+            catch { }
             finally
             {
                 try
                 {
                     SendCommand(handle, new HostCommand("shutdown"));
                 }
-                catch
-                {
-                    // ignore
-                }
+                catch { }
 
                 handle.Dispose();
             }
         }
 
         /// <summary>
-        /// 连接到扩展宿主。
+        /// 连接到扩展宿主并启动后台监听。
         /// </summary>
         private static ExtensionHostHandle ConnectToHost(string pipeName, Process process)
         {
             var client = new NamedPipeClientStream(
-                ".",
-                pipeName,
-                PipeDirection.InOut,
+                ".", pipeName, PipeDirection.InOut,
                 PipeOptions.Asynchronous | PipeOptions.WriteThrough);
 
-            // 等待管道连接，同时监控进程是否提前退出
             var timeoutMs = (int)TimeSpan.FromSeconds(10).TotalMilliseconds;
             var sw = Stopwatch.StartNew();
             while (!client.IsConnected && sw.ElapsedMilliseconds < timeoutMs)
@@ -154,14 +125,7 @@ namespace Quicker.Extend
                 {
                     throw new IOException($"扩展宿主已退出：{ReadProcessError(process)}");
                 }
-                try
-                {
-                    client.Connect(200);
-                }
-                catch (TimeoutException)
-                {
-                    // 继续循环，直到总超时
-                }
+                try { client.Connect(200); } catch (TimeoutException) { }
             }
 
             if (!client.IsConnected)
@@ -172,12 +136,70 @@ namespace Quicker.Extend
             var reader = new StreamReader(client, Encoding.UTF8, false, 1024, leaveOpen: true);
             var writer = new StreamWriter(client, new UTF8Encoding(false), 1024, leaveOpen: true) { AutoFlush = true };
 
-            return new ExtensionHostHandle(client, reader, writer);
+            var handle = new ExtensionHostHandle(client, reader, writer);
+
+            _ = Task.Run(async () =>
+            {
+                while (true)
+                {
+                    string? line;
+                    try
+                    {
+                        line = await reader.ReadLineAsync();
+                    }
+                    catch (Exception ex) when (ex is IOException or ObjectDisposedException or InvalidOperationException)
+                    {
+                        // ★ 管道已断开或已释放，必须退出循环，否则 catch 空转会吃满 CPU
+                        break;
+                    }
+
+                    if (line == null) break;
+
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(line);
+                        var root = doc.RootElement;
+                        if (root.ValueKind != JsonValueKind.Object) continue;
+
+                        if (root.TryGetProperty("Action", out var action) &&
+                            action.ValueKind == JsonValueKind.String &&
+                            action.GetString() == "toast")
+                        {
+                            var cmd = root.Deserialize<HostCommand>();
+                            if (cmd != null)
+                            {
+                                Application.Current?.Dispatcher.BeginInvoke(() =>
+                                {
+                                    try
+                                    {
+                                        ToastType type = Enum.TryParse<ToastType>(cmd.ToastType, out var t)
+                                            ? t : ToastType.Common;
+                                        new ToastManager().Show(cmd.Message ?? "", type);
+                                    }
+                                    catch { }
+                                });
+                            }
+                        }
+                        else
+                        {
+                            var response = root.Deserialize<HostResult>();
+                            if (response != null)
+                            {
+                                handle.LastResponse = response;
+                                handle.ResponseEvent.Set();
+                            }
+                        }
+                    }
+                    catch (JsonException)
+                    {
+                        // 单行格式错误，忽略
+                    }
+                }
+            });
+
+            return handle;
         }
 
-        /// <summary>
-        /// 启动扩展宿主进程。
-        /// </summary>
         private static Process StartHostProcess(string hostPath, string modulePath, string pipeName)
         {
             var psi = new ProcessStartInfo
@@ -188,12 +210,12 @@ namespace Quicker.Extend
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
                 CreateNoWindow = true,
+                WorkingDirectory = Path.GetDirectoryName(hostPath) ?? AppContext.BaseDirectory
             };
 
             var process = Process.Start(psi)
                           ?? throw new InvalidOperationException("无法启动扩展宿主进程");
 
-            // 如果进程瞬间退出，直接抛出可读错误
             if (process.HasExited)
             {
                 string error = ReadProcessError(process);
@@ -203,9 +225,6 @@ namespace Quicker.Extend
             return process;
         }
 
-        /// <summary>
-        /// 读取进程错误。
-        /// </summary>
         private static string ReadProcessError(Process process)
         {
             try
@@ -223,9 +242,6 @@ namespace Quicker.Extend
             }
         }
 
-        /// <summary>
-        /// 请求扩展元数据。
-        /// </summary>
         private ModuleMetadata? RequestMetadata(ExtensionHostHandle handle)
         {
             var response = SendCommand(handle, new HostCommand("metadata"));
@@ -241,65 +257,63 @@ namespace Quicker.Extend
                     throw new IOException($"扩展宿主已退出：{ReadProcessError(handle.Process)}");
                 }
 
+                handle.ResponseEvent.Reset();
+                handle.LastResponse = null;
+
                 string payload = JsonSerializer.Serialize(command);
                 handle.Writer.WriteLine(payload);
-                string? line = handle.Reader.ReadLine();
-                if (string.IsNullOrWhiteSpace(line))
+
+                if (handle.ResponseEvent.Wait(5000))
                 {
-                    if (handle.Process is not null && handle.Process.HasExited)
+                    var response = handle.LastResponse;
+                    if (response == null) throw new InvalidOperationException("扩展宿主无响应或连接已断开");
+
+                    if (!response.Ok && response.Error is not null)
                     {
-                        throw new IOException($"扩展宿主已退出：{ReadProcessError(handle.Process)}");
+                        _toast.Show($"扩展错误：{response.Error}", ToastType.Error);
                     }
 
-                    throw new IOException("扩展宿主无响应");
+                    return response;
                 }
-
-                var response = JsonSerializer.Deserialize<HostResult>(line);
-                if (response is null)
+                else
                 {
-                    throw new InvalidOperationException("扩展宿主响应格式错误");
+                    throw new TimeoutException("扩展宿主响应超时");
                 }
-
-                if (!response.Ok && response.Error is not null)
-                {
-                    _toast.Show($"扩展错误：{response.Error}", ToastType.Error);
-                }
-
-                return response;
             }
         }
 
         private string ResolveHostExecutable()
         {
-            string baseDir = AppContext.BaseDirectory;
             string exeName = HostProtocol.HostExecutableName;
+            if (!exeName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                exeName += ".exe";
 
-            var candidates = new[]
+            // Release / 发布：只认主程序目录（csproj 会自动 copy 过来）
+            string directPath = Path.Combine(AppContext.BaseDirectory, exeName);
+            if (File.Exists(directPath))
             {
-                Path.Combine(baseDir, exeName),
-                Path.Combine(baseDir, "Extend", "ExtensionHost", exeName),
-                Path.Combine(baseDir, "Extend", "ExtensionHost", "bin", "Release", "net8.0", exeName),
-                Path.Combine(baseDir, "Extend", "ExtensionHost", "bin", "Debug", "net8.0", exeName),
-                Path.Combine(baseDir, "Extend", "ExtensionHost", "bin", "Release", "net8.0-windows10.0.17763.0", exeName),
-                Path.Combine(baseDir, "Extend", "ExtensionHost", "bin", "Debug", "net8.0-windows10.0.17763.0", exeName),
+                return directPath;
+            }
 
-                // 如果宿主项目被移到解决方案根目录（与 Quicker 平级）
-                Path.Combine(baseDir, "..", "ExtensionHost", exeName),
-                Path.Combine(baseDir, "..", "ExtensionHost", "bin", "Release", "net8.0", exeName),
-                Path.Combine(baseDir, "..", "ExtensionHost", "bin", "Debug", "net8.0", exeName),
-                Path.Combine(baseDir, "..", "ExtensionHost", "bin", "Release", "net8.0-windows10.0.17763.0", exeName),
-                Path.Combine(baseDir, "..", "ExtensionHost", "bin", "Debug", "net8.0-windows10.0.17763.0", exeName)
+            #if DEBUG
+            // 仅 Debug 下做源码目录兜底，方便本地边写边跑
+            string baseDir = AppContext.BaseDirectory;
+            string[] candidates =
+            {
+                Path.GetFullPath(Path.Combine(baseDir, @"..\..\..\..\..\ExtensionHost\bin\Debug\net8.0-windows10.0.17763.0", exeName)),
+                Path.GetFullPath(Path.Combine(baseDir, @"..\..\..\..\ExtensionHost\bin\Debug\net8.0-windows10.0.17763.0", exeName)),
             };
-
-            foreach (string path in candidates)
+            foreach (var path in candidates)
             {
                 if (File.Exists(path))
                 {
-                    return Path.GetFullPath(path);
+                    return path;
                 }
             }
+            #endif
 
-            throw new FileNotFoundException($"未找到 {exeName}，请先构建扩展宿主项目。");
+            throw new FileNotFoundException(
+                $"未找到扩展宿主 {exeName}，请确认它和主程序在同一目录。");
         }
 
         private sealed class ExtensionHostHandle : IDisposable
@@ -317,11 +331,15 @@ namespace Quicker.Extend
             public StreamWriter Writer { get; }
             public object SyncRoot { get; } = new();
 
+            public ManualResetEventSlim ResponseEvent { get; } = new(false);
+            public HostResult? LastResponse { get; set; }
+
             public void Dispose()
             {
                 try { Pipe.Dispose(); } catch { }
                 try { Reader.Dispose(); } catch { }
                 try { Writer.Dispose(); } catch { }
+                try { ResponseEvent.Dispose(); } catch { }
                 try { Process?.Kill(true); } catch { }
                 try { Process?.Dispose(); } catch { }
             }

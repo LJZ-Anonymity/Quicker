@@ -9,13 +9,14 @@ using Quicker.Database.Core;
 using Quicker.Windows.Menus;
 using System.Windows.Media;
 using System.Windows.Input;
+using Quicker.Extensions;
 using Quicker.Windows;
 using Quicker.Helpers;
 using System.Windows;
 using Quicker.Models;
 using WpfAnimatedGif;
-using Quicker.Extend;
 using System.IO;
+using Quicker.Contracts.Extensions;
 
 namespace Quicker.Managers
 {

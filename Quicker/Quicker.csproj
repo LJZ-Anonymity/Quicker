@@ -37,6 +37,26 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\ExtensionHost\ExtensionHost.csproj" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+
+	<Target Name="CopyHostAfterBuild" AfterTargets="Build">
+		<ItemGroup>
+			<_HostFiles Include="..\ExtensionHost\bin\$(Configuration)\net8.0-windows10.0.17763.0\**\*.*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(_HostFiles)" DestinationFolder="$(OutDir)%(RecursiveDir)" SkipUnchangedFiles="true" />
+		<Message Text="[Quicker] 已复制 Host 文件 ($(_HostFiles->Count())) 个到 $(OutDir)" Importance="high" />
+	</Target>
+
+	<Target Name="CopyHostAfterPublish" AfterTargets="Publish">
+		<ItemGroup>
+			<_HostFiles Include="..\ExtensionHost\bin\$(Configuration)\net8.0-windows10.0.17763.0\**\*.*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(_HostFiles)" DestinationFolder="$(PublishDir)%(RecursiveDir)" SkipUnchangedFiles="true" />
+		<Message Text="[Quicker] 已复制 Host 文件 ($(_HostFiles->Count())) 个到 $(PublishDir)" Importance="high" />
+	</Target>
+
+	<ItemGroup>
 		<None Remove=".gitattributes" />
 		<None Remove=".gitignore" />
 		<None Remove=".gitignore~RF3e5ebf6d.TMP" />
@@ -118,7 +138,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Quicker.Contracts\Quicker.Contracts.csproj" />
+		<ProjectReference Include="..\Quicker.Contracts\Quicker.Contracts.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

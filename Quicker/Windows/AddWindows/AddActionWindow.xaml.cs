@@ -17,7 +17,6 @@ using Quicker.Helpers;
 using System.Windows;
 using Quicker.Models;
 using WpfAnimatedGif;
-using Quicker.Extend;
 using System.Media;
 using System.IO;
 
