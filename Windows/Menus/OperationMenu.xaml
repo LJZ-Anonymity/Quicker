@@ -25,14 +25,14 @@
             </Border>
             <Border CornerRadius="5" Background="White">
                 <StackPanel x:Name="MainStackPanel">
-                    <Button x:Name="CloseFloatButton" Style="{StaticResource MenuButton}" ToolTip="关闭悬浮窗" Margin="0,5,0,0" Command="{Binding CloseFloatCommand, RelativeSource={RelativeSource AncestorType=local:OperationMenu}}">
+                    <Button x:Name="CloseFloatButton" Style="{StaticResource MenuButton}" ToolTip="关闭悬浮窗" Margin="0,5,0,0" Click="CloseFloatButton_Click">
                         <Grid Width="194">
                             <Image Source="/Resources/Images/DeleteImage.png" Style="{StaticResource MenuButtonImage}"/>
                             <TextBlock Style="{StaticResource MenuButtonTextBlock}" Text="关闭"/>
                         </Grid>
                     </Button>
                     <Rectangle x:Name="Rectangle1" Height="1" Fill="#FFF0F0F0" Width="204" Margin="0,3"/>
-                    <Button x:Name="EditeInformation" Style="{StaticResource MenuButton}" Command="{Binding EditInformationCommand, RelativeSource={RelativeSource AncestorType=local:OperationMenu}}">
+                    <Button x:Name="EditeInformation" Style="{StaticResource MenuButton}" Click="EditeInformation_Click">
                         <Button.ToolTip>
                             <StackPanel>
                                 <TextBlock Text="编辑动作定义"/>
@@ -52,7 +52,7 @@
                         </Grid>
                     </Button>
                     <Rectangle Height="1" Fill="#FFF0F0F0" Width="204" Margin="0,3"/>
-                    <Button x:Name="CopyAction" Style="{StaticResource MenuButton}" Command="{Binding CopyActionCommand, RelativeSource={RelativeSource AncestorType=local:OperationMenu}}">
+                    <Button x:Name="CopyAction" Style="{StaticResource MenuButton}" Click="CopyAction_Click">
                         <Button.ToolTip>
                             <StackPanel>
                                 <TextBlock Text="复制动作"/>
@@ -65,19 +65,19 @@
                             <TextBlock Style="{StaticResource MenuButtonTextBlock}" Text="复制"/>
                         </Grid>
                     </Button>
-                    <Button x:Name="CutAction" ToolTip="复制并删除动作" Style="{StaticResource MenuButton}" Command="{Binding CutActionCommand, RelativeSource={RelativeSource AncestorType=local:OperationMenu}}">
+                    <Button x:Name="CutAction" ToolTip="复制并删除动作" Style="{StaticResource MenuButton}" Click="CutAction_Click">
                         <Grid Width="199">
                             <Image Source="/Resources/Images/Quicker_Enabled.png" Style="{StaticResource MenuButtonImage}"/>
                             <TextBlock Style="{StaticResource MenuButtonTextBlock}" Text="剪切"/>
                         </Grid>
                     </Button>
-                    <Button x:Name="DeleteAction" ToolTip="【面板窗口快速触发方式】拖动动作到右上角的关闭按钮" Style="{StaticResource MenuButton}" Command="{Binding DeleteActionCommand, RelativeSource={RelativeSource AncestorType=local:OperationMenu}}">
+                    <Button x:Name="DeleteAction" ToolTip="【面板窗口快速触发方式】拖动动作到右上角的关闭按钮" Style="{StaticResource MenuButton}" Click="DeleteAction_Click">
                         <Grid Width="199">
                             <Image Source="/Resources/Images/DeleteImage.png" Style="{StaticResource MenuButtonImage}"/>
                             <TextBlock Style="{StaticResource MenuButtonTextBlock}" Text="删除"/>
                         </Grid>
                     </Button>
-                    <Button x:Name="PasteIcon" ToolTip="设置动作图标为剪贴板图片" Style="{StaticResource MenuButton}" Command="{Binding PasteIconCommand, RelativeSource={RelativeSource AncestorType=local:OperationMenu}}">
+                    <Button x:Name="PasteIcon" ToolTip="设置动作图标为剪贴板图片" Style="{StaticResource MenuButton}" Click="PasteIcon_Click">
                         <Grid Width="199">
                             <Image Source="/Resources/Images/Quicker_Enabled.png" Style="{StaticResource MenuButtonImage}"/>
                             <TextBlock Style="{StaticResource MenuButtonTextBlock}" Text="粘贴图标"/>
@@ -89,7 +89,7 @@
                             <TextBlock Style="{StaticResource MenuButtonTextBlock}" Text="信息"/>
                         </Grid>
                     </Button>
-                    <Button x:Name="OpenLocation" ToolTip="在资源管理器中找到对应文件或文件夹" Style="{StaticResource MenuButton}" Margin="0,0,0,5" Command="{Binding OpenLocationCommand, RelativeSource={RelativeSource AncestorType=local:OperationMenu}}">
+                    <Button x:Name="OpenLocation" ToolTip="在资源管理器中找到对应文件或文件夹" Style="{StaticResource MenuButton}" Margin="0,0,0,5" Click="OpenLocation_Click">
                         <Grid Width="194">
                             <Image Source="/Resources/Images/OpenFolder.png" Style="{StaticResource MenuButtonImage}"/>
                             <TextBlock Style="{StaticResource MenuButtonTextBlock}" Text="打开所在位置"/>
@@ -108,7 +108,7 @@
                 </Border>
                 <Border CornerRadius="3" Background="White">
                     <StackPanel>
-                        <Button x:Name="FloatActionButton" Style="{StaticResource MenuButton}" Margin="0,3,0,0" Command="{Binding FloatActionCommand, RelativeSource={RelativeSource AncestorType=local:OperationMenu}}">
+                        <Button x:Name="FloatActionButton" Style="{StaticResource MenuButton}" Margin="0,3,0,0" Click="FloatActionButton_Click">
                             <Button.ToolTip>
                                 <StackPanel>
                                     <TextBlock Text="将动作悬浮在桌面方便随身点击"/>
@@ -120,7 +120,7 @@
                                 <TextBlock Style="{StaticResource MenuButtonTextBlock}" Text="悬浮此动作"/>
                             </Grid>
                         </Button>
-                        <Button x:Name="FloatActionPageButton" Margin="0,0,0,3" Style="{StaticResource MenuButton}" Command="{Binding FloatActionPageCommand, RelativeSource={RelativeSource AncestorType=local:OperationMenu}}">
+                        <Button x:Name="FloatActionPageButton" Margin="0,0,0,3" Style="{StaticResource MenuButton}" Click="FloatActionPageButton_Click">
                             <Button.ToolTip>
                                 <StackPanel>
                                     <TextBlock Text="悬浮动作所在动作页"/>
@@ -147,14 +147,14 @@
                 </Border>
                 <Border CornerRadius="3" Background="White">
                     <StackPanel>
-                        <Button x:Name="ExportAction" Style="{StaticResource MenuButton}" ToolTip="导出动作定义到文件" Margin="0,3" Command="{Binding ExportActionCommand, RelativeSource={RelativeSource AncestorType=local:OperationMenu}}">
+                        <Button x:Name="ExportAction" Style="{StaticResource MenuButton}" ToolTip="导出动作定义到文件" Margin="0,3" Click="ExportAction_Click">
                             <Grid Width="130">
                                 <Image Source="/Resources/Images/Quicker_Enabled.png" Style="{StaticResource MenuButtonImage}"/>
                                 <TextBlock Style="{StaticResource MenuButtonTextBlock}" Text="导出动作"/>
                             </Grid>
                         </Button>
                         <Rectangle Height="1" Fill="#F0F0F0" Width="130"/>
-                        <Button x:Name="CheckImformation" Style="{StaticResource MenuButton}" ToolTip="查看动作信息" Margin="0,3,0,0" Command="{Binding CheckInformationCommand, RelativeSource={RelativeSource AncestorType=local:OperationMenu}}">
+                        <Button x:Name="CheckImformation" Style="{StaticResource MenuButton}" ToolTip="查看动作信息" Margin="0,3,0,0" Click="CheckImformation_Click">
                             <Grid Width="130">
                                 <Image Source="/Resources/Images/Quicker_Enabled.png" Style="{StaticResource MenuButtonImage}"/>
                                 <TextBlock Style="{StaticResource MenuButtonTextBlock}" Text="查看信息"/>
@@ -178,13 +178,13 @@
                 </Border>
                 <Border CornerRadius="3" Background="White">
                     <StackPanel>
-                        <Button x:Name="CopyActionID" Style="{StaticResource MenuButton}" ToolTip="复制动作的ID文字" Margin="0,3,0,0" Command="{Binding CopyActionIdCommand, RelativeSource={RelativeSource AncestorType=local:OperationMenu}}">
+                        <Button x:Name="CopyActionID" Style="{StaticResource MenuButton}" ToolTip="复制动作的ID文字" Margin="0,3,0,0" Click="CopyActionID_Click">
                             <Grid Width="130">
                                 <Image Source="/Resources/Images/Quicker_Enabled.png" Style="{StaticResource MenuButtonImage}"/>
                                 <TextBlock Style="{StaticResource MenuButtonTextBlock}" Text="动作ID"/>
                             </Grid>
                         </Button>
-                        <Button x:Name="CopyActionName" Style="{StaticResource MenuButton}" ToolTip="复制动作的名称文字" Margin="0,0,0,3" Command="{Binding CopyActionNameCommand, RelativeSource={RelativeSource AncestorType=local:OperationMenu}}">
+                        <Button x:Name="CopyActionName" Style="{StaticResource MenuButton}" ToolTip="复制动作的名称文字" Margin="0,0,0,3" Click="CopyActionName_Click">
                             <Grid Width="130">
                                 <Image Source="/Resources/Images/Quicker_Enabled.png" Style="{StaticResource MenuButtonImage}"/>
                                 <TextBlock Style="{StaticResource MenuButtonTextBlock}" Text="动作名称"/>

@@ -11,7 +11,6 @@ using Quicker.Database.Core;
 using System.Windows.Media;
 using System.Windows.Input;
 using Quicker.Internal;
-using Quicker.Commands;
 using Quicker.Managers;
 using Quicker.Helpers;
 using System.Windows;
@@ -36,20 +35,6 @@ namespace Quicker.Windows.Menus
         public string TableName { get; private set; } // 表名
         public Window FatherWindow { get; private set; } // 父窗口
 
-        public ICommand CloseFloatCommand { get; private set; }
-        public ICommand EditInformationCommand { get; private set; }
-        public ICommand CopyActionCommand { get; private set; }
-        public ICommand CutActionCommand { get; private set; }
-        public ICommand DeleteActionCommand { get; private set; }
-        public ICommand PasteIconCommand { get; private set; }
-        public ICommand FloatActionCommand { get; private set; }
-        public ICommand FloatActionPageCommand { get; private set; }
-        public ICommand ExportActionCommand { get; private set; }
-        public ICommand CheckInformationCommand { get; private set; }
-        public ICommand CopyActionIdCommand { get; private set; }
-        public ICommand CopyActionNameCommand { get; private set; }
-        public ICommand OpenLocationCommand { get; private set; }
-
         private readonly ButtonManager buttonManager = new(); // 按钮管理器
         private readonly ActionManager actionManager = new(); // 动作管理器
         private readonly ButtonDatabase db2 = new(); // 按钮数据库
@@ -65,7 +50,6 @@ namespace Quicker.Windows.Menus
         /// <param name="tableName">表名</param>
         public OperationMenu(int buttonID, string tableName, Window window = null)
         {
-            InitializeCommands();
             InitializeComponent(); // 初始化窗口
             ChildGrid.Visibility = Visibility.Collapsed; // 隐藏悬浮子菜单
             FirstChildGrid.Visibility = Visibility.Collapsed; // 隐藏子菜单
@@ -74,23 +58,6 @@ namespace Quicker.Windows.Menus
             TableName = tableName; // 设置表名
             FatherWindow = window; // 设置父窗口
             InitializeMenu(); // 初始化菜单
-        }
-
-        private void InitializeCommands()
-        {
-            CloseFloatCommand = new RelayCommand(_ => CloseFloatButton_Click(null, null));
-            EditInformationCommand = new RelayCommand(_ => EditeInformation_Click(null, null));
-            CopyActionCommand = new RelayCommand(_ => CopyAction_Click(null, null));
-            CutActionCommand = new RelayCommand(_ => CutAction_Click(null, null));
-            DeleteActionCommand = new RelayCommand(_ => DeleteAction_Click(null, null));
-            PasteIconCommand = new RelayCommand(_ => PasteIcon_Click(null, null));
-            FloatActionCommand = new RelayCommand(_ => FloatActionButton_Click(null, null));
-            FloatActionPageCommand = new RelayCommand(_ => FloatActionPageButton_Click(null, null));
-            ExportActionCommand = new RelayCommand(_ => ExportAction_Click(null, null));
-            CheckInformationCommand = new RelayCommand(_ => CheckImformation_Click(null, null));
-            CopyActionIdCommand = new RelayCommand(_ => CopyActionID_Click(null, null));
-            CopyActionNameCommand = new RelayCommand(_ => CopyActionName_Click(null, null));
-            OpenLocationCommand = new RelayCommand(_ => OpenLocation_Click(null, null));
         }
 
         // 重写基类的窗口加载方法
@@ -156,7 +123,7 @@ namespace Quicker.Windows.Menus
         {
             if (buttonData.ActionType != ActionType.OpenFile &&
                 buttonData.ActionType != ActionType.OpenFiles &&
-                buttonData.ActionType != ActionType.LoadExtension) 
+                buttonData.ActionType != ActionType.LoadExtension)
             {
                 MainStackPanel.Children.Remove(OpenLocation); // 移除打开文件或文件夹按钮
                 MainGrid.Height -= 25;
@@ -456,7 +423,7 @@ namespace Quicker.Windows.Menus
                 }
             }
         }
-        
+
         // 查看动作信息
         private void CheckImformation_Click(object sender, RoutedEventArgs e)
         {
@@ -556,7 +523,7 @@ namespace Quicker.Windows.Menus
         private void OpenMultiplePathsInExplorer(string paths)
         {
             var pathList = paths.Split(';').Select(p => p.Trim()).Where(p => !string.IsNullOrEmpty(p)).ToList();
-            
+
             if (pathList.Count == 0)
             {
                 actionManager.ShowToast("没有有效的路径", ToastType.Error);
@@ -675,7 +642,7 @@ namespace Quicker.Windows.Menus
         private List<IntPtr> CreatePidlList(List<string> paths)
         {
             List<IntPtr> pidlItems = new List<IntPtr>();
-            
+
             foreach (string path in paths)
             {
                 IntPtr pidlItem = CreatePidlForPath(path);
@@ -684,7 +651,7 @@ namespace Quicker.Windows.Menus
                     pidlItems.Add(pidlItem);
                 }
             }
-            
+
             return pidlItems;
         }
 
@@ -700,14 +667,14 @@ namespace Quicker.Windows.Menus
                 actionManager.ShowToast($"路径不存在：{path}", ToastType.Error);
                 return IntPtr.Zero;
             }
-            
+
             IntPtr pidlItem = ILCreateFromPathW(path);
             if (pidlItem == IntPtr.Zero)
             {
                 actionManager.ShowToast($"无法获取路径的 PIDL：{path}", ToastType.Error);
                 return IntPtr.Zero;
             }
-            
+
             return pidlItem;
         }
 
@@ -723,7 +690,7 @@ namespace Quicker.Windows.Menus
             {
                 // 将PIDL列表写入内存
                 WritePidlArrayToMemory(pidlArray, pidlItems);
-                
+
                 // 打开资源管理器并选中项目
                 Marshal.ThrowExceptionForHR(SHOpenFolderAndSelectItems(pidlFolder, (uint)pidlItems.Count, pidlArray, 0));
             }
@@ -810,12 +777,12 @@ namespace Quicker.Windows.Menus
                 return string.Empty;
 
             string commonPrefix = paths[0];
-            
+
             foreach (string path in paths.Skip(1))
             {
                 int commonLength = 0;
                 int minLength = Math.Min(commonPrefix.Length, path.Length);
-                
+
                 for (int i = 0; i < minLength; i++)
                 {
                     if (char.ToUpperInvariant(commonPrefix[i]) == char.ToUpperInvariant(path[i]))
@@ -827,16 +794,16 @@ namespace Quicker.Windows.Menus
                         break;
                     }
                 }
-                
+
                 // 确保在目录分隔符处截断
                 while (commonLength > 0 && commonPrefix[commonLength - 1] != '\\')
                 {
                     commonLength--;
                 }
-                
+
                 commonPrefix = commonPrefix.Substring(0, commonLength);
             }
-            
+
             return commonPrefix;
         }
 
@@ -856,7 +823,7 @@ namespace Quicker.Windows.Menus
                         actionManager.ShowToast($"路径不存在：{path}", ToastType.Error);
                         continue; // 跳过当前路径
                     }
-                    
+
                     IntPtr pidlList = ILCreateFromPathW(path); // 获取路径的 PIDL
                     try
                     {
