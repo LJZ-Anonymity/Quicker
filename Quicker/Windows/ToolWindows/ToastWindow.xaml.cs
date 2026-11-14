@@ -61,6 +61,7 @@ namespace Quicker.Windows.ToolWindows
         }
 
         // 检查并显示消息
+        // 检查并显示消息
         private void CheckAndDisplayToast()
         {
             // 如果队列有消息且当前显示数量未达到上限，显示新消息
@@ -68,10 +69,10 @@ namespace Quicker.Windows.ToolWindows
             {
                 ShowToast(messageQueue.Dequeue());
             }
-            // 如果队列为空且没有显示的消息，关闭窗口
+            // 如果队列为空且没有显示的消息，只隐藏窗口，不销毁
             else if (messageQueue.Count == 0 && ToastStackPanel.Children.Count == 0)
             {
-                Close();
+                Hide();
             }
         }
 

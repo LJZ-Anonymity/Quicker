@@ -1,4 +1,6 @@
 ﻿using Quicker.Windows.MainWindows.MainWindow;
+using System.Collections.Concurrent;
+using Quicker.Contracts.Extensions;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using Quicker.Windows.MainWindows;
@@ -16,7 +18,6 @@ using System.Windows;
 using Quicker.Models;
 using WpfAnimatedGif;
 using System.IO;
-using Quicker.Contracts.Extensions;
 
 namespace Quicker.Managers
 {
@@ -33,25 +34,34 @@ namespace Quicker.Managers
         /// </summary>
         public const double ManageWindowTitleMaxWidth = 60;
 
-        public bool isClosing = false, isDragging, shouldHideTooltip; // 窗口关闭和拖拽状态、隐藏提示标志
-        private readonly IconManager iconManager = new(); // 图标管理器
-        private readonly ButtonDatabase db2 = new(); // 按钮数据库（用于读数据 / 交换 / 删除等非保存操作）
-        private Point initialMousePosition; // 鼠标初始位置
-        private string SourceTableName; // 数据库表名
-        private Button SourceButton; // 源按钮
+        public bool isClosing = false, isDragging, shouldHideTooltip;
+        private readonly IconManager iconManager = new();
+        private readonly ButtonDatabase db2 = new();
+        private Point initialMousePosition;
+        private string SourceTableName;
+        private Button SourceButton;
+
+        // 外观设置缓存
+        private Quicker.Models.Settings.Appearance? _appearance;
+        private Quicker.Models.Settings.Appearance? Appearance =>
+            _appearance ??= SettingDatabase.GetAppearanceSettings().FirstOrDefault();
+
+        public void InvalidateAppearance() => _appearance = null;
+
+        // 图标内存缓存
+        private static readonly ConcurrentDictionary<(string, int), BitmapImage> _iconCache = new();
 
         public ButtonManager()
         {
-            var Convention = SettingDatabase.GetAllConventions().FirstOrDefault(); // 获取所有约定
-            shouldHideTooltip = Convention.HideTooltip; // 获取隐藏提示标志
+            var Convention = SettingDatabase.GetAllConventions().FirstOrDefault();
+            shouldHideTooltip = Convention.HideTooltip;
         }
 
-        // 设置按钮拖拽时的效果
         public void Button_PreviewDragOver(object sender, DragEventArgs e)
         {
-            e.Handled = true; // 标记事件已处理
-            Button button = sender as Button; // 获取按钮
-            bool isCtrlPressed = App.GetCtrlKeyState(); // Ctrl键是否按下
+            e.Handled = true;
+            Button button = sender as Button;
+            bool isCtrlPressed = App.GetCtrlKeyState();
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 e.Effects = button.Tag == null ? DragDropEffects.Copy : DragDropEffects.None;
@@ -71,14 +81,14 @@ namespace Quicker.Managers
         /// </summary>
         public void Button_Drop(object sender, DragEventArgs e, double buttonSize, double titleMaxWidth, string tableName)
         {
-            Button TargetButton = sender as Button; // 获取目标按钮
-            if (TargetButton == SourceButton) return; // 如果目标按钮和源按钮相同，直接返回
-            if (e.Data.GetDataPresent(typeof(ButtonData))) // 如果拖拽的是按钮
-                ProcessButtonDrop(TargetButton, SourceTableName, tableName, buttonSize, titleMaxWidth); // 处理按钮拖拽
-            else if (e.Data.GetDataPresent(DataFormats.FileDrop)) // 如果拖拽的是文件
-                ProcessFileDrop(e, TargetButton, buttonSize, titleMaxWidth, tableName); // 处理文件拖拽
-            else if (e.Data.GetDataPresent(DataFormats.Text)) // 如果拖拽的是文本（可能是 URL）
-                ProcessTextDrop(e, TargetButton, tableName); // 处理文本拖拽
+            Button TargetButton = sender as Button;
+            if (TargetButton == SourceButton) return;
+            if (e.Data.GetDataPresent(typeof(ButtonData)))
+                ProcessButtonDrop(TargetButton, SourceTableName, tableName, buttonSize, titleMaxWidth);
+            else if (e.Data.GetDataPresent(DataFormats.FileDrop))
+                ProcessFileDrop(e, TargetButton, buttonSize, titleMaxWidth, tableName);
+            else if (e.Data.GetDataPresent(DataFormats.Text))
+                ProcessTextDrop(e, TargetButton, tableName);
         }
 
         /// <summary>
@@ -301,10 +311,9 @@ namespace Quicker.Managers
         /// <summary>
         /// 根据按钮尺寸计算标题最大宽度（主窗口使用：按钮大小减去左右边框宽度）。
         /// </summary>
-        public static double GetTitleMaxWidthForButtonSize(double buttonSize)
+        public double GetTitleMaxWidthForButtonSize(double buttonSize)
         {
-            var appearance = SettingDatabase.GetAppearanceSettings().FirstOrDefault();
-            double borderWidth = appearance?.BorderWidth ?? 0;
+            double borderWidth = Appearance?.BorderWidth ?? 0;
             return buttonSize - borderWidth * 2;
         }
 
@@ -403,7 +412,7 @@ namespace Quicker.Managers
         /// </summary>
         private void AddTitleToGrid(Grid grid, ButtonData buttonInformation, double titleMaxWidth)
         {
-            var appearance = SettingDatabase.GetAppearanceSettings().FirstOrDefault();
+            var appearance = Appearance;
             grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             TextBlock textBlock = LoadActionTitle(buttonInformation);
             textBlock.Visibility = appearance.HideActionNameAfterIcon ? Visibility.Collapsed : Visibility.Visible;
@@ -424,7 +433,6 @@ namespace Quicker.Managers
         /// </summary>
         private Image LoadActionIcon(ButtonData buttonInformation, double buttonSize)
         {
-            var appearance = SettingDatabase.GetAppearanceSettings().FirstOrDefault();
             double imageSize = buttonSize / 2.0;
             var image = new Image
             {
@@ -436,7 +444,7 @@ namespace Quicker.Managers
                 Source = LoadIconSource(buttonInformation.ImagePath, imageSize)
             };
 
-            if (appearance.ShowActionIconShadow == true)
+            if (Appearance.ShowActionIconShadow == true)
             {
                 image.Effect = new DropShadowEffect
                 {
@@ -451,19 +459,43 @@ namespace Quicker.Managers
         }
 
         /// <summary>
-        /// 以显示尺寸的 2 倍（给高 DPI 留余量）解码图标，避免按原图（512/256）解码造成大对象堆膨胀
+        /// 以显示尺寸的 2 倍解码图标，并加入内存缓存
         /// </summary>
         private static BitmapImage LoadIconSource(string path, double displaySize)
         {
-            var bmp = new BitmapImage();
-            bmp.BeginInit();
-            bmp.CacheOption = BitmapCacheOption.OnLoad;
-            bmp.DecodePixelWidth = Math.Max(16, (int)(displaySize * 2));
-            bmp.UriSource = new Uri(path);
-            bmp.EndInit();
-            bmp.Freeze();
-            return bmp;
+            int px = Math.Max(16, (int)(displaySize * 2));
+            return _iconCache.GetOrAdd((path, px), key =>
+            {
+                var bmp = new BitmapImage();
+                bmp.BeginInit();
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.DecodePixelWidth = px;
+                bmp.UriSource = new Uri(path);
+                bmp.EndInit();
+                bmp.Freeze(); // 冻结后支持跨线程使用
+                return bmp;
+            });
         }
+
+        // 后台预加载图标
+        public static Task PrewarmAsync(string commonStyle, double buttonSize) => Task.Run(() =>
+        {
+            try
+            {
+                using var db = new ButtonDatabase();
+                foreach (var style in new[] { "_global", commonStyle })
+                {
+                    var pageData = db.GetButtonDataByPage(style, 0);
+                    if (pageData == null) continue;
+                    foreach (var data in pageData.Values)
+                    {
+                        if (!string.IsNullOrEmpty(data?.ImagePath))
+                            try { LoadIconSource(data.ImagePath, buttonSize / 2.0); } catch { }
+                    }
+                }
+            }
+            catch { }
+        });
 
         /// <summary>
         /// 重新读取行为相关设置（当前只有 HideTooltip），供常驻窗口在显示时刷新
@@ -482,7 +514,7 @@ namespace Quicker.Managers
         /// </summary>
         private TextBlock LoadActionTitle(ButtonData buttonInformation)
         {
-            var appearance = SettingDatabase.GetAppearanceSettings().FirstOrDefault();
+            var appearance = Appearance;
             var textBlock = new TextBlock
             {
                 HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -601,7 +633,7 @@ namespace Quicker.Managers
             if (textBlock == null || string.IsNullOrEmpty(textBlock.Text)) return;
             if (maxWidth <= 0) return;
 
-            var appearance = SettingDatabase.GetAppearanceSettings().FirstOrDefault();
+            var appearance = Appearance;
             double fontSize = appearance?.FontSize ?? 12;
             const double minFontSize = 1;
 
@@ -728,7 +760,6 @@ namespace Quicker.Managers
             }
             catch
             {
-                // 静默失败，让系统使用默认菜单
             }
         }
 

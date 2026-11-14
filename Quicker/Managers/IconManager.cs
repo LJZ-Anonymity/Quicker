@@ -16,11 +16,11 @@ using Quicker.Helpers;
 using System.Windows;
 using WpfAnimatedGif;
 using System.Drawing;
+using Quicker.Models;
 using System.Text;
 using System.Net;
 using System.IO;
 using Svg;
-using Quicker.Models;
 
 namespace Quicker.Managers
 {
@@ -1200,6 +1200,44 @@ namespace Quicker.Managers
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// 异步在后台读取并解码背景图片（限制尺寸）
+        /// </summary>
+        public Task<BitmapImage?> LoadBackgroundAsync(string path) => Task.Run(() =>
+        {
+            if (string.IsNullOrEmpty(path) || !File.Exists(path)) return null;
+            try
+            {
+                var bi = new BitmapImage();
+                bi.BeginInit();
+                bi.CacheOption = BitmapCacheOption.OnLoad;
+                bi.DecodePixelWidth = 1600;       // ★ 按窗口实际宽度取，防止大图撑爆内存
+                bi.UriSource = new Uri(path, UriKind.Absolute);
+                bi.EndInit();
+                bi.Freeze();
+                return bi;
+            }
+            catch { return null; }
+        });
+
+        /// <summary>
+        /// 将预解码好的 BitmapImage 应用到控件上（处理 GIF 和普通图片）
+        /// </summary>
+        public void ApplyBackground(Image control, BitmapImage? bitmap, string path)
+        {
+            if (bitmap == null) { SetImageWithGifSupport(control, path); return; } // 失败时回退原逻辑（含 SVG）
+
+            if (Path.GetExtension(path).Equals(".gif", StringComparison.OrdinalIgnoreCase))
+            {
+                ImageBehavior.SetAnimatedSource(control, bitmap);
+            }
+            else
+            {
+                ImageBehavior.SetAnimatedSource(control, null);
+                control.Source = bitmap;
+            }
         }
     }
 }

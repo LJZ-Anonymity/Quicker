@@ -19,6 +19,7 @@ using System.Windows.Input;
 using System.Windows.Forms;
 using Quicker.Managers;
 using Quicker.Helpers;
+using System.Diagnostics; // ★ 用于日志
 using System.Windows;
 using System.IO;
 
@@ -79,10 +80,46 @@ namespace Quicker.Windows.MainWindows.MainWindow
             CheckUpdate();
         }
 
+        public async Task InitializeAsync()
+        {
+            if (isInitialized) return;
+            isInitialized = true;
+
+            CommonStyle = AppStateManager.CommonState ?? DEFAULT_STYLE;
+            DataContext = new MainWindowViewModel();
+            var vm = (MainWindowViewModel)DataContext;
+            string style = db2.TableExists(CommonStyle) ? CommonStyle : DEFAULT_STYLE;
+
+            // 后台并行：查库、解码图标、解码背景图
+            var bgTask = iconManager.LoadBackgroundAsync(vm.BackgroundImagePath);
+            await Task.WhenAll(ButtonManager.PrewarmAsync(style, vm.ButtonSize), bgTask);
+
+            // UI 线程：只剩创建控件，图标和外观都命中缓存
+            iconManager.ApplyBackground(BackgroundImage, bgTask.Result, vm.BackgroundImagePath);
+            InitializePageGrids();
+            SubscribeStateEvents();   // 放在页面生成之后，避免 ScheduleRefresh 在页面没建好时触发
+            CheckUpdate();
+        }
+
+        public void PrewarmFirstShow()
+        {
+            if (_isShutdown || IsVisible) return;
+
+            _isSilentlyHidden = true;        // IsHiddenOrInvisible 保持为 true
+            bool oldShowActivated = ShowActivated;
+            ShowActivated = false;           // 不抢焦点
+            Opacity = 0;
+            IsHitTestVisible = false;
+
+            Show();
+            UpdateLayout();                  // 把首次布局也做掉
+
+            ShowActivated = oldShowActivated;
+        }
+
         /// <summary>
         /// 通用类型改变事件
         /// </summary>
-        /// <param name="style">样式名称</param>
         public void OnCommonStyleChanged(string style)
         {
             CommonStyle = db2.TableExists(style) ? style : DEFAULT_STYLE; // 设置样式
@@ -239,6 +276,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         private void OnAppearanceChanged(Quicker.Models.Settings.Appearance appearance)
         {
             if (appearance != null) _latestAppearance = appearance; // 记录最新对象
+            buttonManager.InvalidateAppearance(); // 清除外观缓存
             MarkDirty("appearance");
             ScheduleRefresh();
         }
@@ -798,7 +836,9 @@ namespace Quicker.Windows.MainWindows.MainWindow
             }
 
             _isSilentlyHidden = false;
+
             RefreshOnShow(AppStateManager.CommonState ?? DEFAULT_STYLE);
+
             Opacity = 1;
             IsHitTestVisible = true;
 
@@ -925,7 +965,9 @@ namespace Quicker.Windows.MainWindows.MainWindow
             {
                 string buttonType = GetButtonType(sender);
                 double buttonSize = ((MainWindowViewModel)DataContext).ButtonSize;
-                double titleMaxWidth = ButtonManager.GetTitleMaxWidthForButtonSize(buttonSize);
+
+                double titleMaxWidth = buttonManager.GetTitleMaxWidthForButtonSize(buttonSize);
+
                 buttonManager.Button_Drop(sender, e, buttonSize, titleMaxWidth, buttonType);
                 NotifyActionPageChanged(buttonType);
             }
@@ -1110,7 +1152,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
             {
                 searchWindow = new SearchWindow(); // 创建搜索窗口
                 searchWindow.Show(); // 显示窗口
-                if(!AppStateManager.MainWindowPinned)
+                if (!AppStateManager.MainWindowPinned)
                     HideWindowSilently();
             }
             else
