@@ -6,7 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
-    <BaseOutputPath>E:\Program\Quicker\Quicker\bin</BaseOutputPath>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,14 +1,13 @@
-name: CodeMerging
+name: Build Check
 
 on:
   pull_request:
     branches: [ main, Quicker ]
-    types: [opened, synchronize, reopened]
   push:
     branches: [ main, Quicker ]
 
 jobs:
-  build-and-test:
+  build:
     runs-on: windows-latest
 
     steps:
@@ -25,51 +24,3 @@ jobs:
 
       - name: Build with MSBuild
         run: msbuild Quicker.sln /p:Configuration=Release
-
-  auto-merge:
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          
-      - name: Auto-merge PR if no conflicts
-        run: |
-          PR_NUMBER=${{ github.event.pull_request.number }}
-          
-          # 检查是否有冲突
-          CONFLICTS=$(gh pr view $PR_NUMBER --json mergeStateStatus -q .mergeStateStatus)
-          
-          if [ "$CONFLICTS" != "CONFLICTING" ]; then
-            echo "No conflicts detected, proceeding with merge"
-            gh pr merge $PR_NUMBER --merge --delete-branch
-          else
-            echo "Conflicts detected in PR #$PR_NUMBER"
-            echo "Please resolve conflicts manually"
-            exit 1
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          
-  sync-branches:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          
-      - name: Sync branches
-        run: |
-          git fetch origin
-          git checkout Quicker
-          git merge origin/main
-          git push origin Quicker
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
