@@ -73,7 +73,7 @@ namespace Quicker.Extensions
             }
             catch (Exception ex)
             {
-                _toast.Show($"加载模块时出错：{ex.Message}", ToastType.Error);
+                Application.Current?.Dispatcher.BeginInvoke(() => _toast.Show($"加载模块时出错：{ex.Message}", ToastType.Error));
             }
         }
 
@@ -268,7 +268,7 @@ namespace Quicker.Extensions
 
                     if (!response.Ok && response.Error is not null)
                     {
-                        _toast.Show($"扩展错误：{response.Error}", ToastType.Error);
+                        Application.Current?.Dispatcher.BeginInvoke(() => _toast.Show($"扩展错误：{response.Error}", ToastType.Error));
                     }
 
                     return response;

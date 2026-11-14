@@ -7,6 +7,7 @@ using Quicker.Extensions;
 using Quicker.Managers;
 using Quicker.Models;
 using System.Windows;
+using System.IO;
 using System;
 
 namespace Quicker.Managers
@@ -19,11 +20,12 @@ namespace Quicker.Managers
         private bool isDisposed = false;
 
         private readonly IActionLauncher _launcher;
-        private readonly ModuleLoader _moduleLoader;
 
-        public ActionManager() : this(new ProcessActionLauncher(), new ModuleLoader())
+        // 将 ModuleLoader 设为全局共享单例，确保 _hosts 字典不会丢失，防止重复启动宿主进程
+        private static readonly ModuleLoader _sharedModuleLoader = new ModuleLoader();
+
+        public ActionManager() : this(new ProcessActionLauncher(), _sharedModuleLoader)
         {
-
         }
 
         public ActionManager(IActionLauncher launcher, ModuleLoader moduleLoader)
@@ -32,13 +34,23 @@ namespace Quicker.Managers
             _moduleLoader = moduleLoader ?? throw new ArgumentNullException(nameof(moduleLoader));
         }
 
+        private readonly ModuleLoader _moduleLoader;
+
         /// <summary>
-        /// 弹出消息（保留给调用方用，底层 launcher 内部不再直接弹）
+        /// 弹出消息（UI线程安全）
         /// </summary>
+        private void ShowToastSafe(string message, ToastType type)
+        {
+            Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
+            {
+                var toast = new ToastManager();
+                toast.Show(message, type);
+            }));
+        }
+
         public void ShowToast(string message, ToastType type)
         {
-            var toast = new ToastManager();
-            toast.Show(message, type);
+            ShowToastSafe(message, type);
         }
 
         /// <summary>
@@ -66,13 +78,13 @@ namespace Quicker.Managers
                         await RunLauncherAsync(ToLaunchRequest(data, LaunchKind.OpenUri));
                         break;
                     case ActionType.LoadExtension:
-                        LoadExtension(data);
+                        await LoadExtensionAsync(data); // 改为异步加载，释放 UI 线程
                         break;
                     case ActionType.OpenActionPage:
                         OpenActionPage(data);
                         break;
                     default:
-                        ShowToast($"未知的动作类型：{data.ActionType}", ToastType.Error);
+                        ShowToastSafe($"未知的动作类型：{data.ActionType}", ToastType.Error);
                         break;
                 }
             }
@@ -96,7 +108,7 @@ namespace Quicker.Managers
             var result = await _launcher.LaunchAsync(req);
             if (!result.Success)
             {
-                ShowToast($"打开失败：{result.ErrorMessage}", ToastType.Error);
+                ShowToastSafe($"打开失败：{result.ErrorMessage}", ToastType.Error);
             }
         }
 
@@ -128,15 +140,18 @@ namespace Quicker.Managers
             };
         }
 
-        private void LoadExtension(ButtonData data)
+        // 将 LoadExtension 改为异步执行
+        private async Task LoadExtensionAsync(ButtonData data)
         {
             string dllPath = data.Location;
-            if (string.IsNullOrEmpty(dllPath) || !System.IO.File.Exists(dllPath))
+            if (string.IsNullOrEmpty(dllPath) || !File.Exists(dllPath))
             {
-                ShowToast($"扩展文件不存在: {dllPath}", ToastType.Error);
+                ShowToastSafe($"扩展文件不存在: {dllPath}", ToastType.Error);
                 return;
             }
-            _moduleLoader.LoadModule(dllPath);
+
+            // 把阻塞的 LoadModule 扔到后台线程执行
+            await Task.Run(() => _moduleLoader.LoadModule(dllPath));
         }
 
         private void OpenActionPage(ButtonData data)

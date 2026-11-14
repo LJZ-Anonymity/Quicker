@@ -770,7 +770,11 @@ namespace Quicker.Windows.MainWindows.MainWindow
             Opacity = 0;
             IsHitTestVisible = false;
 
-            ResetToFirstPage();
+            // 延迟重置页面，让 UI 线程优先渲染 Opacity = 0，避免视觉卡顿
+            Dispatcher.BeginInvoke(new Action(() =>
+            {
+                if (_isSilentlyHidden) ResetToFirstPage();
+            }), System.Windows.Threading.DispatcherPriority.Background);
 
             try
             {
