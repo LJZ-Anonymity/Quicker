@@ -1,0 +1,132 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UseWPF>True</UseWPF>
+		<ApplicationIcon>Quicker.ico</ApplicationIcon>
+		<SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<UseWindowsForms>False</UseWindowsForms>
+		<PackageIcon>Quicker_Enabled.png</PackageIcon>
+		<NeutralLanguage>zh-CN</NeutralLanguage>
+		<EnableNETAnalyzers>True</EnableNETAnalyzers>
+		<RunAnalyzersDuringLiveAnalysis>True</RunAnalyzersDuringLiveAnalysis>
+		<RunAnalyzersDuringBuild>True</RunAnalyzersDuringBuild>
+		<FileVersion>2.3.0</FileVersion>
+		<AssemblyVersion>2.3.0</AssemblyVersion>
+		<Authors>Anonymity</Authors>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+		<SignAssembly>False</SignAssembly>
+		<RepositoryUrl>https://github.com/LJZ-Anonymity/Quicker</RepositoryUrl>
+		<NuGetAuditMode>all</NuGetAuditMode>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<WarningLevel>0</WarningLevel>
+		<Optimize>False</Optimize>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<WarningLevel>0</WarningLevel>
+		<Optimize>False</Optimize>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove=".gitattributes" />
+		<None Remove=".gitignore" />
+		<None Remove=".gitignore~RF3e5ebf6d.TMP" />
+		<None Remove="App.xaml.cs~RF119692ff.TMP" />
+		<None Remove="Windows\MainWindow.xaml.cs~RF56f46fe.TMP" />
+		<None Remove="Windows\MainWindow.xaml.cs~RFc4626a.TMP" />
+		<None Remove="Windows\okjxncmm.k0p~" />
+		<None Remove="Resources\Styles\TextBlockStyles.xaml~RF2e0471d2.TMP" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<COMReference Include="IWshRuntimeLibrary">
+			<WrapperTool>tlbimp</WrapperTool>
+			<VersionMinor>0</VersionMinor>
+			<VersionMajor>1</VersionMajor>
+			<Guid>f935dc20-1cf0-11d0-adb9-00c04fd58a0b</Guid>
+			<Lcid>0</Lcid>
+			<Isolated>false</Isolated>
+			<EmbedInteropTypes>true</EmbedInteropTypes>
+		</COMReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Quicker.ico" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Resource Include="ComponentLicenses.txt">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+		<Resource Include="VersionInfo.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Resource>
+
+		<Resource Include="Resources\Images\**\*.*" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="2.0.1" />
+		<PackageReference Include="Magick.NET-Q8-AnyCPU" Version="15.0.0" />
+		<PackageReference Include="SharpHook" Version="8.0.1" />
+		<PackageReference Include="SQLitePCLRawEx.bundle_e_sqlite3" Version="2.1.0" />
+		<PackageReference Include="Svg" Version="3.4.8" />
+		<PackageReference Include="System.Data.SQLite" Version="2.0.4" />
+		<PackageReference Include="WpfAnimatedGif" Version="2.0.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="LICENSE">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Update="Properties\Settings.settings">
+			<Generator>SettingsSingleFileGenerator</Generator>
+			<LastGenOutput>Settings.Designer.cs</LastGenOutput>
+		</None>
+		<None Update="README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+		<None Update="Resources\Images\Quicker_Enabled.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Page Update="Windows\MainWindows\SettingWindow.xaml">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Page>
+		<Page Update="Resources\Styles\StackPanelStyles.xaml">
+			<Generator>MSBuild:Compile</Generator>
+			<SubType>Designer</SubType>
+		</Page>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="UserControls\SettingWindow\Auxiliary_Functions\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Quicker.Contracts\Quicker.Contracts.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Update="Properties\Settings.Designer.cs">
+			<DesignTimeSharedInput>True</DesignTimeSharedInput>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Settings.settings</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+</Project>
