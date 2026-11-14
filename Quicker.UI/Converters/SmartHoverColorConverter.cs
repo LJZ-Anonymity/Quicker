@@ -2,7 +2,7 @@
 using System.Windows.Media;
 using System.Windows.Data;
 
-namespace Quicker.Converters
+namespace Quicker.UI.Converters
 {
     /// <summary>
     /// 智能变色转换器：深色变浅，浅色变深。支持SolidColorBrush和颜色字符串。

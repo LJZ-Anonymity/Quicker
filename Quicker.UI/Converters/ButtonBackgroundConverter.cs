@@ -2,7 +2,7 @@
 using System.Windows.Media;
 using System.Windows.Data;
 
-namespace Quicker.Converters
+namespace Quicker.UI.Converters
 {
     /// <summary>
     /// 按钮背景色转换器，根据按钮的 Tag、鼠标悬停状态和不同颜色参数，动态返回对应的 SolidColorBrush。
@@ -28,9 +28,9 @@ namespace Quicker.Converters
             var blankHoverColor = values[5]?.ToString(); // 第六个参数为“空白按钮”悬停颜色
 
             bool isAction = tag != null; // 判断当前按钮是否为“动作”按钮（Tag 不为 null）
-            string colorStr = isAction
-                ? (isMouseOver ? actionHoverColor : actionColor)
-                : (isMouseOver ? blankHoverColor : blankColor); // 根据按钮类型和鼠标状态选择颜色字符串
+            string? colorStr = isAction
+                ? isMouseOver ? actionHoverColor : actionColor
+                : isMouseOver ? blankHoverColor : blankColor; // 根据按钮类型和鼠标状态选择颜色字符串
 
             // 防御性处理：如果颜色字符串为空，使用默认色
             if (string.IsNullOrWhiteSpace(colorStr))
@@ -38,11 +38,15 @@ namespace Quicker.Converters
 
             try
             {
-                return (SolidColorBrush)new BrushConverter().ConvertFromString(colorStr); // 尝试将颜色字符串转换为 SolidColorBrush
+                if (new BrushConverter().ConvertFromString(colorStr) is SolidColorBrush brush)
+                {
+                    return brush;
+                }
+                return Brushes.Transparent;
             }
             catch
             {
-                return Brushes.Transparent; // 转换失败时返回透明画刷
+                return Brushes.Transparent;
             }
         }
 

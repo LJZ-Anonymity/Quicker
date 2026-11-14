@@ -2,7 +2,7 @@
 using System.Windows.Data;
 using System.Windows;
 
-namespace Quicker.Converters
+namespace Quicker.UI.Converters
 {
     /// <summary>
     /// 将ComboBox的SelectedIndex（int）转换为CornerRadius的转换器。

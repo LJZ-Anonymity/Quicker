@@ -207,9 +207,8 @@ namespace Quicker.Extensions
                 FileName = hostPath,
                 ArgumentList = { modulePath, pipeName },
                 UseShellExecute = false,
-                RedirectStandardError = true,
-                RedirectStandardOutput = true,
-                CreateNoWindow = true,
+                CreateNoWindow = false,
+
                 WorkingDirectory = Path.GetDirectoryName(hostPath) ?? AppContext.BaseDirectory
             };
 
@@ -218,8 +217,7 @@ namespace Quicker.Extensions
 
             if (process.HasExited)
             {
-                string error = ReadProcessError(process);
-                throw new InvalidOperationException($"扩展宿主启动失败：{error}");
+                throw new InvalidOperationException($"扩展宿主启动失败：exit code {process.ExitCode}");
             }
 
             return process;

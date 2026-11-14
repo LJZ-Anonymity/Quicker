@@ -4,6 +4,7 @@ using Quicker.Database.Core;
 using System.Windows.Media;
 using Quicker.Managers;
 using System.Windows;
+using Quicker.UI.Converters;
 
 namespace Quicker.Windows.MainWindows.MainWindow
 {
@@ -310,7 +311,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
                 BlankButtonColor = appearance.BlankButtonColor;
                 BlankButtonMouseOverColor = appearance.BlankButtonMouseOverColor;
                 FontSize = appearance.FontSize;
-                FontWeight = Quicker.Converters.FontWeightConverter.IndexToFontWeight(appearance.FontWeight); // 调用FontWeightConverter
+                FontWeight = UI.Converters.FontWeightConverter.IndexToFontWeight(appearance.FontWeight); // 调用FontWeightConverter
                 ActionButtonColor = appearance.ActionButtonColor;
                 ActionButtonMouseOverColor = appearance.ActionButtonMouseOverColor;
                 ShowActionButtonMouseOver = appearance.ShowActionButtonMouseOver;
@@ -353,7 +354,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
             BlankButtonColor = appearance.BlankButtonColor;
             BlankButtonMouseOverColor = appearance.BlankButtonMouseOverColor;
             FontSize = appearance.FontSize;
-            FontWeight = Quicker.Converters.FontWeightConverter.IndexToFontWeight(appearance.FontWeight);
+            FontWeight = UI.Converters.FontWeightConverter.IndexToFontWeight(appearance.FontWeight);
             ActionButtonColor = appearance.ActionButtonColor;
             ActionButtonMouseOverColor = appearance.ActionButtonMouseOverColor;
             ShowActionButtonMouseOver = appearance.ShowActionButtonMouseOver;

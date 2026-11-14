@@ -2,7 +2,7 @@
 using System.Windows.Data;
 using System.Windows;
 
-namespace Quicker.Converters
+namespace Quicker.UI.Converters
 {
     public class DoubleToGridLengthConverter : IValueConverter
     {

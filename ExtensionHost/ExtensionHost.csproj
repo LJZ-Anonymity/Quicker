@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<OutputType>Exe</OutputType>
+		<OutputType>WinExe</OutputType>
 		<TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -12,6 +12,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Quicker.Contracts\Quicker.Contracts.csproj" />
+		<ProjectReference Include="..\Quicker.UI\Quicker.UI.csproj" />
 	</ItemGroup>
 
 </Project>

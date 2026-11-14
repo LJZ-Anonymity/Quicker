@@ -2,8 +2,8 @@
 using Quicker.Contracts.Models;
 using System.ComponentModel;
 using Quicker.Database.Core;
+using Quicker.UI.Converters;
 using System.Windows.Media;
-using Quicker.Converters;
 using System.Windows;
 
 namespace Quicker.Windows.FloatingWindows.ViewModels
@@ -338,7 +338,7 @@ namespace Quicker.Windows.FloatingWindows.ViewModels
                 Win11CornerRadius = appearance.Win11CornerRadius;
                 Blur = appearance.Blur;
                 FontSize = appearance.FontSize;
-                FontWeight = Converters.FontWeightConverter.IndexToFontWeight(appearance.FontWeight);
+                FontWeight = UI.Converters.FontWeightConverter.IndexToFontWeight(appearance.FontWeight);
             }
         }
 

@@ -45,7 +45,7 @@
 			<_HostFiles Include="..\ExtensionHost\bin\$(Configuration)\net8.0-windows10.0.17763.0\**\*.*" />
 		</ItemGroup>
 		<Copy SourceFiles="@(_HostFiles)" DestinationFolder="$(OutDir)%(RecursiveDir)" SkipUnchangedFiles="true" />
-		<Message Text="[Quicker] 已复制 Host 文件 ($(_HostFiles->Count())) 个到 $(OutDir)" Importance="high" />
+		<Message Text="[Quicker] 已复制 Host 文件 ($(_HostFiles-&gt;Count())) 个到 $(OutDir)" Importance="high" />
 	</Target>
 
 	<Target Name="CopyHostAfterPublish" AfterTargets="Publish">
@@ -53,7 +53,7 @@
 			<_HostFiles Include="..\ExtensionHost\bin\$(Configuration)\net8.0-windows10.0.17763.0\**\*.*" />
 		</ItemGroup>
 		<Copy SourceFiles="@(_HostFiles)" DestinationFolder="$(PublishDir)%(RecursiveDir)" SkipUnchangedFiles="true" />
-		<Message Text="[Quicker] 已复制 Host 文件 ($(_HostFiles->Count())) 个到 $(PublishDir)" Importance="high" />
+		<Message Text="[Quicker] 已复制 Host 文件 ($(_HostFiles-&gt;Count())) 个到 $(PublishDir)" Importance="high" />
 	</Target>
 
 	<ItemGroup>
@@ -64,7 +64,6 @@
 		<None Remove="Windows\MainWindow.xaml.cs~RF56f46fe.TMP" />
 		<None Remove="Windows\MainWindow.xaml.cs~RFc4626a.TMP" />
 		<None Remove="Windows\okjxncmm.k0p~" />
-		<None Remove="Resources\Styles\TextBlockStyles.xaml~RF2e0471d2.TMP" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -127,10 +126,6 @@
 		<Page Update="Windows\MainWindows\SettingWindow.xaml">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</Page>
-		<Page Update="Resources\Styles\StackPanelStyles.xaml">
-			<Generator>MSBuild:Compile</Generator>
-			<SubType>Designer</SubType>
-		</Page>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -139,6 +134,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Quicker.Contracts\Quicker.Contracts.csproj" />
+		<ProjectReference Include="..\Quicker.UI\Quicker.UI.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

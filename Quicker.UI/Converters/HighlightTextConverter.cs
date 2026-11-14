@@ -4,7 +4,7 @@ using System.Globalization;
 using System.Windows.Data;
 using System.Windows;
 
-namespace Quicker.Converters
+namespace Quicker.UI.Converters
 {
     /// <summary>
     /// 用于将文本和关键字转换为高亮显示（加粗匹配关键字）的 Inline 集合的多值转换器。

@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 using System.Windows.Data;
 
-namespace Quicker.Converters
+namespace Quicker.UI.Converters
 {
     /// <summary>
     /// GridHeightConverter：用于计算Grid的宽度，根据按钮大小、间隙、列数计算。
@@ -20,6 +20,6 @@ namespace Quicker.Converters
             }
             return 0.0;
         }
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) => throw new System.NotImplementedException();
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) => throw new NotImplementedException();
     }
 }

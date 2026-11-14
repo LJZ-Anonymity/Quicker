@@ -2,7 +2,7 @@
 using System.Windows.Data;
 using System.Windows;
 
-namespace Quicker.Converters
+namespace Quicker.UI.Converters
 {
     public class SearchHintVisibilityConverter : IValueConverter
     {
@@ -16,7 +16,7 @@ namespace Quicker.Converters
         /// <returns> bool值 </returns>
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            string text = value as string; // 转换前的类型为string
+            string? text = value as string; // 转换前的类型为string
             return string.IsNullOrWhiteSpace(text) ? Visibility.Visible : Visibility.Hidden; // 若搜索提示为空白，则可见，否则不可见
         }
 

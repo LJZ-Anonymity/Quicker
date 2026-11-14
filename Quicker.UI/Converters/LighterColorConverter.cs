@@ -2,7 +2,7 @@
 using System.Windows.Media;
 using System.Windows.Data;
 
-namespace Quicker.Converters
+namespace Quicker.UI.Converters
 {
     /// <summary>
     /// 颜色变浅转换器。将颜色字符串转换为变浅后的 SolidColorBrush。

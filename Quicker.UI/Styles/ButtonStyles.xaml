@@ -4,7 +4,7 @@
     xmlns:styles="clr-namespace:Quicker.Resources.Styles"
     xmlns:local="clr-namespace:Quicker.Resources.Styles"
     xmlns:sys="clr-namespace:System;assembly=mscorlib"
-    xmlns:conv="clr-namespace:Quicker.Converters"
+    xmlns:conv="clr-namespace:Quicker.UI.Converters"
 >
     <!-- 颜色转换器 -->
     <conv:SmartHoverColorConverter x:Key="SmartHoverColorConverter" DarkerFactor="0.8" LighterFactor="1.2"/>

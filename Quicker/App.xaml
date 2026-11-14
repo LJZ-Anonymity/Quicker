@@ -3,11 +3,41 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="clr-namespace:Quicker"
     x:Class="Quicker.App"
-
     ShutdownMode="OnExplicitShutdown"
 >
     <Application.Resources>
         <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- 右键菜单样式 -->
+                <ResourceDictionary Source="/Quicker.UI;component/Styles/CustomContextMenuStyle.xaml"/>
+                <!-- 堆栈面板样式 -->
+                <!--<ResourceDictionary Source="/Quicker.UI;component/Styles/StackPanelStyles.xaml"/>-->
+                <!-- 文本块样式 -->
+                <ResourceDictionary Source="/Quicker.UI;component/Styles/TextBlockStyles.xaml"/>
+                <!-- 滚动条样式 -->
+                <ResourceDictionary Source="/Quicker.UI;component/Styles/ScrollBarStyle.xaml"/>
+                <!-- 复选框样式 -->
+                <ResourceDictionary Source="/Quicker.UI;component/Styles/CheckBoxStyle.xaml"/>
+                <!-- 组框样式 -->
+                <ResourceDictionary Source="/Quicker.UI;component/Styles/GroupBoxStyle.xaml"/>
+                <!-- 输入框样式 -->
+                <ResourceDictionary Source="/Quicker.UI;component/Styles/TextBoxStyles.xaml"/>
+                <!-- 下拉框样式 -->
+                <ResourceDictionary Source="/Quicker.UI;component/Styles/ComboBoxStyle.xaml"/>
+                <!-- 画布样式 -->
+                <ResourceDictionary Source="/Quicker.UI;component/Styles/CanvasStyles.xaml"/>
+                <!-- 提示框样式 -->
+                <ResourceDictionary Source="/Quicker.UI;component/Styles/TooltipStyle.xaml"/>
+                <!-- 按钮样式 -->
+                <ResourceDictionary Source="/Quicker.UI;component/Styles/ButtonStyles.xaml"/>
+                <!-- 标签样式 -->
+                <ResourceDictionary Source="/Quicker.UI;component/Styles/SliderStyle.xaml"/>
+                <!-- 图片样式 -->
+                <ResourceDictionary Source="/Quicker.UI;component/Styles/ImageStyles.xaml"/>
+                <!-- 网格样式 -->
+                <ResourceDictionary Source="/Quicker.UI;component/Styles/GridStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
             <!-- 定义TextBox右键菜单 -->
             <ContextMenu x:Key="TextBoxCustomContextMenu" Style="{StaticResource CustomContextMenuStyle}">
                 <MenuItem Header="剪切" Command="ApplicationCommands.Cut" Style="{StaticResource CustomMenuItemStyle}"/>
@@ -19,6 +49,7 @@
 
             <!-- 字体资源 -->
             <FontFamily x:Key="GlobalFontFamily">微软雅黑</FontFamily>
+
             <!-- 全局默认控件字体样式 -->
             <Style TargetType="TextBlock">
                 <Setter Property="FontFamily" Value="{DynamicResource GlobalFontFamily}"/>
@@ -36,38 +67,7 @@
             <Style TargetType="Window">
                 <Setter Property="FontFamily" Value="{DynamicResource GlobalFontFamily}"/>
             </Style>
-            
-            <!-- 合并资源词典必须放最后 -->
-            <ResourceDictionary.MergedDictionaries>
-                <!-- 右键菜单样式 -->
-                <ResourceDictionary Source="Resources/Styles/CustomContextMenuStyle.xaml"/>
-                <!-- 堆栈面板样式 -->
-                <!--<ResourceDictionary Source="Resources/Styles/StackPanelStyles.xaml"/>-->
-                <!-- 文本块样式 -->
-                <ResourceDictionary Source="Resources/Styles/TextBlockStyles.xaml"/>
-                <!-- 滚动条样式 -->
-                <ResourceDictionary Source="Resources/Styles/ScrollBarStyle.xaml"/>
-                <!-- 复选框样式 -->
-                <ResourceDictionary Source="Resources/Styles/CheckBoxStyle.xaml"/>
-                <!-- 组框样式 -->
-                <ResourceDictionary Source="Resources/Styles/GroupBoxStyle.xaml"/>
-                <!-- 输入框样式 -->
-                <ResourceDictionary Source="Resources/Styles/TextBoxStyles.xaml"/>
-                <!-- 下拉框样式 -->
-                <ResourceDictionary Source="Resources/Styles/ComboBoxStyle.xaml"/>
-                <!-- 画布样式 -->
-                <ResourceDictionary Source="Resources/Styles/CanvasStyles.xaml"/>
-                <!-- 提示框样式 -->
-                <ResourceDictionary Source="Resources/Styles/TooltipStyle.xaml"/>
-                <!-- 按钮样式 -->
-                <ResourceDictionary Source="Resources/Styles/ButtonStyles.xaml"/>
-                <!-- 标签样式 -->
-                <ResourceDictionary Source="Resources/Styles/SliderStyle.xaml"/>
-                <!-- 图片样式 -->
-                <ResourceDictionary Source="Resources/Styles/ImageStyles.xaml"/>
-                <!-- 网格样式 -->
-                <ResourceDictionary Source="Resources/Styles/GridStyles.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
+
         </ResourceDictionary>
     </Application.Resources>
 </Application>

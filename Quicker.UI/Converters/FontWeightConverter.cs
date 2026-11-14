@@ -1,4 +1,4 @@
-﻿namespace Quicker.Converters
+﻿namespace Quicker.UI.Converters
 {
     /// <summary>
     /// 字体粗细转换器：根据SelectedIndex返回对应FontWeight
@@ -29,7 +29,7 @@
         /// <summary>
         /// 将SelectedIndex或字符串转换为FontWeight
         /// </summary>
-        public object Convert(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             // value 可能是 ComboBoxItem、string、int
             int index = -1;
@@ -42,7 +42,7 @@
                 // 尝试用字符串查找索引
                 for (int j = 0; j < FontWeightList.Length; j++)
                 {
-                    if (FontWeightList[j].ToString().Equals(s, System.StringComparison.OrdinalIgnoreCase))
+                    if (FontWeightList[j].ToString().Equals(s, StringComparison.OrdinalIgnoreCase))
                     {
                         index = j;
                         break;
@@ -57,7 +57,7 @@
         /// <summary>
         /// 将FontWeight反向转换为索引
         /// </summary>
-        public object ConvertBack(object value, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             // 反向转换为索引
             if (value is System.Windows.FontWeight fw)

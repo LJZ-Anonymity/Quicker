@@ -1,4 +1,4 @@
-﻿namespace Quicker.Converters
+﻿namespace Quicker.UI.Converters
 {
     /// <summary>
     /// 毛玻璃效果转换器：根据模糊下拉框选项返回BlurEffect或null
@@ -8,7 +8,7 @@
         /// <summary>
         /// 将模糊下拉框选项转换为BlurEffect对象
         /// </summary>
-        public object Convert(object[] values, System.Type targetType, object parameter, System.Globalization.CultureInfo culture)
+        public object? Convert(object[] values, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             int selectedIndex = (int)values[0];
             if (selectedIndex == 1) // 毛玻璃
@@ -20,6 +20,6 @@
         /// <summary>
         /// 不支持反向转换
         /// </summary>
-        public object[] ConvertBack(object value, System.Type[] targetTypes, object parameter, System.Globalization.CultureInfo culture) => throw new System.NotImplementedException();
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, System.Globalization.CultureInfo culture) => throw new NotImplementedException();
     }
 }
