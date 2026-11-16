@@ -935,9 +935,7 @@ namespace Quicker
                 case 0: // 保持当前位置
                     break;
                 case 1: // 鼠标位置
-                    {
-                        WindowHelper.SetWindowCenterAtMouse(mainWindow, mainWindow.GetFunctionBarCenterOffsetFromTop());
-                    }
+                    WindowHelper.SetWindowCenterAtMouse(mainWindow, mainWindow.GetFunctionBarCenterOffsetFromTop(), mainWindow.VisibleArea);
                     break;
                 case 2: // 屏幕中心（主屏幕工作区）
                     {

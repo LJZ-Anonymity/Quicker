@@ -296,9 +296,11 @@ namespace Quicker.Helpers
         }
 
         /// <summary>
-        /// 将窗口中心定位到鼠标位置
+        /// 将窗口中心定位到鼠标位置（若窗口真实可见区域会超出鼠标所在屏幕工作区，则自动推回屏幕内）
         /// </summary>
-        public static void SetWindowCenterAtMouse(Window window, double? centerOffsetYFromTop = null)
+        public static void SetWindowCenterAtMouse(Window window,
+            double? centerOffsetYFromTop = null,
+            FrameworkElement visibleElement = null)
         {
             if (!GetCursorPos(out POINT cursorPos)) return;
 
@@ -325,9 +327,99 @@ namespace Quicker.Helpers
             double mouseDipX = cursorPos.X * scaleX;
             double mouseDipY = cursorPos.Y * scaleY;
 
+            double left = mouseDipX - anchorX;
+            double top = mouseDipY - anchorY;
+
+            // 边界约束：优先基于真实可见区域（ViewBorder），排除透明边距/阴影
+            if (TryGetVisibleAreaRect(visibleElement, window,
+                out double vLeft, out double vTop, out double vWidth, out double vHeight))
+            {
+                // 可见区域在目标位置下的屏幕矩形（DIP）
+                double targetVLeft = left + vLeft;
+                double targetVTop = top + vTop;
+
+                (double clampedVLeft, double clampedVTop) = ClampToScreenWorkArea(
+                    targetVLeft, targetVTop, vWidth, vHeight, scaleX, scaleY,
+                    cursorPos.X, cursorPos.Y);
+
+                // 把可见区域的位移量反推回窗口位置
+                left += clampedVLeft - targetVLeft;
+                top += clampedVTop - targetVTop;
+            }
+            else
+            {
+                // 可见区域未就绪（首次 Show 前/未加载），回退到窗口尺寸约束
+                (left, top) = ClampToScreenWorkArea(
+                    left, top, w, h, scaleX, scaleY, cursorPos.X, cursorPos.Y);
+            }
+
             // 直接设 Left/Top（DIP），Show 时会应用
-            window.Left = mouseDipX - anchorX;
-            window.Top = mouseDipY - anchorY;
+            window.Left = left;
+            window.Top = top;
+        }
+
+        /// <summary>
+        /// 将窗口位置约束到鼠标所在屏幕的工作区内（不包含任务栏，不包含阴影）。
+        /// 当窗口尺寸大于工作区时，优先贴靠工作区左上角。
+        /// </summary>
+        /// <param name="scaleX"> 物理像素 → DIP 的 X 缩放系数 </param>
+        /// <param name="scaleY"> 物理像素 → DIP 的 Y 缩放系数 </param>
+        private static (double Left, double Top) ClampToScreenWorkArea(
+            double left, double top, double width, double height,
+            double scaleX, double scaleY, int mouseScreenX, int mouseScreenY)
+        {
+            try
+            {
+                var screen = System.Windows.Forms.Screen.FromPoint(
+                    new System.Drawing.Point(mouseScreenX, mouseScreenY));
+                var wa = screen.WorkingArea; // 物理像素（已排除任务栏）
+
+                // 工作区物理像素 → DIP（使用与 left/top 相同的缩放系数，保证自洽）
+                double waLeft = wa.Left * scaleX;
+                double waTop = wa.Top * scaleY;
+                double waRight = (wa.Left + wa.Width) * scaleX;
+                double waBottom = (wa.Top + wa.Height) * scaleY;
+
+                // 先约束右/下边界，再约束左/上边界：
+                // 当窗口比工作区还大时，优先贴靠左上角，避免"左约束"与"右约束"互相覆盖导致抖动。
+                if (left + width > waRight) left = waRight - width;
+                if (top + height > waBottom) top = waBottom - height;
+
+                if (left < waLeft) left = waLeft;
+                if (top < waTop) top = waTop;
+            }
+            catch { } // 屏幕查询失败就保持原值
+
+            return (left, top);
+        }
+
+        /// <summary>
+        /// 尝试获取可见区域相对窗口左上角的 DIP 矩形（偏移 + 尺寸）
+        /// </summary>
+        private static bool TryGetVisibleAreaRect(
+            FrameworkElement visibleElement, Window window,
+            out double left, out double top, out double width, out double height)
+        {
+            left = top = width = height = 0;
+
+            if (visibleElement == null || !visibleElement.IsLoaded) return false;
+            if (visibleElement.ActualWidth <= 0 || visibleElement.ActualHeight <= 0) return false;
+
+            try
+            {
+                Point offset = visibleElement.TranslatePoint(new Point(0, 0), window);
+                if (double.IsNaN(offset.X) || double.IsNaN(offset.Y)) return false;
+
+                left = offset.X;
+                top = offset.Y;
+                width = visibleElement.ActualWidth;
+                height = visibleElement.ActualHeight;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         /// <summary>

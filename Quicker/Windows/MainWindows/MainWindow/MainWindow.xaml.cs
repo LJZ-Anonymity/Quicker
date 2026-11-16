@@ -19,7 +19,6 @@ using System.Windows.Input;
 using System.Windows.Forms;
 using Quicker.Managers;
 using Quicker.Helpers;
-using System.Diagnostics; // ★ 用于日志
 using System.Windows;
 using System.IO;
 
@@ -38,6 +37,7 @@ namespace Quicker.Windows.MainWindows.MainWindow
         public bool ShouldCenterAtMouseOnShow { get; set; } = false; // 本次唤起是否需要居中到鼠标
         public bool ShouldCenterOnScreenOnShow { get; set; } = false; // 本次唤起是否需要居中屏幕
         public bool IsHiddenOrInvisible => _isSilentlyHidden || !IsVisible;
+        public FrameworkElement VisibleArea => ViewBorder; // 真实可见区域
 
         private readonly CancellationTokenSource cancellationTokenSource = new(); // 取消后台任务的令牌源
         private Quicker.Models.Settings.Appearance _latestAppearance;
@@ -179,7 +179,10 @@ namespace Quicker.Windows.MainWindows.MainWindow
             base.OnSourceInitialized(e);
             if (ShouldCenterAtMouseOnShow)
             {
-                WindowHelper.SetWindowCenterAtMouse(this, GetFunctionBarCenterOffsetFromTop());
+                // 首次显示时布局可能尚未完成，强制同步布局，确保 ViewBorder 有正确的可见矩形
+                try { UpdateLayout(); } catch { }
+
+                WindowHelper.SetWindowCenterAtMouse(this, GetFunctionBarCenterOffsetFromTop(), ViewBorder);
                 ShouldCenterAtMouseOnShow = false;
             }
             else if (ShouldCenterOnScreenOnShow) // 首次唤起且强制居中屏幕
