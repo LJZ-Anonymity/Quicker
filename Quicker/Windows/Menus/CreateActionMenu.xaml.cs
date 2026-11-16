@@ -494,8 +494,6 @@ namespace Quicker.Windows.Menus
             currentInternalCommand = null; // 清理内部命令
             internalCommandManager.CommandPublished -= InternalCommandManager_CommandPublished; // 解绑事件
             hasChanged = false; // 清理检查状态
-            ButtonID = 0; // 清理当前按钮
-            TableName = null; // 清理表名
             haveAction = false; // 清理是否有动作
             close = false; // 清理关闭状态
 

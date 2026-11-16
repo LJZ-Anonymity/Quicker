@@ -75,7 +75,6 @@ namespace Quicker.Database.Core
         /// 通过ButtonID从对应表中获取数据
         /// </summary>
         /// <param name="buttonID"> 要获取数据的ButtonID </param>
-        /// <returns> ButtonData对象，如果找不到则返回null </returns>
         public ButtonData GetButtonDataByID(int buttonID, string tableName)
         {
             using var connection = OpenConnection(); // 打开数据库连接
