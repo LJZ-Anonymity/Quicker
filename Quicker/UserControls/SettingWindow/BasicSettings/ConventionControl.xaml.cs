@@ -141,13 +141,6 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             });
         }
 
-        // 打开网站检查更新
-        private void CheckUpdateButton_Click(object sender, RoutedEventArgs e)
-        {
-            UpdateWindow updateWindow = new(); // 创建更新窗口
-            updateWindow.Show(); // 显示更新窗口
-        }
-
         // 勾选框点击事件
         private void CheckBox_Click(object sender, RoutedEventArgs e)
         {
@@ -294,7 +287,6 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             LoopPageFlippingCheckBox = null;
             CurrentUsingTimeTextBlock = null;
             TotalUsageTimeTextBlock = null;
-            CheckUpdateButton = null;
             GC.Collect(); // 垃圾回收
         }
     }

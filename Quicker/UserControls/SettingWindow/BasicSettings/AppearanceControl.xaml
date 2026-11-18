@@ -545,14 +545,11 @@
                                 </Rectangle>
                             </Button>
                             <Button x:Name="ActionPageManager" Style="{StaticResource Task}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="82,0,0,0">
-                                <Grid>
-                                    <Rectangle Width="16" Height="16" Fill="{Binding ElementName=ToolbarIconColorButton, Path=Background}">
-                                        <Rectangle.OpacityMask>
-                                            <ImageBrush ImageSource="/Resources/Images/MoreSelection.png"/>
-                                        </Rectangle.OpacityMask>
-                                    </Rectangle>
-                                    <Border x:Name="HasNewVersionTip" CornerRadius="4" Background="#11AD45" Margin="12,12,0,0"/>
-                                </Grid>
+                                <Rectangle Width="16" Height="16" Fill="{Binding ElementName=ToolbarIconColorButton, Path=Background}">
+                                    <Rectangle.OpacityMask>
+                                        <ImageBrush ImageSource="/Resources/Images/MoreSelection.png"/>
+                                    </Rectangle.OpacityMask>
+                                </Rectangle>
                             </Button>
                             <Button Style="{StaticResource Task}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,26,0">
                                 <Rectangle Width="20" Height="20" Fill="{Binding ElementName=ToolbarIconColorButton, Path=Background}">

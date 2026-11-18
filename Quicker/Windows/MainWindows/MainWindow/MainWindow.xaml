@@ -207,16 +207,13 @@
                         </Rectangle>
                     </Button>
                     <Button x:Name="ActionPageManager" Style="{StaticResource Task}" Click="OpenTitleMenu" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="82,0,0,0">
-                        <Grid>
-                            <Rectangle Width="16" Height="16" Fill="{Binding DataContext.ToolbarIconColor, RelativeSource={RelativeSource AncestorType=Window}}">
-                                <Rectangle.OpacityMask>
-                                    <ImageBrush ImageSource="/Resources/Images/MoreSelection.png"/>
-                                </Rectangle.OpacityMask>
-                            </Rectangle>
-                            <Border x:Name="HasNewVersionTip" CornerRadius="4" Background="#11AD45" Margin="12,12,0,0"/>
-                        </Grid>
+                        <Rectangle Width="16" Height="16" Fill="{Binding DataContext.ToolbarIconColor, RelativeSource={RelativeSource AncestorType=Window}}">
+                            <Rectangle.OpacityMask>
+                                <ImageBrush ImageSource="/Resources/Images/MoreSelection.png"/>
+                            </Rectangle.OpacityMask>
+                        </Rectangle>
                     </Button>
-                    <Popup x:Name="TitlePop" PopupAnimation="Fade" Width="180" Height="95" PlacementTarget="{Binding ElementName=ActionPageManager}" AllowsTransparency="True" StaysOpen="False">
+                    <Popup x:Name="TitlePop" PopupAnimation="Fade" Width="180" Height="70" PlacementTarget="{Binding ElementName=ActionPageManager}" AllowsTransparency="True" StaysOpen="False">
                         <Grid>
                             <Border Background="White" CornerRadius="3" Margin="3">
                                 <Border.Effect>
@@ -229,12 +226,6 @@
                                         <Grid Width="176">
                                             <Image Source="/Resources/Images/ActionPagesManager.jpg" Style="{StaticResource SelectButtonImage}"/>
                                             <TextBlock Text="场景与动作" TextAlignment="Left" VerticalAlignment="Center" Margin="26,0,0,0" FontSize="13"/>
-                                        </Grid>
-                                    </Button>
-                                    <Button x:Name="UpdateButton" Style="{StaticResource MenuButton}" Click="UpdateQuicker">
-                                        <Grid Width="176">
-                                            <Image Source="/Resources/Images/Quicker_Enabled.png" Style="{StaticResource SelectButtonImage}"/>
-                                            <TextBlock Text="升级Quicker" TextAlignment="Left" VerticalAlignment="Center" Margin="26,0,0,0" FontSize="13"/>
                                         </Grid>
                                     </Button>
                                     <Rectangle Height="1" Width="176" Fill="#FFF0F0F0" Margin="0,3"/>

@@ -77,7 +77,6 @@ namespace Quicker.Windows.MainWindows.MainWindow
             iconManager.SetImageWithGifSupport(BackgroundImage, vm.BackgroundImagePath);
             SubscribeStateEvents(); // 绑定UI更新事件
             InitializePageGrids();
-            CheckUpdate();
         }
 
         public async Task InitializeAsync()
@@ -98,7 +97,6 @@ namespace Quicker.Windows.MainWindows.MainWindow
             iconManager.ApplyBackground(BackgroundImage, bgTask.Result, vm.BackgroundImagePath);
             InitializePageGrids();
             SubscribeStateEvents();   // 放在页面生成之后，避免 ScheduleRefresh 在页面没建好时触发
-            CheckUpdate();
         }
 
         public void PrewarmFirstShow()
@@ -141,17 +139,6 @@ namespace Quicker.Windows.MainWindows.MainWindow
             GeneratePageGrid(CommonGrid, CommonStyle, 0, 4, 4);
             GenerateButtons(); // 生成按钮
             SetCommonTextBlock(0);
-        }
-
-        // 检查更新
-        private void CheckUpdate()
-        {
-            if (!AppStateManager.HasNewVersion) // 如果没有新版本
-            {
-                HasNewVersionTip.Visibility = Visibility.Collapsed; // 隐藏提示
-                TitlePop.Height -= 25; // 减少高度
-                UpdateButton.Visibility = Visibility.Collapsed; // 隐藏更新按钮
-            }
         }
 
         /// <summary>
@@ -1052,13 +1039,6 @@ namespace Quicker.Windows.MainWindows.MainWindow
         {
             Button button = sender as Button; // 获取按钮
             return button.Name.StartsWith(GLOBAL_STYLE) ? GLOBAL_STYLE : CommonStyle; // 获取按钮类型
-        }
-
-        // 点击按钮更新Quicker
-        private void UpdateQuicker(object sender, RoutedEventArgs e)
-        {
-            UpdateWindow updateWindow = new(); // 创建更新窗口
-            updateWindow.Show(); // 显示窗口
         }
 
         /// <summary>

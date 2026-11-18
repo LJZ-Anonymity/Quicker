@@ -82,7 +82,6 @@ namespace Quicker
             InitializeTimer(); // 初始化定时器
             InitializeTaskbar(); // 初始化托盘图标
             InitializeHookAsync(); // 初始化钩子
-            CheckAppUpdate(); // 检查应用更新
             this.MainWindow = null; // 设置主窗口为null，避免应用程序在没有窗口时退出
         }
 
@@ -114,18 +113,6 @@ namespace Quicker
         {
             using var databaseUpdater = new DatabaseUpdateManager();
             databaseUpdater.CheckAndUpgradeDatabase(); // 检查并升级数据库
-        }
-
-        /// <summary>
-        /// 检查应用更新
-        /// </summary>
-        private async void CheckAppUpdate()
-        {
-            await Task.Run(() =>
-            {
-                using var updateManager = new AppUpdateManager(); // 创建更新管理器
-                updateManager.CheckForUpdate(); // 检查并安装更新
-            });
         }
 
         /// <summary>

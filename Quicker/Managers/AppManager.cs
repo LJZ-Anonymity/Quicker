@@ -263,7 +263,6 @@ namespace Quicker.Managers
         /// 获取 UWP 图标（三级回退）：
         ///   ① UwpIconResolver 的磁盘缓存（含 unplated 优先）
         ///   ② WinRT DisplayInfo.GetLogo(400x400)
-        ///   ③ 返回 null
         /// </summary>
         private async Task<ImageSource> GetUwpAppIconAsync(
             AppListEntry appEntry, string packageFamilyName, string aumid)
@@ -304,8 +303,6 @@ namespace Quicker.Managers
         /// <summary>
         /// 从文件路径加载图标
         /// </summary>
-        /// <param name="filePath"> 文件路径 </param>
-        /// <returns></returns>
         private async Task<ImageSource> GetIconAsync(string filePath)
         {
             if (_iconCache.TryGetValue(filePath, out var weakRef)
@@ -334,8 +331,6 @@ namespace Quicker.Managers
         /// <summary>
         ///从 .lnk 解析目标路径（带 TTL）
         /// </summary>
-        /// <param name="linkFilePath"> .lnk 文件路径 </param>
-        /// <returns></returns>
         private string GetTargetPathFromLinkFile(string linkFilePath)
         {
             if (_linkTargetCache.TryGetValue(linkFilePath, out var entry)
@@ -355,43 +350,6 @@ namespace Quicker.Managers
                 return targetPath;
             }
             catch { return null; }
-        }
-
-        /// <summary>
-        /// 获取图标（三级回退）
-        /// </summary>
-        /// <param name="linkFilePath"> .lnk 文件路径 </param>
-        /// <returns></returns>
-        private ImageSource ShellIconFromLink(string linkFilePath)
-        {
-            string cacheKey = GetCacheKey(linkFilePath);
-            if (cacheKey == null) return null;
-
-            if (_iconCache.TryGetValue(cacheKey, out var wr) && wr.TryGetTarget(out var cached))
-                return cached;
-
-            try
-            {
-                string targetPath = GetTargetPathFromLinkFile(linkFilePath);
-                if (!string.IsNullOrEmpty(targetPath))
-                {
-                    var icon1 = ExtractIconFromPath(targetPath);
-                    if (icon1 != null)
-                    {
-                        _iconCache[cacheKey] = new WeakReference<ImageSource>(icon1);
-                        return icon1;
-                    }
-                }
-
-                var icon2 = ExtractIconFromPath(linkFilePath);
-                if (icon2 != null)
-                {
-                    _iconCache[cacheKey] = new WeakReference<ImageSource>(icon2);
-                    return icon2;
-                }
-            }
-            catch { }
-            return null;
         }
 
         /// <summary>

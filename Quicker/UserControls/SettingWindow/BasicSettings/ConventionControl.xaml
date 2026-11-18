@@ -29,10 +29,7 @@
                     </Grid>
                 </GroupBox>
                 <GroupBox Header="软件更新" Style="{StaticResource SettingGroupBox}" Margin="5,5,0,0">
-                    <Grid>
-                        <Label x:Name="VersionLabel" Content="当前版本：" VerticalAlignment="Top" FontSize="14" HorizontalContentAlignment="Right" HorizontalAlignment="Left"/>
-                        <Button x:Name="CheckUpdateButton" Content="检查是否有更新" Style="{StaticResource WhiteButton}" Click="CheckUpdateButton_Click" Margin="6,33,0,0" VerticalAlignment="Top" Width="107" HorizontalAlignment="Left" FontSize="12"/>
-                    </Grid>
+                    <Label x:Name="VersionLabel" Content="当前版本：" VerticalAlignment="Top" FontSize="14" HorizontalContentAlignment="Right" HorizontalAlignment="Left"/>
                 </GroupBox>
             </Grid>
             <ScrollViewer Margin="0,23,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="645" Height="779">
