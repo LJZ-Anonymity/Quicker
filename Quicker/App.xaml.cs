@@ -991,6 +991,8 @@ namespace Quicker
         // 退出应用释放资源
         protected override void OnExit(ExitEventArgs e)
         {
+            ActionManager.SharedModuleLoader.UnloadAll(); // 统一关闭并清理所有扩展宿主进程
+
             // 先释放关键资源，避免阻塞退出流程
             DisposeTaskbarIcon();
             DisposeHook();

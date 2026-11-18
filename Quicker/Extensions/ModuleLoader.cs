@@ -19,16 +19,21 @@ namespace Quicker.Extensions
         private readonly Dictionary<string, ExtensionHostHandle> _hosts = new();
         private readonly ToastManager _toast = new();
 
+        /// <summary>
+        /// 加载并激活扩展；若宿主进程已在运行，则直接向其发送 activate 指令。
+        /// </summary>
         public void LoadModule(string modulePath)
         {
             try
             {
                 string assemblyName = Path.GetFileNameWithoutExtension(modulePath);
 
+                // 宿主已存在且存活，直接复用连接并再次触发 Activate
                 if (_hosts.TryGetValue(assemblyName, out var existingHandle))
                 {
                     if (existingHandle.Process != null && !existingHandle.Process.HasExited)
                     {
+                        ActivateHandle(existingHandle);
                         return;
                     }
 
@@ -36,27 +41,24 @@ namespace Quicker.Extensions
                     _hosts.Remove(assemblyName);
                 }
 
+                // 启动新宿主进程并建立管道连接
                 string hostPath = ResolveHostExecutable();
                 string pipeName = $"{HostProtocol.PipePrefix}{Guid.NewGuid():N}";
 
                 var process = StartHostProcess(hostPath, modulePath, pipeName);
                 var handle = ConnectToHost(pipeName, process);
+                handle.Process = process;
 
                 var metadata = RequestMetadata(handle);
                 if (metadata is null)
                 {
+                    handle.Dispose();
                     throw new InvalidOperationException("无法读取扩展元数据");
                 }
 
-                var activateResult = SendCommand(handle, new HostCommand("activate"));
-                if (!activateResult.Ok)
-                {
-                    throw new InvalidOperationException(activateResult.Error ?? "激活失败");
-                }
-
-                handle.Process = process;
+                // 首次激活
+                ActivateHandle(handle);
                 _hosts[assemblyName] = handle;
-
                 process.EnableRaisingEvents = true;
                 process.Exited += (s, e) =>
                 {
@@ -73,7 +75,38 @@ namespace Quicker.Extensions
             }
             catch (Exception ex)
             {
-                Application.Current?.Dispatcher.BeginInvoke(() => _toast.Show($"加载模块时出错：{ex.Message}", ToastType.Error));
+                Application.Current?.Dispatcher.BeginInvoke(() => _toast.Show($"加载或激活模块时出错：{ex.Message}", ToastType.Error));
+            }
+        }
+
+        /// <summary>
+        /// 单独向已加载的扩展发送激活命令（供解耦后的点击事件调用）。
+        /// </summary>
+        public void ActivateModule(string moduleName)
+        {
+            try
+            {
+                if (!_hosts.TryGetValue(moduleName, out var handle) ||
+                    handle.Process == null ||
+                    handle.Process.HasExited)
+                {
+                    throw new InvalidOperationException($"扩展 {moduleName} 尚未加载或宿主已退出");
+                }
+
+                ActivateHandle(handle);
+            }
+            catch (Exception ex)
+            {
+                Application.Current?.Dispatcher.BeginInvoke(() => _toast.Show($"激活模块时出错：{ex.Message}", ToastType.Error));
+            }
+        }
+
+        private void ActivateHandle(ExtensionHostHandle handle)
+        {
+            var activateResult = SendCommand(handle, new HostCommand("activate"));
+            if (!activateResult.Ok)
+            {
+                throw new InvalidOperationException(activateResult.Error ?? "激活失败");
             }
         }
 
@@ -149,8 +182,7 @@ namespace Quicker.Extensions
                     }
                     catch (Exception ex) when (ex is IOException or ObjectDisposedException or InvalidOperationException)
                     {
-                        // ★ 管道已断开或已释放，必须退出循环，否则 catch 空转会吃满 CPU
-                        break;
+                        break; // 管道已断开或已释放，退出循环防止空转吃满 CPU
                     }
 
                     if (line == null) break;
@@ -208,7 +240,6 @@ namespace Quicker.Extensions
                 ArgumentList = { modulePath, pipeName },
                 UseShellExecute = false,
                 CreateNoWindow = false,
-
                 WorkingDirectory = Path.GetDirectoryName(hostPath) ?? AppContext.BaseDirectory
             };
 
@@ -266,11 +297,6 @@ namespace Quicker.Extensions
                     var response = handle.LastResponse;
                     if (response == null) throw new InvalidOperationException("扩展宿主无响应或连接已断开");
 
-                    if (!response.Ok && response.Error is not null)
-                    {
-                        Application.Current?.Dispatcher.BeginInvoke(() => _toast.Show($"扩展错误：{response.Error}", ToastType.Error));
-                    }
-
                     return response;
                 }
                 else
@@ -286,15 +312,13 @@ namespace Quicker.Extensions
             if (!exeName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
                 exeName += ".exe";
 
-            // Release / 发布：只认主程序目录（csproj 会自动 copy 过来）
             string directPath = Path.Combine(AppContext.BaseDirectory, exeName);
             if (File.Exists(directPath))
             {
                 return directPath;
             }
 
-            #if DEBUG
-            // 仅 Debug 下做源码目录兜底，方便本地边写边跑
+#if DEBUG
             string baseDir = AppContext.BaseDirectory;
             string[] candidates =
             {
@@ -308,10 +332,22 @@ namespace Quicker.Extensions
                     return path;
                 }
             }
-            #endif
+#endif
 
             throw new FileNotFoundException(
                 $"未找到扩展宿主 {exeName}，请确认它和主程序在同一目录。");
+        }
+
+        /// <summary>
+        /// 卸载并关闭所有运行中的扩展宿主进程
+        /// </summary>
+        public void UnloadAll()
+        {
+            var moduleNames = _hosts.Keys.ToList();
+            foreach (var name in moduleNames)
+            {
+                UnloadModule(name);
+            }
         }
 
         private sealed class ExtensionHostHandle : IDisposable

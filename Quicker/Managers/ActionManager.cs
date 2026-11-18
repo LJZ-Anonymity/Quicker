@@ -22,9 +22,9 @@ namespace Quicker.Managers
         private readonly IActionLauncher _launcher;
 
         // 将 ModuleLoader 设为全局共享单例，确保 _hosts 字典不会丢失，防止重复启动宿主进程
-        private static readonly ModuleLoader _sharedModuleLoader = new ModuleLoader();
+        public static ModuleLoader SharedModuleLoader { get; } = new ModuleLoader();
 
-        public ActionManager() : this(new ProcessActionLauncher(), _sharedModuleLoader)
+        public ActionManager() : this(new ProcessActionLauncher(), SharedModuleLoader)
         {
         }
 
