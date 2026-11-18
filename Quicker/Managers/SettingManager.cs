@@ -336,7 +336,6 @@ namespace Quicker.Managers
         /// <typeparam name="T">设置对象类型</typeparam>
         /// <param name="obj1">第一个设置对象</param>
         /// <param name="obj2">第二个设置对象</param>
-        /// <returns>是否相等</returns>
         private bool AreSettingsEqual<T>(T obj1, T obj2) where T : class
         {
             if (obj1 == null && obj2 == null) return true; // 如果两个对象都为null，认为相等

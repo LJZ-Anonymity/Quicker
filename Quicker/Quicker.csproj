@@ -61,6 +61,7 @@
 		<None Remove=".gitignore" />
 		<None Remove=".gitignore~RF3e5ebf6d.TMP" />
 		<None Remove="App.xaml.cs~RF119692ff.TMP" />
+		<None Remove="UserControls\SettingWindow\BasicSettings\AppearanceControl.xaml.cs~RF10a8afc.TMP" />
 		<None Remove="Windows\MainWindow.xaml.cs~RF56f46fe.TMP" />
 		<None Remove="Windows\MainWindow.xaml.cs~RFc4626a.TMP" />
 		<None Remove="Windows\okjxncmm.k0p~" />

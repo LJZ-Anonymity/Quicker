@@ -545,11 +545,11 @@
                                 </Rectangle>
                             </Button>
                             <Button x:Name="ActionPageManager" Style="{StaticResource Task}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="82,0,0,0">
-                                <Rectangle Width="16" Height="16" Fill="{Binding ElementName=ToolbarIconColorButton, Path=Background}">
-                                    <Rectangle.OpacityMask>
-                                        <ImageBrush ImageSource="/Resources/Images/MoreSelection.png"/>
-                                    </Rectangle.OpacityMask>
-                                </Rectangle>
+                                    <Rectangle Width="16" Height="16" Fill="{Binding ElementName=ToolbarIconColorButton, Path=Background}">
+                                        <Rectangle.OpacityMask>
+                                            <ImageBrush ImageSource="/Resources/Images/MoreSelection.png"/>
+                                        </Rectangle.OpacityMask>
+                                    </Rectangle>
                             </Button>
                             <Button Style="{StaticResource Task}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,26,0">
                                 <Rectangle Width="20" Height="20" Fill="{Binding ElementName=ToolbarIconColorButton, Path=Background}">
@@ -614,7 +614,7 @@
                         </Grid>
                         <!-- 功能栏 -->
                         <Grid x:Name="FunctionBarGrid" VerticalAlignment="Center" Height="25" Background="{Binding ElementName=ToolbarColorButton, Path=Background}" Grid.Row="2">
-                            <TextBlock x:Name="CommonTextBlock" Text="默认" HorizontalAlignment="Left" VerticalAlignment="Center" Foreground="{Binding ElementName=ToolbarIconColorButton, Path=Background}" TextAlignment="Center" Margin="10,0"/>
+                            <TextBlock Text="默认" HorizontalAlignment="Left" VerticalAlignment="Center" Foreground="{Binding ElementName=ToolbarIconColorButton, Path=Background}" TextAlignment="Center" Margin="10,0"/>
                             <Button IsEnabled="False" HorizontalAlignment="Right" Margin="0,0,58,0" Style="{StaticResource Task}">
                                 <Rectangle Width="14" Height="14" Fill="{Binding ElementName=ToolbarIconColorButton, Path=Background}">
                                     <Rectangle.OpacityMask>
@@ -652,12 +652,8 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="{Binding ElementName=ButtonGapSlider, Path=Value}"/>
                                 <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="{Binding ElementName=ButtonGapSlider, Path=Value}"/>
-                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="{Binding ElementName=ButtonGapSlider, Path=Value}"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="{Binding ElementName=ButtonGapSlider, Path=Value}"/>
                                 <RowDefinition Height="Auto"/>
@@ -692,7 +688,7 @@
             </Grid>
         </Grid>
 
-        <!-- 添加颜色选择器Popup -->
+        <!-- 颜色选择器Popup -->
         <Popup x:Name="ColorPickerPopup" StaysOpen="False" Placement="Bottom" PlacementTarget="{Binding ElementName=BackgroundColorButton}" AllowsTransparency="True" Closed="ColorPickerPopup_Closed">
             <Border Background="White" BorderBrush="Gray" BorderThickness="1" CornerRadius="3">
                 <setting:ColorPicker x:Name="PopupColorPicker" Width="245" Height="280" SelectedColorChanged="PopupColorPicker_SelectedColorChanged"/>
