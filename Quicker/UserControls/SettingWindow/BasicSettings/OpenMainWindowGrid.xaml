@@ -18,7 +18,7 @@
             <ColumnDefinition Width="953*"/>
         </Grid.ColumnDefinitions>
         <!-- 基础设置-弹出面板-弹出面板 -->
-        <Button x:Name="OpenMainWindowButton" Content="弹出面板" ToolTip="面板窗口的触发方式" Style="{StaticResource Button3}" Margin="1,14,0,0" Width="74" Click="OpenMainWindowButton_Click" Grid.Column="1" Height="30" BorderThickness="0,0,0,2"/>
+        <Button x:Name="OpenMainWindowButton" Content="弹出面板" ToolTip="面板窗口的触发方式" Style="{StaticResource Button3}" Margin="1,14,0,0" Width="74" Click="OpenMainWindowButton_Click" Grid.Column="1" BorderThickness="0,0,0,2"/>
         <Grid x:Name="OpenMainWindowButtonGrid" Margin="10,43,0,0" Visibility="Visible" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="186*"/>

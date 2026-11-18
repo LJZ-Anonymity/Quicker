@@ -17,7 +17,7 @@
             <ColumnDefinition Width="15*"/>
             <ColumnDefinition Width="953*"/>
         </Grid.ColumnDefinitions>
-        <Button Content="常规" Style="{StaticResource Button3}" Margin="1,14,0,0" Width="68" Grid.Column="1" Height="30" BorderThickness="0,0,0,2"/>
+        <Button Content="常规" Style="{StaticResource Button3}" Margin="1,14,0,0" Width="68" Grid.Column="1" BorderThickness="0,0,0,2"/>
         <Grid Margin="10,43,0,0" Grid.ColumnSpan="2">
             <Grid Margin="0,23,0,0" HorizontalAlignment="Right" VerticalAlignment="Top" Height="320" RenderTransformOrigin="0.5,0.5" Width="307">
                 <GroupBox Header="使用情况" HorizontalAlignment="Left" Height="190" VerticalAlignment="Top" Width="277" Margin="10,107,0,0">

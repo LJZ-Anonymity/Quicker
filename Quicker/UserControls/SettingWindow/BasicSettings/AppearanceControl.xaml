@@ -82,7 +82,7 @@
             <ColumnDefinition Width="952*"/>
         </Grid.ColumnDefinitions>
         <!-- 基础设置-外观-面板窗口 -->
-        <Button x:Name="AppearanceButton"  Content="面板窗口" ToolTip="外观设置" Style="{StaticResource Button3}" Margin="1,14,0,0" Width="82" Grid.Column="1" Height="30" BorderThickness="0,0,0,2"/>
+        <Button x:Name="AppearanceButton"  Content="面板窗口" ToolTip="外观设置" Style="{StaticResource Button3}" Margin="1,14,0,0" Width="82" Grid.Column="1" BorderThickness="0,0,0,2"/>
         <Grid x:Name="AppearanceButtonGrid" Margin="10,43,0,0" Grid.ColumnSpan="2">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="186*"/>
@@ -545,11 +545,11 @@
                                 </Rectangle>
                             </Button>
                             <Button x:Name="ActionPageManager" Style="{StaticResource Task}" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="82,0,0,0">
-                                    <Rectangle Width="16" Height="16" Fill="{Binding ElementName=ToolbarIconColorButton, Path=Background}">
-                                        <Rectangle.OpacityMask>
-                                            <ImageBrush ImageSource="/Resources/Images/MoreSelection.png"/>
-                                        </Rectangle.OpacityMask>
-                                    </Rectangle>
+                                <Rectangle Width="16" Height="16" Fill="{Binding ElementName=ToolbarIconColorButton, Path=Background}">
+                                    <Rectangle.OpacityMask>
+                                        <ImageBrush ImageSource="/Resources/Images/MoreSelection.png"/>
+                                    </Rectangle.OpacityMask>
+                                </Rectangle>
                             </Button>
                             <Button Style="{StaticResource Task}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,26,0">
                                 <Rectangle Width="20" Height="20" Fill="{Binding ElementName=ToolbarIconColorButton, Path=Background}">
