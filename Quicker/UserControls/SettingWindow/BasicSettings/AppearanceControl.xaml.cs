@@ -39,6 +39,11 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         private SolidColorBrush _currentBrush;
         private SettingManager settingManager;
         private bool _isInitializing = true;
+        private int _suppressWrites; // 批量刷新界面（重置/预置/导入/补应用字体）时临时抑制写库
+        private bool WritesSuppressed => _isInitializing || _suppressWrites > 0;
+
+        // 分享时用它代替本地路径：表示"载体 PNG 本身就是背景图"，避免泄露本机路径又不丢背景
+        private const string EmbeddedBackgroundMarker = "<embedded>";
         private Button _currentColorButton;
         private bool _pendingColorFlush;
 
@@ -110,6 +115,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             settingManager = settingWindow._settingManager;
             weakSettingWindow = new(settingWindow);
             this.DataContext = this;
+            InitializeSettingsDebounceTimer(); // 提前创建，避免初始化窗口期内空引用
 
             Dispatcher.BeginInvoke(new Action(async () =>
             {
@@ -117,7 +123,6 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
                 {
                     await InitializeAsync();
                     InitializeSettingsChangeTimer();
-                    InitializeSettingsDebounceTimer();
                     await InitializeFontComboBoxes();
                 }
                 catch (Exception ex)
@@ -164,7 +169,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
 
         private void ScheduleSettingsFlush()
         {
-            if (_isInitializing) return;
+            if (WritesSuppressed || _settingsDebounceTimer == null) return;
             _pendingSettingsFlush = true;
             _settingsDebounceTimer.Stop();
             _settingsDebounceTimer.Start();
@@ -176,13 +181,16 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             FlushSettingsChange();
         }
 
-        private void FlushSettingsChange()
+        private void FlushSettingsChange(bool reloadPreview = true)
         {
             if (!_pendingSettingsFlush || settingManager == null) return;
             _pendingSettingsFlush = false;
 
             SettingDatabase.UpdateAppearance(settingManager.appearanceConditions);
             AppStateManager.NotifyAppearanceChanged(settingManager.appearanceConditions);
+
+            // 图标大小、标题宽度、字号等由 ButtonManager 在代码里按设置创建，需要在落库后重刷预览
+            if (reloadPreview) LoadGlobalButtonsForPreview();
         }
         #endregion
 
@@ -278,14 +286,6 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
 
             EnablePreviewCheckBox.IsChecked = settingManager.appearanceConditions.EnablePreview;
             ViewPreviewBorder.Visibility = settingManager.appearanceConditions.EnablePreview ? Visibility.Visible : Visibility.Collapsed;
-
-            if (settingManager.appearanceConditions.EnablePreview && !_isInitializing)
-            {
-                Dispatcher.BeginInvoke(new Action(() =>
-                {
-                    LoadGlobalButtonsForPreview();
-                }), System.Windows.Threading.DispatcherPriority.Background);
-            }
         }
         #endregion
 
@@ -306,7 +306,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         #region 复选框点击事件
         private void CheckBox_Click(object sender, RoutedEventArgs e)
         {
-            if (_isInitializing || settingManager == null) return;
+            if (WritesSuppressed || settingManager == null) return;
             var checkBox = sender as CheckBox;
             if (checkBox == null) return;
             bool value = checkBox.IsChecked == true;
@@ -335,6 +335,9 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             }
             SettingDatabase.UpdateAppearance(settingManager.appearanceConditions);
             AppStateManager.NotifyAppearanceChanged(settingManager.appearanceConditions);
+
+            if (checkBox.Name != "EnablePreviewCheckBox")
+                LoadGlobalButtonsForPreview();
         }
         #endregion
 
@@ -356,7 +359,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
 
         private void PopupColorPicker_SelectedColorChanged(object sender, ColorChangedEventArgs e)
         {
-            if (_isInitializing || _currentBrush == null || settingManager == null) return;
+            if (WritesSuppressed || _currentBrush == null || settingManager == null) return;
 
             _currentBrush.Color = e.NewColor;
             UpdateAppearanceColorProperty(_currentBrush, e.NewColor);
@@ -430,6 +433,17 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         #region 资源释放
         private void AppearanceGrid_Unloaded(object sender, RoutedEventArgs e)
         {
+            // 离开页面前，把防抖期内尚未提交的修改落库（不再触发预览重载）
+            try
+            {
+                FlushColorChange();
+                FlushSettingsChange(false);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Unloaded flush error: {ex.Message}");
+            }
+
             _settingsChangeTimer?.Stop();
             _settingsChangeTimer = null;
 
@@ -473,7 +487,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
 
         private void LoadGlobalButtonsForPreview()
         {
-            if (_isInitializing || !settingManager.appearanceConditions.EnablePreview) return;
+            if (_isInitializing || settingManager == null || !settingManager.appearanceConditions.EnablePreview) return;
             LoadGlobalButtonsForPreviewInternal();
         }
 
@@ -495,6 +509,11 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
 
                     await Application.Current.Dispatcher.InvokeAsync(() =>
                     {
+                        if (settingManager == null) return; // 页面已卸载
+
+                        // ButtonManager 内部缓存了外观设置（来自数据库），每次重刷前先失效，保证读到最新值
+                        buttonManager.InvalidateAppearance();
+
                         var buttons = GlobalGrid.Children.OfType<Button>().ToList();
                         bool hasChanges = ProcessButtonsWithData(buttons, globalButtons);
                         if (!hasChanges)
@@ -548,7 +567,10 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         {
             var defaultData = CreateDefaultButtonData();
             var global11Button = buttons.FirstOrDefault(b => b.Name == "_global11");
-            ApplyButtonData(global11Button, defaultData);
+            if (global11Button != null)
+            {
+                ApplyButtonData(global11Button, defaultData);
+            }
         }
 
         private ButtonData CreateDefaultButtonData()
@@ -603,7 +625,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         #region 滑块改变事件
         private void Slider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if (_isInitializing || settingManager == null) return;
+            if (WritesSuppressed || settingManager == null) return;
             var slider = sender as Slider;
             if (slider == null) return;
 
@@ -637,7 +659,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         #region 字体与圆角
         private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (_isInitializing || settingManager == null) return;
+            if (WritesSuppressed || settingManager == null) return;
             if (sender is ComboBox comboBox)
             {
                 switch (comboBox.Name)
@@ -655,9 +677,15 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
                         if (comboBox.SelectedItem is string fontName)
                         {
                             if (comboBox.Name == "FontSizeComboBox1")
+                            {
                                 settingManager.appearanceConditions.Font1Name = fontName;
+                                settingManager.appearanceConditions.Font1 = comboBox.SelectedIndex; // 过渡期同时保留下标
+                            }
                             else
+                            {
                                 settingManager.appearanceConditions.Font2Name = fontName;
+                                settingManager.appearanceConditions.Font2 = comboBox.SelectedIndex;
+                            }
                         }
                         ApplyGlobalFontFamily();
                         break;
@@ -776,13 +804,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             {
                 string imagePath = Clipboard.GetText().Trim().Replace("\"", "");
                 BackgroundImagePathTextBox.Text = imagePath;
-                EnablePreviewCheckBox.IsChecked = true;
-                if (settingManager != null)
-                {
-                    settingManager.appearanceConditions.EnablePreview = true;
-                    ViewPreviewBorder.Visibility = Visibility.Visible;
-                    LoadGlobalButtonsForPreview();
-                }
+                SetPreviewEnabled(true);
             }
             catch (Exception ex)
             {
@@ -805,23 +827,25 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             }
         }
 
-        private void BackgroundImagePathButton_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        private void SetPreviewBackgroundImage(string path)
+        {
+            if (!IsLoaded || PreviewBackgroundImage == null) return;
+            var iconManager = new IconManager();
+            iconManager.SetImageWithGifSupport(PreviewBackgroundImage, path);
+        }
+
+        private void ClearBackgroundImageButton_Click(object sender, RoutedEventArgs e)
         {
             BackgroundImagePathTextBox.Text = "";
         }
 
-        private void SetPreviewBackgroundImage(string path)
-        {
-            if (!IsLoaded || PreviewBackgroundImage == null) return;
-            var iconManager = new Quicker.Managers.IconManager();
-            iconManager.SetImageWithGifSupport(PreviewBackgroundImage, path);
-        }
-
         private void BackgroundImagePathTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (_isInitializing || settingManager == null) return;
+            if (WritesSuppressed || settingManager == null) return;
+            SetPreviewBackgroundImage(BackgroundImagePathTextBox.Text);
             settingManager.appearanceConditions.BackgroundImagePath = BackgroundImagePathTextBox.Text;
-            ScheduleSettingsFlush();
+            SettingDatabase.UpdateAppearance(settingManager.appearanceConditions);
+            AppStateManager.NotifyAppearanceChanged(settingManager.appearanceConditions);
         }
         #endregion
 
@@ -831,9 +855,11 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             try
             {
                 var appearance = settingManager.appearanceConditions;
-                // 深度复制并清空敏感本地路径
+                // 深拷贝后替换本地路径：有自定义背景则写占位符（导入端据此把载体 PNG 当作背景），否则留空
                 var exportAppearance = JsonSerializer.Deserialize<Appearance>(JsonSerializer.Serialize(appearance));
-                if (exportAppearance != null) exportAppearance.BackgroundImagePath = string.Empty;
+                bool hasCustomBackground = !string.IsNullOrEmpty(appearance.BackgroundImagePath) && File.Exists(appearance.BackgroundImagePath);
+                if (exportAppearance != null)
+                    exportAppearance.BackgroundImagePath = hasCustomBackground ? EmbeddedBackgroundMarker : string.Empty;
 
                 string json = JsonSerializer.Serialize(exportAppearance);
                 string inputPngPath = GetAppearanceCarrierImagePath();
@@ -971,24 +997,97 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
 
             string json = Encoding.UTF8.GetString(Convert.FromBase64String(base64));
             var imported = JsonSerializer.Deserialize<Appearance>(json);
+            if (imported == null) return null;
 
-            // 用默认预置对象补缺防错
-            var defaultPreset = CreatePreset();
-            if (imported != null)
+            NormalizeImportedAppearance(imported, json);
+            return imported;
+        }
+
+        // 外观中参与导入补缺的字段（与 CreatePreset 中的字段一致）
+        private static readonly string[] ImportableFields =
+        {
+            "ButtonSize", "ButtonGap", "BorderWidth", "ButtonCornerRadius",
+            "BackgroundColor", "BorderColor", "ToolbarColor", "ToolbarIconColor",
+            "ActionButtonColor", "ActionButtonMouseOverColor", "BlankButtonColor",
+            "BlankButtonMouseOverColor", "ButtonTextColor",
+            "Font1", "Font2", "FontSize", "FontWeight",
+            "BackgroundImagePath", "BackgroundImageOpacity",
+            "Blur", "Win11CornerRadius",
+            "AutoHideTitleBar", "ShowActionButtonMouseOver", "HideActionNameAfterIcon", "ShowActionIconShadow",
+            "EnablePreview"
+        };
+
+        /// <summary>
+        /// 对导入的外观做补缺与校验：JSON 中缺失的字段（含数值类型）用默认值补齐；颜色格式、数值范围不合法时回退/夹取
+        /// </summary>
+        private static void NormalizeImportedAppearance(Appearance a, string json)
+        {
+            var d = CreatePreset();
+
+            try
             {
-                foreach (var prop in typeof(Appearance).GetProperties())
+                using var doc = JsonDocument.Parse(json);
+                var present = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                if (doc.RootElement.ValueKind == JsonValueKind.Object)
                 {
-                    if (prop.CanRead && prop.CanWrite)
+                    foreach (var p in doc.RootElement.EnumerateObject())
                     {
-                        var val = prop.GetValue(imported);
-                        if (val == null)
-                        {
-                            prop.SetValue(imported, prop.GetValue(defaultPreset));
-                        }
+                        if (p.Value.ValueKind != JsonValueKind.Null) present.Add(p.Name);
+                    }
+                }
+
+                foreach (var name in ImportableFields)
+                {
+                    if (present.Contains(name)) continue;
+                    var prop = typeof(Appearance).GetProperty(name);
+                    if (prop != null && prop.CanRead && prop.CanWrite)
+                    {
+                        prop.SetValue(a, prop.GetValue(d));
                     }
                 }
             }
-            return imported;
+            catch (JsonException)
+            {
+                // json 已经反序列化成功过，这里理论上不会出现；出现则只做下面的范围校验
+            }
+
+            a.BackgroundColor = NormalizeColor(a.BackgroundColor, d.BackgroundColor);
+            a.BorderColor = NormalizeColor(a.BorderColor, d.BorderColor);
+            a.ToolbarColor = NormalizeColor(a.ToolbarColor, d.ToolbarColor);
+            a.ToolbarIconColor = NormalizeColor(a.ToolbarIconColor, d.ToolbarIconColor);
+            a.ActionButtonColor = NormalizeColor(a.ActionButtonColor, d.ActionButtonColor);
+            a.ActionButtonMouseOverColor = NormalizeColor(a.ActionButtonMouseOverColor, d.ActionButtonMouseOverColor);
+            a.BlankButtonColor = NormalizeColor(a.BlankButtonColor, d.BlankButtonColor);
+            a.BlankButtonMouseOverColor = NormalizeColor(a.BlankButtonMouseOverColor, d.BlankButtonMouseOverColor);
+            a.ButtonTextColor = NormalizeColor(a.ButtonTextColor, d.ButtonTextColor);
+
+            // 范围与界面滑块/下拉框保持一致
+            a.ButtonSize = Math.Clamp(a.ButtonSize, 40, 100);
+            a.ButtonGap = Math.Clamp(a.ButtonGap, 0, 10);
+            a.BorderWidth = Math.Clamp(a.BorderWidth, 0, 15);
+            a.ButtonCornerRadius = Math.Clamp(a.ButtonCornerRadius, 0, 40);
+            a.FontSize = Math.Clamp(a.FontSize, 4, 24);
+            a.BackgroundImageOpacity = Math.Clamp(a.BackgroundImageOpacity, 0, 1);
+            a.Blur = Math.Clamp(a.Blur, 0, 3);
+            a.Win11CornerRadius = Math.Clamp(a.Win11CornerRadius, 0, 3);
+            a.FontWeight = Math.Clamp(a.FontWeight, 0, 15);
+            if (a.Font1 < -1) a.Font1 = -1;
+            if (a.Font2 < -1) a.Font2 = -1;
+            if (a.BackgroundImagePath == null) a.BackgroundImagePath = string.Empty;
+        }
+
+        private static string NormalizeColor(string value, string fallback)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return fallback;
+            try
+            {
+                ColorConverter.ConvertFromString(value);
+                return value;
+            }
+            catch
+            {
+                return fallback;
+            }
         }
 
         private void ImportAppearanceButton_Click(object sender, RoutedEventArgs e)
@@ -1042,15 +1141,24 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
 
         private void ApplyImportedAppearance(Appearance appearance)
         {
-            SettingDatabase.UpdateAppearance(appearance);
-            settingManager.appearanceConditions = appearance;
-            RefreshInterfaceDisplay();
-            AppStateManager.NotifyAppearanceChanged(settingManager.appearanceConditions);
-
-            EnablePreviewCheckBox.IsChecked = true;
-            settingManager.appearanceConditions.EnablePreview = true;
-            ViewPreviewBorder.Visibility = Visibility.Visible;
-            LoadGlobalButtonsForPreview();
+            var previous = settingManager.appearanceConditions;
+            try
+            {
+                appearance.EnablePreview = true; // 导入后保证预览可见，并随外观一起落库
+                SettingDatabase.UpdateAppearance(appearance);
+                settingManager.appearanceConditions = appearance;
+                AppStateManager.NotifyAppearanceChanged(settingManager.appearanceConditions);
+                RefreshInterfaceDisplay(); // 内部会加载预览
+            }
+            catch
+            {
+                // 应用失败则回滚到导入前的外观，避免半应用状态
+                settingManager.appearanceConditions = previous;
+                SettingDatabase.UpdateAppearance(previous);
+                AppStateManager.NotifyAppearanceChanged(previous);
+                RefreshInterfaceDisplay();
+                throw;
+            }
         }
 
         private void RemoveTextChunkAndCopy(string srcPath, string destPath)
@@ -1143,7 +1251,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
 
         private void RefreshInterfaceDisplay()
         {
-            _isInitializing = true;
+            _suppressWrites++;
             try
             {
                 ApplyButtonSettings();
@@ -1155,7 +1263,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             }
             finally
             {
-                _isInitializing = false;
+                _suppressWrites--;
             }
 
             if (settingManager.appearanceConditions.EnablePreview)
@@ -1284,21 +1392,29 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         {
             if (_cachedSystemFonts == null)
             {
-                await Task.Run(() =>
+                _cachedSystemFonts = await Task.Run(() =>
                 {
-                    _cachedSystemFonts = Fonts.SystemFontFamilies.Select(f => f.Source).OrderBy(f => f).ToList();
-                    _cachedSystemFonts.Add("(系统默认)");
+                    var list = Fonts.SystemFontFamilies.Select(f => f.Source).OrderBy(f => f).ToList();
+                    list.Add("(系统默认)");
+                    return list;
                 });
             }
 
-            await Application.Current.Dispatcher.InvokeAsync(() =>
-            {
-                FontSizeComboBox1.ItemsSource = _cachedSystemFonts;
-                FontSizeComboBox2.ItemsSource = _cachedSystemFonts;
+            if (settingManager == null) return; // 页面已卸载
 
-                // 列表加载完成后，补一次选中项及应用全局字体
+            FontSizeComboBox1.ItemsSource = _cachedSystemFonts;
+            FontSizeComboBox2.ItemsSource = _cachedSystemFonts;
+
+            // 列表加载完成后补一次选中项并应用全局字体；期间抑制写库，避免启动时就把设置写回数据库
+            _suppressWrites++;
+            try
+            {
                 ApplyFontSettings();
-            });
+            }
+            finally
+            {
+                _suppressWrites--;
+            }
         }
 
         private void ApplyGlobalFontFamily()
@@ -1361,12 +1477,21 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
         }
         private void EnablePreviewCheckBox_Click(object sender, RoutedEventArgs e)
         {
+            SetPreviewEnabled(EnablePreviewCheckBox.IsChecked == true);
+        }
+
+        /// <summary>
+        /// 开启/关闭预览的统一入口：同步复选框、可见性，并立即落库与通知
+        /// </summary>
+        private void SetPreviewEnabled(bool enabled)
+        {
             if (settingManager == null) return;
-            settingManager.appearanceConditions.EnablePreview = EnablePreviewCheckBox.IsChecked == true;
+            EnablePreviewCheckBox.IsChecked = enabled;
+            settingManager.appearanceConditions.EnablePreview = enabled;
             SettingDatabase.UpdateAppearance(settingManager.appearanceConditions);
             AppStateManager.NotifyAppearanceChanged(settingManager.appearanceConditions);
-            ViewPreviewBorder.Visibility = (EnablePreviewCheckBox.IsChecked == true) ? Visibility.Visible : Visibility.Collapsed;
-            if (EnablePreviewCheckBox.IsChecked == true)
+            ViewPreviewBorder.Visibility = enabled ? Visibility.Visible : Visibility.Collapsed;
+            if (enabled)
             {
                 LoadGlobalButtonsForPreview();
             }

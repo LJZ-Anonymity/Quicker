@@ -940,35 +940,47 @@ namespace Quicker.Managers
         }
 
         /// <summary>
-        /// 加载背景图片（支持 GIF 动图、SVG 和普通图片），自动处理 WpfAnimatedGif 兼容性。
+        /// 加载背景图片（支持 GIF 动图、SVG 和普通图片），自动处理 WpfAnimatedGif 兼容性
         /// </summary>
-        public void SetImageWithGifSupport(Image imageControl, string path)
+        public void SetImageWithGifSupport(Image imageControl, string path, bool showToast = true)
         {
-            if (string.IsNullOrEmpty(path)) return;
+            if (imageControl == null) return;
+
+            // 路径为空：清空图片（预览清空路径、主窗口取消背景都走这里）
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                ClearImage(imageControl);
+                return;
+            }
+
+            // 文件不存在：清空图片，只提示一次，然后返回
             if (!File.Exists(path))
             {
-                ShowToast("背景图片不存在！", ToastType.Error); // 显示Toast
+                ClearImage(imageControl);
+                if (showToast) ShowToast("背景图片不存在！", ToastType.Error);
+                return;
             }
+
             try
             {
-                string ext = Path.GetExtension(path).ToLower(); // 获取文件扩展名
+                string ext = Path.GetExtension(path).ToLowerInvariant();
                 if (ext == ".gif")
                 {
-                    SetGifImage(imageControl, path); // 设置GIF动图
+                    SetGifImage(imageControl, path);
                 }
                 else if (ext == ".svg")
                 {
-                    SetSvgImage(imageControl, path); // 设置SVG图片
+                    SetSvgImage(imageControl, path);
                 }
                 else
                 {
-                    SetNormalImage(imageControl, path); // 设置普通图片
+                    SetNormalImage(imageControl, path);
                 }
             }
             catch
             {
-                ClearImage(imageControl); // 清空图片
-                ShowToast("背景图片设置失败！", ToastType.Error); // 显示Toast
+                ClearImage(imageControl);
+                if (showToast) ShowToast("背景图片设置失败！", ToastType.Error);
             }
         }
 
@@ -977,6 +989,7 @@ namespace Quicker.Managers
         /// </summary>
         private void SetGifImage(Image imageControl, string path)
         {
+            ImageBehavior.SetAnimatedSource(imageControl, null);
             var bitmap = CreateBitmapImageFromFile(path);
             ImageBehavior.SetAnimatedSource(imageControl, bitmap); // 设置动画源
         }
@@ -986,6 +999,7 @@ namespace Quicker.Managers
         /// </summary>
         private void SetSvgImage(Image imageControl, string path)
         {
+            ClearImage(imageControl);
             ImageBehavior.SetAnimatedSource(imageControl, null); // 设置动画源为空
             var svgBitmap = LoadSvgToBitmapImage(path); // 加载SVG图片
             imageControl.Source = svgBitmap; // 设置图片源
@@ -996,6 +1010,7 @@ namespace Quicker.Managers
         /// </summary>
         private void SetNormalImage(Image imageControl, string path)
         {
+            ClearImage(imageControl);
             ImageBehavior.SetAnimatedSource(imageControl, null); // 设置动画源为空
             var bitmap = CreateBitmapImageFromFile(path);
             imageControl.Source = bitmap; // 设置图片源
@@ -1006,8 +1021,8 @@ namespace Quicker.Managers
         /// </summary>
         private void ClearImage(Image imageControl)
         {
-            imageControl.Source = null; // 设置图片为空
             ImageBehavior.SetAnimatedSource(imageControl, null); // 设置动画源为空
+            imageControl.Source = null; // 设置图片为空
         }
 
         /// <summary>

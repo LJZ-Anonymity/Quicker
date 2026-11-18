@@ -324,8 +324,8 @@
                                 <Grid VerticalAlignment="Top" HorizontalAlignment="Left">
                                     <Label Content="路径：" FontSize="14" VerticalAlignment="Center" HorizontalAlignment="Left"/>
                                     <TextBox x:Name="BackgroundImagePathTextBox" Style="{StaticResource RoundedTextBox}" HorizontalAlignment="Left" TextAlignment="Right" VerticalAlignment="Center" Width="200" Text="{Binding BackgroundImagePath, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" TextChanged="BackgroundImagePathTextBox_TextChanged" Margin="57,0,0,0"/>
-                                    <Button x:Name="BackgroundImagePathButton" ToolTip="左键添加背景图片，右键清空当前图片" Content="选择..." Style="{StaticResource WhiteButton}" HorizontalAlignment="Left" Margin="272,0,0,0" Width="53" Click="BackgroundImagePathButton_Click" MouseRightButtonDown="BackgroundImagePathButton_MouseRightButtonDown"/>
-                                    <Popup x:Name="BackgroundImagePathPopup" PopupAnimation="Fade" Width="150" Height="62" PlacementTarget="{Binding ElementName=BackgroundImagePathButton}" AllowsTransparency="True" StaysOpen="False">
+                                    <Button x:Name="BackgroundImagePathButton" Content="选择..." Style="{StaticResource WhiteButton}" HorizontalAlignment="Left" Margin="272,0,0,0" Width="53" Click="BackgroundImagePathButton_Click"/>
+                                    <Popup x:Name="BackgroundImagePathPopup" PopupAnimation="Fade" Width="130" Height="87" PlacementTarget="{Binding ElementName=BackgroundImagePathButton}" AllowsTransparency="True" StaysOpen="False">
                                         <Grid>
                                             <Border Background="White" BorderThickness="0" CornerRadius="3" Margin="3">
                                                 <Border.Effect>
@@ -334,7 +334,12 @@
                                             </Border>
                                             <Border Background="White" BorderThickness="0" CornerRadius="3" Margin="3">
                                                 <StackPanel Background="{x:Null}">
-                                                    <Button x:Name="SelectBackgroundImageButton" Content="选择图片" Style="{StaticResource MenuButton}" Margin="0,3,0,0" Click="SelectBackgroundImageButton_Click"/>
+                                                    <Button x:Name="SelectBackgroundImageButton" Style="{StaticResource MenuButton}" Margin="0,3,0,0" HorizontalContentAlignment="Left" Click="SelectBackgroundImageButton_Click">
+                                                        <TextBlock Text="选择图片" HorizontalAlignment="Left" Margin="7,0"/>
+                                                    </Button>
+                                                    <Button x:Name="ClearBackgroundImageButton" Style="{StaticResource MenuButton}" HorizontalContentAlignment="Left" Click="ClearBackgroundImageButton_Click">
+                                                        <TextBlock Text="清空图片" HorizontalAlignment="Left" Margin="7,0"/>
+                                                    </Button>
                                                     <Button x:Name="InsertClipboardTextButton" Content="插入剪切贴板文本" Style="{StaticResource MenuButton}" Margin="0,0,0,3" Click="InsertClipboardTextButton_Click"/>
                                                 </StackPanel>
                                             </Border>
