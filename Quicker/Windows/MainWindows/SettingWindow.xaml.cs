@@ -1,21 +1,22 @@
-﻿using Quicker.UserControls.SettingWindow.BasicSettings;
-using Quicker.UserControls.SettingWindow.Tools;
-using System.Windows.Threading;
-using System.Windows.Controls;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Windows.Shapes;
+﻿using Microsoft.Win32;
 using Quicker.Database.Core;
+using Quicker.Database.SettingRepositories;
+using Quicker.Helpers;
+using Quicker.Managers;
+using Quicker.Models;
+using Quicker.UserControls.SettingWindow.BasicSettings;
+using Quicker.UserControls.SettingWindow.Tools;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
+using System.Reflection;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Diagnostics;
-using System.Reflection;
-using Quicker.Managers;
-using Microsoft.Win32;
-using Quicker.Helpers;
-using System.Windows;
-using Quicker.Models;
-using System.IO;
+using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace Quicker.Windows.MainWindows
 {
@@ -151,11 +152,11 @@ namespace Quicker.Windows.MainWindows
                     _settingManager.openMainWindowConditions.OpenMainWindowByCtrl,
                     _settingManager.openMainWindowConditions.WindowStartupLocation
                     ); // 更新弹出面板设置
-                if (_settingManager.blacklistSettings != null)
-                    SettingDatabase.ApplyBlacklistSettings(
-                        _settingManager.blacklistSettings.IsFullScreenDisabled,
-                        _settingManager.blacklistSettings.IsBlacklistEnabledForExtendedHotkey
-                    ); // 更新黑名单设置
+                var blacklistSetting = AppStateManager.BlacklistSettings;
+                if (blacklistSetting != null)
+                {
+                    BlacklistRepository.UpdateSetting(blacklistSetting);
+                } // 更新黑名单设置
 
                 bool settingsLoadSuccess = true; // 设置加载成功标志
                 try

@@ -17,13 +17,11 @@ namespace Quicker.Managers
 
         public OpenMainWindow openMainWindowConditions; // 弹出面板设置缓存对象
         public Appearance appearanceConditions; // 外观设置缓存对象
-        public Blacklist blacklistSettings; // 黑名单设置缓存对象
         public Convention conventions; // 常规设置缓存对象
 
         // 原始设置缓存
         private Convention _originalConventions;
         private OpenMainWindow _originalOpenMainWindowConditions;
-        private Blacklist _originalBlacklistSettings;
         private Appearance _originalAppearanceConditions;
 
         /// <summary>
@@ -34,13 +32,11 @@ namespace Quicker.Managers
             // 确保设置已加载
             await LoadConventionsAsync(); // 加载常规设置
             await LoadOpenMainWindowConditionsAsync(); // 加载弹出面板设置
-            await LoadBlacklistSettingsAsync(); // 加载黑名单设置
             await LoadAppearanceAsync(); // 加载外观设置
 
             // 复制当前设置作为原始设置
             _originalConventions = CloneSettingsCache(conventions); // 复制常规设置
             _originalOpenMainWindowConditions = CloneSettingsCache(openMainWindowConditions); // 复制弹出面板设置
-            _originalBlacklistSettings = CloneSettingsCache(blacklistSettings); // 复制黑名单设置
             _originalAppearanceConditions = CloneSettingsCache(appearanceConditions); // 复制外观设置
         }
 
@@ -55,9 +51,6 @@ namespace Quicker.Managers
             
             if (_originalOpenMainWindowConditions != null)
                 openMainWindowConditions = CloneSettingsCache(_originalOpenMainWindowConditions);
-            
-            if (_originalBlacklistSettings != null)
-                blacklistSettings = CloneSettingsCache(_originalBlacklistSettings);
         }
 
         /// <summary>
@@ -133,18 +126,6 @@ namespace Quicker.Managers
             }; // 加载设置数据到缓存
         }
 
-        // 异步加载黑名单设置信息
-        public async Task LoadBlacklistSettingsAsync()
-        {
-            if (blacklistSettings != null) return; // 如果已经初始化了数据，直接返回
-            var BlacklistSettings = SettingDatabase.GetAllBlacklistSettings().FirstOrDefault(); // 获取黑名单设置信息
-            blacklistSettings = new Blacklist // 黑名单设置
-            {
-                IsFullScreenDisabled = BlacklistSettings.IsFullScreenDisabled, // 启用黑名单
-                IsBlacklistEnabledForExtendedHotkey = BlacklistSettings.IsBlacklistEnabledForExtendedHotkey // 是否将黑名单与全屏禁用设置应用于扩展热键功能
-            }; // 加载设置数据到缓存
-        }
-
         // 异步加载外观设置信息
         public async Task LoadAppearanceAsync()
         {
@@ -152,6 +133,8 @@ namespace Quicker.Managers
             var Appearance = SettingDatabase.GetAppearanceSettings().FirstOrDefault(); // 获取外观设置信息
             appearanceConditions = new Appearance // 外观设置
             {
+                ThemeName = Appearance.ThemeName, // 主题名称
+
                 // 按钮
                 ButtonSize = Appearance.ButtonSize, // 按钮大小
                 ButtonGap = Appearance.ButtonGap, // 按钮间距
@@ -289,11 +272,6 @@ namespace Quicker.Managers
             // 判断弹出面板设置是否变化
             if (_originalOpenMainWindowConditions != null && openMainWindowConditions != null && 
                 !AreSettingsEqual(_originalOpenMainWindowConditions, openMainWindowConditions))
-                return true;
-
-            // 判断黑名单设置是否变化
-            if (_originalBlacklistSettings != null && blacklistSettings != null &&
-                !AreSettingsEqual(_originalBlacklistSettings, blacklistSettings))
                 return true;
 
             return false;

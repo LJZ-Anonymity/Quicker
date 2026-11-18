@@ -822,8 +822,7 @@ namespace Quicker.Windows.ToolWindows
         /// <param name="type">消息类型</param>
         private void ShowToast(string message, ToastType type)
         {
-            var toast = new ToastManager();
-            toast.Show(message, type);
+            new ToastManager().Show(message, type);
         }
 
         // 点击按钮关闭窗口

@@ -30,14 +30,14 @@ namespace Quicker.Database.SettingRepositories
         private static void InsertDefaultAppearanceData()
         {
             using var connection = OpenConnection(); // 打开数据库连接
-            var lightDefaults = ("Light", 77.6, 0.2, 0.0, 0.0, "#FFF3F3F3", "#FFD3D3D3", "#22F3F3F3", "#FFA1A1A1", "#FFFFFFFF", "#FFBEE6FD", "#FFF3F3F3", "#FFEAEAEA", "#FF000000", "#FF696969", "#D0FF8C00", "#FF666666", -1, -1, 12, 4, "", 1.0, 0, 0, false, false, false, false, false); // 使用参数元组封装默认值
-            var darkDefaults = ("Dark", 77.6, 0.2, 0.0, 0.0, "#FFF3F3F3", "#FFD3D3D3", "#22F3F3F3", "#FFA1A1A1", "#FFFFFFFF", "#FFBEE6FD", "#FFF3F3F3", "#FFEAEAEA", "#FF000000", "#FF696969", "#D0FF8C00", "#FF666666", -1, -1, 12, 4, "", 1.0, 0, 0, false, false, false, false, false); // 使用参数元组封装默认值
+            var lightDefaults = ("Light", 77.6, 0.2, 0.0, 0.0, "#FFF3F3F3", "#FFD3D3D3", "#22F3F3F3", "#FFA1A1A1", "#FFFFFFFF", "#FFBEE6FD", "#FFF3F3F3", "#FFEAEAEA", "#FF000000", "#FF696969", "#D0FF8C00", "#FF666666", "(系统默认)", "(系统默认)", 12, 4, "", 1.0, 0, 0, false, false, false, false, false); // 使用参数元组封装默认值
+            var darkDefaults = ("Dark", 77.6, 0.2, 0.0, 0.0, "#FFF3F3F3", "#FFD3D3D3", "#22F3F3F3", "#FFA1A1A1", "#FFFFFFFF", "#FFBEE6FD", "#FFF3F3F3", "#FFEAEAEA", "#FF000000", "#FF696969", "#D0FF8C00", "#FF666666", "(系统默认)", "(系统默认)", 12, 4, "", 1.0, 0, 0, false, false, false, false, false); // 使用参数元组封装默认值
             InsertSingleAppearance(connection, lightDefaults); // 插入浅色主题
             InsertSingleAppearance(connection, darkDefaults); // 插入深色主题
         }
 
         // 辅助方法，简化插入逻辑
-        private static void InsertSingleAppearance(SQLiteConnection connection, (string, double, double, double, double, string, string, string, string, string, string, string, string, string, string, string, string, int, int, int, int, string, double, int, int, bool, bool, bool, bool, bool) defaults)
+        private static void InsertSingleAppearance(SQLiteConnection connection, (string, double, double, double, double, string, string, string, string, string, string, string, string, string, string, string, string, string, string, int, int, string, double, int, int, bool, bool, bool, bool, bool) defaults)
         {
             var parameters = new Dictionary<string, object>
             {
@@ -113,8 +113,8 @@ namespace Quicker.Database.SettingRepositories
                     BlankButtonColor = reader.GetString(11), // 空白按钮颜色
                     BlankButtonMouseOverColor = reader.GetString(12), // 空白按钮悬浮颜色
                     ButtonTextColor = reader.GetString(13), // 按钮文字颜色
-                    Font1 = reader.GetInt32(14), // 字体1
-                    Font2 = reader.GetInt32(15), // 字体2
+                    Font1 = reader.GetString(14), // 字体1
+                    Font2 = reader.GetString(15), // 字体2
                     FontSize = reader.GetDouble(16), // 字体大小
                     FontWeight = reader.GetInt32(17), // 字体粗细
                     BackgroundImagePath = reader.GetString(18), // 背景图片路径
@@ -223,8 +223,8 @@ namespace Quicker.Database.SettingRepositories
                 BlankButtonColor TEXT,
                 BlankButtonMouseOverColor TEXT,
                 ButtonTextColor TEXT,
-                Font1 INTEGER,
-                Font2 INTEGER,
+                Font1 TEXT,
+                Font2 TEXT,
                 FontSize REAL,
                 FontWeight INTEGER,
                 BackgroundImagePath TEXT,

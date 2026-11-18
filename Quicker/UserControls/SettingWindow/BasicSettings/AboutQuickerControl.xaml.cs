@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using Quicker.Database.SettingRepositories;
+using System.Text.RegularExpressions;
 using Quicker.Windows.MainWindows;
 using System.Windows.Resources;
 using System.Windows.Controls;
@@ -293,7 +294,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
                     {
                         using var buttonDb = new ButtonDatabase();
                         buttonDb.MigrateImagePathRoot(oldRoot, newRoot);
-                        SettingDatabase.MigrateAppearanceBackgroundImagePathRoot(oldRoot, newRoot);
+                        AppearanceRepository.MigrateAppearanceBackgroundImagePathRoot(oldRoot, newRoot);
                     }
                     catch { }
 

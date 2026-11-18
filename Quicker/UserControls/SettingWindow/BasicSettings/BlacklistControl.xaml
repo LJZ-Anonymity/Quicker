@@ -145,7 +145,7 @@
                                 </Border>
                             </Grid>
                         </Popup>
-                        <TextBox x:Name="BlacklistProcessTextBox" Style="{StaticResource RoundedTextBox}" TextWrapping="Wrap" VerticalAlignment="Top" Height="24" HorizontalContentAlignment="Stretch" Margin="10,0,1,0" TextChanged="BlacklistProcessTextBox_TextChanged"/>
+                        <TextBox x:Name="BlacklistProcessTextBox" Style="{StaticResource RoundedTextBox}" TextWrapping="Wrap" VerticalAlignment="Top" Height="24" HorizontalContentAlignment="Stretch" Margin="10,0,1,0" TextChanged="BlacklistProcessTextBox_TextChanged" LostFocus="BlacklistProcessTextBox_LostFocus" KeyDown="BlacklistProcessTextBox_KeyDown"/>
                     </Grid>
                     <TextBox IsEnabled="False" Text="全屏时仍然启用Quicker的进程(分号分隔多个)。进程名等于exe文件名除去扩展名的部分。" Margin="10,70,0,0" Foreground="#FFB4B4B4" FontSize="11" TextWrapping="Wrap" HorizontalAlignment="Left" VerticalAlignment="Top">
                         <TextBox.Style>

@@ -24,10 +24,8 @@
         public string ButtonTextColor { get; set; } // 按钮文字颜色
 
         // 字体
-        public int Font1 { get; set; } // 字体1
-        public int Font2 { get; set; } // 字体2
-        public string Font1Name { get; set; }
-        public string Font2Name { get; set; }
+        public string Font1 { get; set; } // 字体1
+        public string Font2 { get; set; } // 字体2
         public double FontSize { get; set; } // 字体大小
         public int FontWeight { get; set; } // 字体粗细
 

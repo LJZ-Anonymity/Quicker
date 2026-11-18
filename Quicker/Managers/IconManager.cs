@@ -1028,12 +1028,9 @@ namespace Quicker.Managers
         /// <summary>
         /// 显示Toast
         /// </summary>
-        /// <param name="message">消息</param>
-        /// <param name="title">标题</param>
-        private void ShowToast(string message, ToastType title = ToastType.Error)
+        private void ShowToast(string message, ToastType toastType = ToastType.Error)
         {
-            var toast = new ToastManager(); // 创建ToastManager对象
-            toast.Show(message, title); // 显示Toast
+            new ToastManager().Show(message, toastType);
         }
 
         /// <summary>

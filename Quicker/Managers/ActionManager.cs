@@ -43,8 +43,7 @@ namespace Quicker.Managers
         {
             Application.Current?.Dispatcher.BeginInvoke(new Action(() =>
             {
-                var toast = new ToastManager();
-                toast.Show(message, type);
+                new ToastManager().Show(message, type);
             }));
         }
 

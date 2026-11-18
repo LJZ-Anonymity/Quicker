@@ -1,4 +1,5 @@
 ﻿using Quicker.Windows.MainWindows.MainWindow;
+using Quicker.Database.SettingRepositories;
 using System.Collections.Concurrent;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
@@ -21,16 +22,17 @@ namespace Quicker.Managers
 
         #region 设置缓存与访问器
 
-        private static List<BlacklistApplication> _blacklistApplications; // 黑名单应用
+        private static BlacklistRuleSet _blacklistRules; // 黑名单/白名单规则集（只读，重建时整体替换）
         private static OpenMainWindow _openMainWindowConditions; // 打开主窗口条件
-        private static Blacklist _blacklistSettings; // 黑名单设置
+        private static BlacklistSetting _blacklistSettings; // 黑名单设置
         private static Convention _conventions; // 基础设置
 
-        public static List<BlacklistApplication> BlacklistApplications
-        {
-            get => _blacklistApplications ??= SettingDatabase.GetAllBlacklistApplications(); // 获取黑名单应用
-            set => _blacklistApplications = value; // 设置黑名单应用
-        }
+        /// <summary>
+        /// 黑白名单规则集：判断前台程序是否在黑名单/白名单中。
+        /// 只读结构，LoadSettings 时重建并整体替换引用，判断线程无需加锁。
+        /// </summary>
+        public static BlacklistRuleSet BlacklistRules =>
+            _blacklistRules ??= new BlacklistRuleSet(BlacklistRepository.GetAllRules()); // 获取黑白名单规则集
 
         public static OpenMainWindow OpenMainWindowConditions
         {
@@ -38,11 +40,8 @@ namespace Quicker.Managers
             set => _openMainWindowConditions = value; // 设置打开主窗口条件
         }
 
-        public static Blacklist BlacklistSettings
-        {
-            get => _blacklistSettings ??= SettingDatabase.GetAllBlacklistSettings().FirstOrDefault(); // 获取黑名单设置
-            set => _blacklistSettings = value; // 设置黑名单设置
-        }
+        public static BlacklistSetting BlacklistSettings =>
+            _blacklistSettings ??= BlacklistRepository.GetSetting(); // 获取黑名单设置
 
         public static Convention Conventions
         {
@@ -152,8 +151,8 @@ namespace Quicker.Managers
         {
             Conventions = SettingDatabase.GetAllConventions().FirstOrDefault(); // 获取基础设置
             OpenMainWindowConditions = SettingDatabase.GetAllOpenMainWindowConditions().FirstOrDefault(); // 获取打开主窗口条件
-            BlacklistSettings = SettingDatabase.GetAllBlacklistSettings().FirstOrDefault(); // 获取黑名单设置
-            BlacklistApplications = SettingDatabase.GetAllBlacklistApplications(); // 获取黑名单应用
+            _blacklistSettings = BlacklistRepository.GetSetting(); // 获取黑名单设置
+            _blacklistRules = new BlacklistRuleSet(BlacklistRepository.GetAllRules()); // 重建黑白名单规则集
             EnableMemoryOptimization = Conventions?.EnableMemoryOptimization ?? false; // 启用内存优化
             if (EnableMemoryOptimization) // 如果启用内存优化
             {
@@ -167,7 +166,7 @@ namespace Quicker.Managers
             _conventions = null; // 基础设置
             _openMainWindowConditions = null; // 打开主窗口条件
             _blacklistSettings = null; // 黑名单设置
-            _blacklistApplications = null; // 黑名单应用
+            _blacklistRules = null; // 黑白名单规则集
             _cache.Clear();
         }
 

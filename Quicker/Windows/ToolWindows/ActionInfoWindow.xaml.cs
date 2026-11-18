@@ -102,8 +102,7 @@ namespace Quicker.Windows.ToolWindows
         /// </summary>
         private void ShowToast(string message, ToastType toastType)
         {
-            var toast = new ToastManager(); // 消息提醒管理器
-            toast.Show(message, toastType); // 显示复制成功的通知
+            new ToastManager().Show(message, toastType);
         }
 
         // 关闭动作信息窗口

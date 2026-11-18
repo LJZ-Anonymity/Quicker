@@ -24,6 +24,7 @@ using KeyboardHookEventArgs = SharpHook.KeyboardHookEventArgs;
 using MouseHookEventArgs = SharpHook.MouseHookEventArgs;
 using MouseButton = SharpHook.Data.MouseButton;
 using Quicker.Windows.MainWindows.MainWindow;
+using Quicker.Database.SettingRepositories;
 using Hardcodet.Wpf.TaskbarNotification;
 using KeyCode = SharpHook.Data.KeyCode;
 using System.Runtime.InteropServices;
@@ -191,23 +192,33 @@ namespace Quicker
                 toast.Show("获取字体设置失败！", ToastType.Error);
                 return;
             }
-
             // 获取系统字体列表
             var fontFamilies = Fonts.SystemFontFamilies.Select(f => f.Source).OrderBy(f => f).ToList();
             fontFamilies.Add("(系统默认)"); // 保持和界面一致
 
-            // 判断索引是否为最后一项（即"系统默认"）
-            string font1 = (appearance.Font1 >= 0 && appearance.Font1 < fontFamilies.Count - 1) ? fontFamilies[appearance.Font1] : null;
-            string font2 = (appearance.Font2 >= 0 && appearance.Font2 < fontFamilies.Count - 1) ? fontFamilies[appearance.Font2] : null;
-            var fontFamily = (!string.IsNullOrEmpty(font1), !string.IsNullOrEmpty(font2)) switch
+            string defaultFontMarker = "(系统默认)";
+            string font1 = appearance.Font1;
+            string font2 = appearance.Font2;
+
+            // 校验字体是否合法，不在列表则回退系统默认
+            if (string.IsNullOrWhiteSpace(font1) || !fontFamilies.Contains(font1))
+                font1 = defaultFontMarker;
+            if (string.IsNullOrWhiteSpace(font2) || !fontFamilies.Contains(font2))
+                font2 = defaultFontMarker;
+
+            bool isDefault1 = font1 == defaultFontMarker;
+            bool isDefault2 = font2 == defaultFontMarker;
+
+            var fontFamily = (isDefault1, isDefault2) switch
             {
-                (true, true) => new FontFamily($"{font1}, {font2}"),
-                (true, false) => new FontFamily(font1),
-                (false, true) => new FontFamily(font2),
-                _ => new FontFamily("微软雅黑")
+                (false, false) => new FontFamily($"{font1}, {font2}"),
+                (false, true) => new FontFamily(font1),
+                (true, false) => new FontFamily(font2),
+                _ => new FontFamily("微软雅黑, Segoe UI, sans-serif")
             };
             Current.Resources["GlobalFontFamily"] = fontFamily; // 设置全局资源
         }
+
 
         /// <summary>
         /// 初始化定时器
@@ -665,16 +676,23 @@ namespace Quicker
         private bool FullScreenDisable()
         {
             var blacklistSettings = AppStateManager.BlacklistSettings; // 获取设置
-            if (!blacklistSettings.IsFullScreenDisabled) return false; // 如果全屏禁用Quicker，返回
+            if (blacklistSettings == null || !blacklistSettings.DisableOnFullScreen) return false; // 如果未开启全屏禁用，返回 false
 
-            if (!WindowHelper.IsFullScreen()) return false; // 如果窗口不是全屏，返回
+            if (!WindowHelper.IsFullScreen()) return false; // 如果当前窗口不是全屏，返回 false
 
-            string processName = WindowHelper.GetProcessName(); // 获取进程名称
-            var blacklistApplications = AppStateManager.BlacklistApplications; // 获取设置
+            var foreground = ProcessIdentityHelper.GetForeground();
+            var rules = BlacklistRepository.GetAllRules();
 
-            if (blacklistApplications.Count == 0) return true;
+            // 如果当前前台程序在白名单中，则全屏时不禁用
+            foreach (var rule in rules.Where(r => r.ListType == BlacklistListType.Whitelist))
+            {
+                if (rule.MatchType == BlacklistMatchType.ProcessName && string.Equals(rule.Target, foreground.Name, StringComparison.OrdinalIgnoreCase))
+                    return false;
+                if (rule.MatchType == BlacklistMatchType.Folder && foreground.HasPath && foreground.ExePath.StartsWith(rule.Target, StringComparison.OrdinalIgnoreCase))
+                    return false;
+            }
 
-            return !blacklistApplications.Any(p => p.ProcessName == processName && !p.IsInBlacklist);
+            return true;
         }
 
         /// <summary>
@@ -684,14 +702,21 @@ namespace Quicker
         {
             try
             {
-                nint foregroundWindow = WindowHelper.GetCurrentForegroundWindow(); // 获取当前前台窗口
-                if (foregroundWindow == IntPtr.Zero) return false; // 如果当前前台窗口为空，返回
+                var foreground = ProcessIdentityHelper.GetForeground();
+                if (foreground.IsUnknown) return false;
 
-                uint processId = WindowHelper.GetWindowProcessId(foregroundWindow); // 获取窗口进程ID
-                string processName = Process.GetProcessById((int)processId).ProcessName; // 获取进程名称
-
-                return AppStateManager.BlacklistApplications
-                    .Any(p => p.ProcessName == processName && p.IsInBlacklist); // 如果进程名称在黑名单中，返回
+                var rules = BlacklistRepository.GetAllRules();
+                // 检查当前前台程序是否匹配黑名单规则
+                foreach (var rule in rules.Where(r => r.ListType == BlacklistListType.Blacklist))
+                {
+                    if (rule.MatchType == BlacklistMatchType.ProcessName && string.Equals(rule.Target, foreground.Name, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                    if (rule.MatchType == BlacklistMatchType.Folder && foreground.HasPath && foreground.ExePath.StartsWith(rule.Target, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                    if (rule.MatchType == BlacklistMatchType.Unknown && foreground.IsUnknown)
+                        return true;
+                }
+                return false;
             }
             catch { return false; }
         }

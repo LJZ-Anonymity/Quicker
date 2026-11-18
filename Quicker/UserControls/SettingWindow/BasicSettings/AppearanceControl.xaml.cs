@@ -673,19 +673,12 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
                         break;
                     case "FontSizeComboBox1":
                     case "FontSizeComboBox2":
-                        // 记录字体名称而非下标，兼容数据迁移
                         if (comboBox.SelectedItem is string fontName)
                         {
                             if (comboBox.Name == "FontSizeComboBox1")
-                            {
-                                settingManager.appearanceConditions.Font1Name = fontName;
-                                settingManager.appearanceConditions.Font1 = comboBox.SelectedIndex; // 过渡期同时保留下标
-                            }
+                                settingManager.appearanceConditions.Font1 = fontName;
                             else
-                            {
-                                settingManager.appearanceConditions.Font2Name = fontName;
-                                settingManager.appearanceConditions.Font2 = comboBox.SelectedIndex;
-                            }
+                                settingManager.appearanceConditions.Font2 = fontName;
                         }
                         ApplyGlobalFontFamily();
                         break;
@@ -949,8 +942,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
 
         private void ShowToast(string message, ToastType type)
         {
-            var toast = new ToastManager();
-            toast.Show(message, type);
+            new ToastManager().Show(message, type);
         }
 
         private string EnsureTrueColorPng(string inputPath)
@@ -1071,8 +1063,8 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             a.Blur = Math.Clamp(a.Blur, 0, 3);
             a.Win11CornerRadius = Math.Clamp(a.Win11CornerRadius, 0, 3);
             a.FontWeight = Math.Clamp(a.FontWeight, 0, 15);
-            if (a.Font1 < -1) a.Font1 = -1;
-            if (a.Font2 < -1) a.Font2 = -1;
+            if (string.IsNullOrWhiteSpace(a.Font1)) a.Font1 = "(系统默认)";
+            if (string.IsNullOrWhiteSpace(a.Font2)) a.Font2 = "(系统默认)";
             if (a.BackgroundImagePath == null) a.BackgroundImagePath = string.Empty;
         }
 
@@ -1107,6 +1099,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
 
                 HandleImportedAppearanceBackgroundImage(appearance, selectedPngPath);
                 ApplyImportedAppearance(appearance);
+                SettingDatabase.UpdateAppearance(settingManager.appearanceConditions);
                 ShowToast("导入成功！", ToastType.Success);
             }
             catch (Exception ex)
@@ -1144,6 +1137,11 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             var previous = settingManager.appearanceConditions;
             try
             {
+                // 关键修复：继承当前主题的 ThemeName（"Light" 或 "Dark"），否则 UPDATE 语句因 WHERE ThemeName = NULL 无法写入数据库
+                appearance.ThemeName = !string.IsNullOrEmpty(previous?.ThemeName)
+                    ? previous.ThemeName
+                    : (SettingDatabase.GetAllConventions().FirstOrDefault()?.IsDarkTheme == true ? "Dark" : "Light");
+
                 appearance.EnablePreview = true; // 导入后保证预览可见，并随外观一起落库
                 SettingDatabase.UpdateAppearance(appearance);
                 settingManager.appearanceConditions = appearance;
@@ -1297,8 +1295,8 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
                 BlankButtonColor = "#32C8C8C8",
                 BlankButtonMouseOverColor = "#05000000",
                 ButtonTextColor = "#FF000000",
-                Font1 = -1,
-                Font2 = -1,
+                Font1 = "(系统默认)",
+                Font2 = "(系统默认)",
                 FontSize = 12,
                 FontWeight = 4,
                 BackgroundImagePath = "",
@@ -1422,25 +1420,17 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
             var fontFamilies = FontSizeComboBox1.ItemsSource as IList<string>;
             if (fontFamilies == null || fontFamilies.Count == 0) return;
 
-            int defaultIndex = fontFamilies.Count - 1;
+            string defaultFont = "(系统默认)";
 
-            // 优先通过名字匹配，兼容老数据的下标索引
-            int index1 = !string.IsNullOrEmpty(settingManager.appearanceConditions.Font1Name)
-                ? fontFamilies.IndexOf(settingManager.appearanceConditions.Font1Name)
-                : settingManager.appearanceConditions.Font1;
+            // 直接使用 string 匹配，非常直观
+            string font1 = settingManager.appearanceConditions.Font1;
+            string font2 = settingManager.appearanceConditions.Font2;
 
-            int index2 = !string.IsNullOrEmpty(settingManager.appearanceConditions.Font2Name)
-                ? fontFamilies.IndexOf(settingManager.appearanceConditions.Font2Name)
-                : settingManager.appearanceConditions.Font2;
+            FontSizeComboBox1.SelectedItem = fontFamilies.Contains(font1) ? font1 : defaultFont;
+            FontSizeComboBox2.SelectedItem = fontFamilies.Contains(font2) ? font2 : defaultFont;
 
-            FontSizeComboBox1.SelectedIndex = (index1 < 0 || index1 >= fontFamilies.Count) ? defaultIndex : index1;
-            FontSizeComboBox2.SelectedIndex = (index2 < 0 || index2 >= fontFamilies.Count) ? defaultIndex : index2;
-
-            string font1 = FontSizeComboBox1.SelectedItem as string;
-            string font2 = FontSizeComboBox2.SelectedItem as string;
-
-            bool isDefault1 = string.IsNullOrEmpty(font1) || font1 == "(系统默认)";
-            bool isDefault2 = string.IsNullOrEmpty(font2) || font2 == "(系统默认)";
+            bool isDefault1 = string.IsNullOrEmpty(font1) || font1 == defaultFont;
+            bool isDefault2 = string.IsNullOrEmpty(font2) || font2 == defaultFont;
             FontFamily fontFamily;
 
             if (!isDefault1 && !isDefault2)
@@ -1462,6 +1452,7 @@ namespace Quicker.UserControls.SettingWindow.BasicSettings
 
             Application.Current.Resources["GlobalFontFamily"] = fontFamily;
         }
+
         private void ResetAppearanceButton_Click(object sender, RoutedEventArgs e)
         {
             ResetAppearanceButton.Visibility = Visibility.Collapsed;

@@ -1248,8 +1248,7 @@ namespace Quicker.Windows.MainWindows
 
         private void ShowToast(string message, ToastType toastType)
         {
-            var toast = new ToastManager(); // 消息提醒管理器
-            toast.Show(message, toastType); // 弹出消息提醒
+            new ToastManager().Show(message, toastType);
         }
 
         private void NotifyActionPageChanged(string table)
