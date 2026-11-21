@@ -84,9 +84,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Resource Include="ComponentLicenses.txt">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Resource>
 		<Resource Include="VersionInfo.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Resource>
